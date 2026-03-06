@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspection & Inventory</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Step 1: Inspection Info -->
+    <div id="step-info" class="step active">
+      <h1>New Inspection</h1>
+      <p class="subtitle">Fill in the inspection details to get started</p>
+      <div class="form-group">
+        <label for="location">Location</label>
+        <input type="text" id="location" placeholder="e.g. MANA 501">
+      </div>
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date">
+      </div>
+      <div class="form-group">
+        <label for="auditor">Auditor / Inspector</label>
+        <input type="text" id="auditor" placeholder="e.g. Lourdes">
+      </div>
+      <button class="btn primary" onclick="startInspection()">Start Inspection</button>
+    </div>
+
+    <!-- Step 2: Room-by-room inspection -->
+    <div id="step-inspect" class="step">
+      <div class="inspect-header">
+        <h2 id="section-title"></h2>
+        <p id="section-progress"></p>
+      </div>
+
+      <div class="tabs" id="section-tabs"></div>
+
+      <div id="items-container"></div>
+
+      <div class="nav-buttons">
+        <button class="btn secondary" id="btn-prev" onclick="prevSection()">Previous</button>
+        <button class="btn primary" id="btn-next" onclick="nextSection()">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Review & Export -->
+    <div id="step-export" class="step">
+      <h1>Inspection Complete</h1>
+      <p class="subtitle" id="export-summary"></p>
+
+      <div id="review-container"></div>
+
+      <div class="export-buttons">
+        <button class="btn primary" onclick="exportXLSX()">Download XLSX</button>
+        <button class="btn secondary" onclick="exportPDF()">Download PDF</button>
+        <button class="btn outline" onclick="goBackToInspection()">Back to Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
