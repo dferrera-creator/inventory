@@ -2,61 +2,171 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inspection & Inventory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Inspection</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
   <div id="app">
-    <!-- Step 1: Inspection Info -->
-    <div id="step-info" class="step active">
-      <h1>New Inspection</h1>
-      <p class="subtitle">Fill in the inspection details to get started</p>
-      <div class="form-group">
-        <label for="location">Location</label>
-        <input type="text" id="location" placeholder="e.g. MANA 501">
-      </div>
-      <div class="form-group">
-        <label for="date">Date</label>
-        <input type="date" id="date">
-      </div>
-      <div class="form-group">
-        <label for="auditor">Auditor / Inspector</label>
-        <input type="text" id="auditor" placeholder="e.g. Lourdes">
-      </div>
-      <button class="btn primary" onclick="startInspection()">Start Inspection</button>
-    </div>
 
-    <!-- Step 2: Room-by-room inspection -->
-    <div id="step-inspect" class="step">
-      <div class="inspect-header">
-        <h2 id="section-title"></h2>
-        <p id="section-progress"></p>
-      </div>
+    <!-- ══════════ STEP 1: WELCOME ══════════ -->
+    <div id="step-welcome" class="step active">
+      <div class="welcome-screen">
+        <div class="welcome-icon">📋</div>
+        <h1>Inspection</h1>
+        <p class="welcome-sub">Tap to start</p>
 
-      <div class="tabs" id="section-tabs"></div>
+        <div class="form-card">
+          <div class="form-group">
+            <div class="input-icon">📍</div>
+            <input type="text" id="location" placeholder="Location..." autocomplete="off">
+          </div>
+          <div class="form-group">
+            <div class="input-icon">📅</div>
+            <input type="date" id="date">
+          </div>
+          <div class="form-group">
+            <div class="input-icon">👤</div>
+            <input type="text" id="auditor" placeholder="Your name..." autocomplete="off">
+          </div>
+        </div>
 
-      <div id="items-container"></div>
-
-      <div class="nav-buttons">
-        <button class="btn secondary" id="btn-prev" onclick="prevSection()">Previous</button>
-        <button class="btn primary" id="btn-next" onclick="nextSection()">Next</button>
+        <button class="btn-start" onclick="startInspection()">
+          <span class="btn-start-icon">▶</span>
+          START
+        </button>
       </div>
     </div>
 
-    <!-- Step 3: Review & Export -->
+    <!-- ══════════ STEP 2: ROOM SELECT ══════════ -->
+    <div id="step-rooms" class="step">
+      <div class="rooms-header">
+        <h2>Choose a Room</h2>
+        <div class="overall-progress">
+          <div class="overall-progress-bar" id="overall-bar"></div>
+        </div>
+        <p class="overall-label" id="overall-label">0 / 73 items</p>
+      </div>
+      <div id="room-grid" class="room-grid"></div>
+    </div>
+
+    <!-- ══════════ STEP 3: ITEM INSPECTION (ONE AT A TIME) ══════════ -->
+    <div id="step-item" class="step">
+      <!-- Top progress bar -->
+      <div class="item-topbar">
+        <button class="topbar-back" onclick="backToRooms()">←</button>
+        <div class="topbar-progress">
+          <div class="topbar-progress-bar" id="item-progress-bar"></div>
+        </div>
+        <span class="topbar-count" id="item-count">1/10</span>
+      </div>
+
+      <!-- Area badge -->
+      <div class="item-area" id="item-area">Kitchen</div>
+
+      <!-- Item visual -->
+      <div class="item-display">
+        <div class="item-emoji" id="item-emoji">🍳</div>
+        <div class="item-name" id="item-name">Stove</div>
+        <div class="item-name-es" id="item-name-es">Estufa</div>
+      </div>
+
+      <!-- Status buttons (THE MAIN ACTION) -->
+      <div class="status-grid" id="status-grid">
+        <button class="status-btn good" onclick="setStatus('good')">
+          <span class="status-icon">✅</span>
+          <span class="status-label">Good</span>
+          <span class="status-label-es">Bueno</span>
+        </button>
+        <button class="status-btn damaged" onclick="setStatus('damaged')">
+          <span class="status-icon">🔨</span>
+          <span class="status-label">Damaged</span>
+          <span class="status-label-es">Dañado</span>
+        </button>
+        <button class="status-btn missing" onclick="setStatus('missing')">
+          <span class="status-icon">❌</span>
+          <span class="status-label">Missing</span>
+          <span class="status-label-es">Faltante</span>
+        </button>
+        <button class="status-btn new-item" onclick="setStatus('new')">
+          <span class="status-icon">🆕</span>
+          <span class="status-label">New</span>
+          <span class="status-label-es">Nuevo</span>
+        </button>
+      </div>
+
+      <!-- Secondary actions (quantity, photo, notes) -->
+      <div class="item-extras">
+        <div class="qty-row">
+          <span class="qty-label">Qty:</span>
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <span class="qty-value" id="qty-value">1</span>
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+        <div class="extras-row">
+          <button class="extra-btn camera-btn" onclick="triggerPhoto()">
+            <span>📷</span> Photo
+          </button>
+          <button class="extra-btn notes-btn" onclick="toggleNotes()">
+            <span>📝</span> Notes
+          </button>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+        <div class="photo-strip" id="photo-strip"></div>
+        <div class="notes-area" id="notes-area" style="display:none">
+          <textarea id="notes-input" placeholder="Notes..." rows="2"></textarea>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="item-nav">
+        <button class="nav-prev" id="nav-prev" onclick="prevItem()">← Back</button>
+        <button class="nav-next" id="nav-next" onclick="nextItem()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ══════════ STEP 4: ROOM COMPLETE CELEBRATION ══════════ -->
+    <div id="step-room-done" class="step">
+      <div class="celebration">
+        <div class="celebration-icon">🎉</div>
+        <h2 class="celebration-title" id="room-done-title">Room Done!</h2>
+        <p class="celebration-sub" id="room-done-sub">Kitchen completed</p>
+        <div class="celebration-stats" id="room-done-stats"></div>
+        <button class="btn-continue" onclick="backToRooms()">
+          Continue →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ STEP 5: ALL DONE / EXPORT ══════════ -->
     <div id="step-export" class="step">
-      <h1>Inspection Complete</h1>
-      <p class="subtitle" id="export-summary"></p>
+      <div class="celebration">
+        <div class="celebration-icon">🏆</div>
+        <h2 class="celebration-title">All Done!</h2>
+        <p class="celebration-sub" id="export-summary"></p>
+      </div>
 
       <div id="review-container"></div>
 
       <div class="export-buttons">
-        <button class="btn primary" onclick="exportXLSX()">Download XLSX</button>
-        <button class="btn secondary" onclick="exportPDF()">Download PDF</button>
-        <button class="btn outline" onclick="goBackToInspection()">Back to Edit</button>
+        <button class="btn-export xlsx" onclick="exportXLSX()">
+          <span>📊</span> Download Excel
+        </button>
+        <button class="btn-export pdf" onclick="exportPDF()">
+          <span>📄</span> Download PDF
+        </button>
+        <button class="btn-back-edit" onclick="backToRooms()">
+          ← Edit
+        </button>
       </div>
     </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
