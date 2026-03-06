@@ -1,79 +1,139 @@
 // ══════════════════════════════════════════
-// INSPECTION APP — REDESIGNED FOR SIMPLICITY
-// One item at a time, visual-first, guided flow
+// INSPECCIÓN — APP REDISEÑADA
+// Iconos Material Symbols, interfaz en español,
+// cronómetro, Web Share API
 // ══════════════════════════════════════════
 
-// ── Emoji mapping for visual item recognition ──
+// ── Mapeo de iconos Material Symbols por artículo ──
 
-const ITEM_EMOJIS = {
-  'Estufa': '🔥', 'Stove': '🔥',
-  'Refrigerador': '🧊', 'Refrigerator': '🧊',
-  'Microondas': '📡', 'Microwave': '📡',
-  'Horno': '🔥', 'Oven': '🔥',
-  'Campana extractora': '💨', 'Range hood': '💨',
-  'Lavavajillas': '🫧', 'Dishwasher': '🫧',
-  'Fregadero': '🚰', 'Sink': '🚰',
-  'Tarja': '🚰', 'Counter sink': '🚰',
-  'Barra': '🍽️', 'Counter bar': '🍽️',
-  'Sillas de barra': '🪑', 'Bar stools': '🪑',
-  'Cafetera': '☕', 'Coffee maker': '☕',
-  'Tostador': '🍞', 'Toaster': '🍞',
-  'Licuadora': '🥤', 'Blender': '🥤',
-  'Utensilios': '🍴', 'Utensils set': '🍴',
-  'Vajilla': '🍽️', 'Dinnerware set': '🍽️',
-  'Vasos': '🥃', 'Glasses set': '🥃',
-  'Ollas y sartenes': '🍳', 'Pots & pans': '🍳',
-  'Bote de basura': '🗑️', 'Trash can': '🗑️',
-  'Sofá': '🛋️', 'Sofa': '🛋️',
-  'Mesa de centro': '🪵', 'Coffee table': '🪵',
-  'Televisión': '📺', 'TV': '📺',
-  'Mueble de TV': '🗄️', 'TV stand': '🗄️',
-  'Lámpara de piso': '💡', 'Floor lamp': '💡',
-  'Cojines decorativos': '🛋️', 'Throw pillows': '🛋️',
-  'Cortinas': '🪟', 'Curtains': '🪟',
-  'Mesa de comedor': '🪵', 'Dining table': '🪵',
-  'Sillas de comedor': '🪑', 'Dining chairs': '🪑',
-  'Centro de mesa': '🌸', 'Centerpiece': '🌸',
-  'Mesa exterior': '🏖️', 'Outdoor table': '🏖️',
-  'Sillas exteriores': '🪑', 'Outdoor chairs': '🪑',
-  'Sombrilla': '⛱️', 'Umbrella': '⛱️',
-  'Macetas': '🪴', 'Planters': '🪴',
-  'Cama king': '🛏️', 'King bed': '🛏️',
-  'Cama queen': '🛏️', 'Queen bed': '🛏️',
-  'Colchón': '🛏️', 'Mattress': '🛏️',
-  'Ropa de cama': '🛌', 'Bedding set': '🛌',
-  'Almohadas': '🛌', 'Pillows': '🛌',
-  'Buró izquierdo': '🗄️', 'Left nightstand': '🗄️',
-  'Buró derecho': '🗄️', 'Right nightstand': '🗄️',
-  'Buró': '🗄️', 'Nightstand': '🗄️',
-  'Lámpara de buró': '💡', 'Nightstand lamp': '💡',
-  'Clóset': '🚪', 'Closet': '🚪',
-  'Ganchos': '🪝', 'Hangers': '🪝',
-  'Espejo': '🪞', 'Mirror': '🪞',
-  'Inodoro': '🚽', 'Toilet': '🚽',
-  'Lavabo': '🚰', 'Sink': '🚰',
-  'Regadera': '🚿', 'Shower': '🚿',
-  'Toallero': '🧺', 'Towel rack': '🧺',
-  'Toallas': '🧺', 'Towels': '🧺',
-  'Cortina de baño': '🪟', 'Shower curtain': '🪟',
-  'Tapete de baño': '🟫', 'Bath mat': '🟫',
-  'Portarrollos': '🧻', 'Toilet paper holder': '🧻',
+const ITEM_ICONS = {
+  'Estufa': 'local_fire_department',
+  'Stove': 'local_fire_department',
+  'Refrigerador': 'kitchen',
+  'Refrigerator': 'kitchen',
+  'Microondas': 'microwave',
+  'Microwave': 'microwave',
+  'Horno': 'oven_gen',
+  'Oven': 'oven_gen',
+  'Campana extractora': 'air',
+  'Range hood': 'air',
+  'Lavavajillas': 'dishwasher_gen',
+  'Dishwasher': 'dishwasher_gen',
+  'Fregadero': 'water_drop',
+  'Sink': 'water_drop',
+  'Tarja': 'countertops',
+  'Counter sink': 'countertops',
+  'Barra': 'countertops',
+  'Counter bar': 'countertops',
+  'Sillas de barra': 'chair',
+  'Bar stools': 'chair',
+  'Cafetera': 'coffee',
+  'Coffee maker': 'coffee',
+  'Tostador': 'breakfast_dining',
+  'Toaster': 'breakfast_dining',
+  'Licuadora': 'blender',
+  'Blender': 'blender',
+  'Utensilios': 'flatware',
+  'Utensils set': 'flatware',
+  'Vajilla': 'dining',
+  'Dinnerware set': 'dining',
+  'Vasos': 'local_bar',
+  'Glasses set': 'local_bar',
+  'Ollas y sartenes': 'skillet',
+  'Pots & pans': 'skillet',
+  'Bote de basura': 'delete',
+  'Trash can': 'delete',
+  'Sofá': 'weekend',
+  'Sofa': 'weekend',
+  'Mesa de centro': 'table',
+  'Coffee table': 'table',
+  'Televisión': 'tv',
+  'TV': 'tv',
+  'Mueble de TV': 'living',
+  'TV stand': 'living',
+  'Lámpara de piso': 'floor_lamp',
+  'Floor lamp': 'floor_lamp',
+  'Cojines decorativos': 'pillows',
+  'Throw pillows': 'pillows',
+  'Cortinas': 'curtains',
+  'Curtains': 'curtains',
+  'Mesa de comedor': 'table_restaurant',
+  'Dining table': 'table_restaurant',
+  'Sillas de comedor': 'chair',
+  'Dining chairs': 'chair',
+  'Centro de mesa': 'local_florist',
+  'Centerpiece': 'local_florist',
+  'Mesa exterior': 'deck',
+  'Outdoor table': 'deck',
+  'Sillas exteriores': 'chair',
+  'Outdoor chairs': 'chair',
+  'Sombrilla': 'beach_access',
+  'Umbrella': 'beach_access',
+  'Macetas': 'potted_plant',
+  'Planters': 'potted_plant',
+  'Cama king': 'king_bed',
+  'King bed': 'king_bed',
+  'Cama queen': 'queen_bed',
+  'Queen bed': 'queen_bed',
+  'Colchón': 'bed',
+  'Mattress': 'bed',
+  'Ropa de cama': 'bedroom_parent',
+  'Bedding set': 'bedroom_parent',
+  'Almohadas': 'pillows',
+  'Pillows': 'pillows',
+  'Buró izquierdo': 'nightstand',
+  'Left nightstand': 'nightstand',
+  'Buró derecho': 'nightstand',
+  'Right nightstand': 'nightstand',
+  'Buró': 'nightstand',
+  'Nightstand': 'nightstand',
+  'Lámpara de buró': 'table_lamp',
+  'Nightstand lamp': 'table_lamp',
+  'Clóset': 'door_sliding',
+  'Closet': 'door_sliding',
+  'Ganchos': 'checkroom',
+  'Hangers': 'checkroom',
+  'Espejo': 'window',
+  'Mirror': 'window',
+  'Inodoro': 'bathroom',
+  'Toilet': 'bathroom',
+  'Lavabo': 'wash',
+  'Regadera': 'shower',
+  'Shower': 'shower',
+  'Toallero': 'dry',
+  'Towel rack': 'dry',
+  'Toallas': 'dry_cleaning',
+  'Towels': 'dry_cleaning',
+  'Cortina de baño': 'curtains',
+  'Shower curtain': 'curtains',
+  'Tapete de baño': 'grid_on',
+  'Bath mat': 'grid_on',
+  'Portarrollos': 'paper_roll',
+  'Toilet paper holder': 'paper_roll',
 };
 
-// ── Room visual config ──
+// ── Configuración visual de cuartos ──
 
 const ROOM_CONFIG = {
-  'kitchen-living-terrace': { emoji: '🍳', name: 'Kitchen / Living / Terrace', shortName: 'Kitchen' },
-  'bedrooms': { emoji: '🛏️', name: 'Bedrooms', shortName: 'Bedrooms' },
-  'bathrooms': { emoji: '🚿', name: 'Bathrooms', shortName: 'Bathrooms' },
+  'kitchen-living-terrace': { icon: 'cooking', name: 'Cocina / Sala / Terraza', shortName: 'Cocina / Sala' },
+  'bedrooms': { icon: 'bed', name: 'Recámaras', shortName: 'Recámaras' },
+  'bathrooms': { icon: 'shower', name: 'Baños', shortName: 'Baños' },
 };
 
-// ── Inspection Data Template (unchanged structure) ──
+// ── Colores por categoría de cuarto ──
+
+const ROOM_COLORS = {
+  'kitchen-living-terrace': '#f59e0b',
+  'bedrooms': '#8b5cf6',
+  'bathrooms': '#06b6d4',
+};
+
+// ── Plantilla de datos de inspección ──
 
 const SECTIONS = [
   {
     id: 'kitchen-living-terrace',
-    name: 'Kitchen / Living Room / Terrace',
+    name: 'Cocina / Sala / Terraza',
     items: [
       { area: 'Cocina', name: 'Estufa / Stove', type: 'fixed', qty: 1 },
       { area: 'Cocina', name: 'Refrigerador / Refrigerator', type: 'fixed', qty: 1 },
@@ -111,7 +171,7 @@ const SECTIONS = [
   },
   {
     id: 'bedrooms',
-    name: 'Bedrooms',
+    name: 'Recámaras',
     items: [
       { area: 'Recámara principal', name: 'Cama king / King bed', type: 'fixed', qty: 1 },
       { area: 'Recámara principal', name: 'Colchón / Mattress', type: 'fixed', qty: 1 },
@@ -138,7 +198,7 @@ const SECTIONS = [
   },
   {
     id: 'bathrooms',
-    name: 'Bathrooms',
+    name: 'Baños',
     items: [
       { area: 'Baño principal', name: 'Inodoro / Toilet', type: 'fixed', qty: 1 },
       { area: 'Baño principal', name: 'Lavabo / Sink', type: 'fixed', qty: 1 },
@@ -165,30 +225,82 @@ const SECTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'Select status...' },
-  { value: 'good', label: 'Good / Bueno' },
-  { value: 'damaged', label: 'Damaged / Dañado' },
-  { value: 'missing', label: 'Missing / Faltante' },
-  { value: 'new', label: 'New / Nuevo' },
+  { value: '', label: 'Seleccionar...' },
+  { value: 'good', label: 'Bueno / Good' },
+  { value: 'damaged', label: 'Dañado / Damaged' },
+  { value: 'missing', label: 'Faltante / Missing' },
+  { value: 'new', label: 'Nuevo / New' },
 ];
 
-// ── State ──
+// ── Estado ──
 
 let inspectionInfo = {};
-let inspectionData = {}; // keyed by "sectionId-itemIndex"
+let inspectionData = {}; // clave: "sectionId-itemIndex"
 let currentSectionIndex = 0;
 let currentItemIndex = 0;
 
+// ── Cronómetro ──
+
+let timerInterval = null;
+let timerStartTime = null;
+let timerElapsed = 0; // milisegundos
+
+function startTimer() {
+  timerStartTime = Date.now();
+  timerElapsed = 0;
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  if (timerStartTime) {
+    timerElapsed = Date.now() - timerStartTime;
+  }
+}
+
+function updateTimerDisplay() {
+  if (!timerStartTime) return;
+  const elapsed = Date.now() - timerStartTime;
+  const formatted = formatTime(elapsed);
+
+  const display = document.getElementById('timer-display');
+  if (display) display.textContent = formatted;
+
+  const topbar = document.getElementById('topbar-timer');
+  if (topbar) topbar.textContent = formatted;
+}
+
+function formatTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const hrs = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+
+  if (hrs > 0) {
+    return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function getElapsedTime() {
+  if (timerStartTime) {
+    return Date.now() - timerStartTime;
+  }
+  return timerElapsed;
+}
+
 // ── Helpers ──
 
-function getItemEmoji(name) {
-  // Try matching Spanish name first, then English
+function getItemIcon(name) {
   const parts = name.split(' / ');
   for (const part of parts) {
     const trimmed = part.trim();
-    if (ITEM_EMOJIS[trimmed]) return ITEM_EMOJIS[trimmed];
+    if (ITEM_ICONS[trimmed]) return ITEM_ICONS[trimmed];
   }
-  return '📦'; // fallback
+  return 'inventory_2'; // fallback icon
 }
 
 function getItemNames(name) {
@@ -232,7 +344,7 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
-// ── Step Navigation ──
+// ── Navegación de pasos ──
 
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -241,19 +353,28 @@ function showStep(stepId) {
 }
 
 // ══════════════════════════════════════════
-// STEP 1: WELCOME / START
+// PASO 1: BIENVENIDA / INICIAR
 // ══════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('date').valueAsDate = new Date();
+  // Detectar soporte de Web Share API
+  checkShareSupport();
 });
+
+function checkShareSupport() {
+  const shareBtn = document.getElementById('btn-share');
+  if (shareBtn && navigator.share && navigator.canShare) {
+    shareBtn.style.display = '';
+  }
+}
 
 function startInspection() {
   const location = document.getElementById('location').value.trim();
   const date = document.getElementById('date').value;
   const auditor = document.getElementById('auditor').value.trim();
 
-  // Visual validation — highlight empty fields
+  // Validación visual — resaltar campos vacíos
   let valid = true;
   ['location', 'date', 'auditor'].forEach(id => {
     const group = document.getElementById(id).closest('.form-group');
@@ -265,17 +386,18 @@ function startInspection() {
   });
 
   if (!valid) {
-    showToast('⚠️ Fill all fields');
+    showToast('⚠️ Llena todos los campos');
     return;
   }
 
   inspectionInfo = { location, date, auditor };
+  startTimer();
   showStep('step-rooms');
   renderRooms();
 }
 
 // ══════════════════════════════════════════
-// STEP 2: ROOM SELECT
+// PASO 2: SELECCIÓN DE CUARTO
 // ══════════════════════════════════════════
 
 function renderRooms() {
@@ -283,15 +405,16 @@ function renderRooms() {
   const totalItems = getTotalItems();
   const totalCompleted = getTotalCompleted();
 
-  // Update overall progress
+  // Progreso general
   const pct = totalItems > 0 ? (totalCompleted / totalItems) * 100 : 0;
   document.getElementById('overall-bar').style.width = pct + '%';
-  document.getElementById('overall-label').textContent = `${totalCompleted} / ${totalItems} items`;
+  document.getElementById('overall-label').textContent = `${totalCompleted} / ${totalItems} artículos`;
 
   grid.innerHTML = '';
 
   SECTIONS.forEach((section, idx) => {
     const config = ROOM_CONFIG[section.id];
+    const color = ROOM_COLORS[section.id];
     const completed = getSectionCompleted(idx);
     const total = section.items.length;
     const isDone = completed === total;
@@ -302,26 +425,28 @@ function renderRooms() {
     card.onclick = () => openRoom(idx);
 
     card.innerHTML = `
-      ${isDone ? '<div class="room-card-check">✓</div>' : ''}
-      <span class="room-card-emoji">${config.emoji}</span>
+      ${isDone ? '<div class="room-card-check"><span class="material-symbols-rounded">check</span></div>' : ''}
+      <div class="room-card-icon" style="background: ${color}20; color: ${color}">
+        <span class="material-symbols-rounded">${config.icon}</span>
+      </div>
       <div class="room-card-name">${config.shortName}</div>
       <div class="room-card-count">${completed} / ${total}</div>
       <div class="room-card-progress">
-        <div class="room-card-progress-bar" style="width: ${(completed / total) * 100}%"></div>
+        <div class="room-card-progress-bar" style="width: ${(completed / total) * 100}%; background: ${color}"></div>
       </div>
     `;
 
     grid.appendChild(card);
   });
 
-  // Show "Finish All" button if all sections have at least some items done
+  // Botón "Terminar" si todas las secciones están completas
   const allDone = SECTIONS.every((_, i) => isSectionCompleted(i));
   let finishBtn = document.getElementById('btn-finish-all');
   if (!finishBtn) {
     finishBtn = document.createElement('button');
     finishBtn.id = 'btn-finish-all';
     finishBtn.className = 'btn-finish-all' + (allDone ? '' : ' hidden');
-    finishBtn.textContent = '🏆 Finish Inspection';
+    finishBtn.innerHTML = '<span class="material-symbols-rounded">emoji_events</span> Terminar Inspección';
     finishBtn.onclick = showExport;
     grid.parentElement.appendChild(finishBtn);
   } else {
@@ -331,7 +456,7 @@ function renderRooms() {
 
 function openRoom(sectionIdx) {
   currentSectionIndex = sectionIdx;
-  // Find first incomplete item, or start from 0
+  // Encontrar primer artículo incompleto
   const section = SECTIONS[sectionIdx];
   let startIdx = 0;
   for (let i = 0; i < section.items.length; i++) {
@@ -347,7 +472,7 @@ function openRoom(sectionIdx) {
 }
 
 // ══════════════════════════════════════════
-// STEP 3: ITEM INSPECTION (ONE AT A TIME)
+// PASO 3: INSPECCIÓN DE ARTÍCULO (UNO A LA VEZ)
 // ══════════════════════════════════════════
 
 function renderItem() {
@@ -356,21 +481,25 @@ function renderItem() {
   const key = `${section.id}-${currentItemIndex}`;
   const data = inspectionData[key] || {};
   const names = getItemNames(item.name);
+  const color = ROOM_COLORS[section.id];
 
-  // Progress bar
+  // Barra de progreso
   const pct = ((currentItemIndex + 1) / section.items.length) * 100;
   document.getElementById('item-progress-bar').style.width = pct + '%';
   document.getElementById('item-count').textContent = `${currentItemIndex + 1}/${section.items.length}`;
 
-  // Area
+  // Área
   document.getElementById('item-area').textContent = item.area;
 
-  // Item visual
-  document.getElementById('item-emoji').textContent = getItemEmoji(item.name);
-  document.getElementById('item-name').textContent = names.en;
-  document.getElementById('item-name-es').textContent = names.es;
+  // Icono y nombre del artículo
+  const iconName = getItemIcon(item.name);
+  document.getElementById('item-icon').textContent = iconName;
+  document.getElementById('item-icon-wrap').style.background = color + '18';
+  document.getElementById('item-icon-wrap').style.color = color;
+  document.getElementById('item-name').textContent = names.es;
+  document.getElementById('item-name-en').textContent = names.en;
 
-  // Status buttons — highlight selected
+  // Botones de estado — resaltar seleccionado
   document.querySelectorAll('.status-btn').forEach(btn => {
     btn.classList.remove('selected', 'just-selected');
   });
@@ -380,20 +509,20 @@ function renderItem() {
     if (sel) sel.classList.add('selected');
   }
 
-  // Quantity
+  // Cantidad
   const qty = data.qty !== undefined ? data.qty : item.qty;
   document.getElementById('qty-value').textContent = qty;
 
-  // Photos
+  // Fotos
   renderPhotos(key);
 
-  // Notes
+  // Notas
   const notesArea = document.getElementById('notes-area');
   const notesInput = document.getElementById('notes-input');
   notesInput.value = data.observations || '';
   notesArea.style.display = data.observations ? 'block' : 'none';
 
-  // Update notes button style
+  // Estilo del botón de notas
   const notesBtn = document.querySelector('.notes-btn');
   if (data.observations) {
     notesBtn.classList.add('has-content');
@@ -401,7 +530,7 @@ function renderItem() {
     notesBtn.classList.remove('has-content');
   }
 
-  // Update camera button style
+  // Estilo del botón de cámara
   const cameraBtn = document.querySelector('.camera-btn');
   if (data.photos && data.photos.length > 0) {
     cameraBtn.classList.add('has-content');
@@ -409,16 +538,16 @@ function renderItem() {
     cameraBtn.classList.remove('has-content');
   }
 
-  // Navigation
+  // Navegación
   document.getElementById('nav-prev').className =
     'nav-prev' + (currentItemIndex === 0 ? ' hidden' : '');
 
   const navNext = document.getElementById('nav-next');
   if (currentItemIndex === section.items.length - 1) {
-    navNext.textContent = '✓ Done';
+    navNext.innerHTML = '<span class="material-symbols-rounded">check</span> Listo';
     navNext.className = 'nav-next finish';
   } else {
-    navNext.textContent = 'Next →';
+    navNext.innerHTML = 'Siguiente <span class="material-symbols-rounded">arrow_forward</span>';
     navNext.className = 'nav-next';
   }
 }
@@ -433,7 +562,7 @@ function setStatus(status) {
   }
   inspectionData[key].status = status;
 
-  // Visual feedback
+  // Retroalimentación visual
   const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing', 'new': '.new-item' };
   document.querySelectorAll('.status-btn').forEach(btn => {
     btn.classList.remove('selected', 'just-selected');
@@ -443,8 +572,8 @@ function setStatus(status) {
     sel.classList.add('selected', 'just-selected');
   }
 
-  // Brief toast feedback
-  const labels = { 'good': '✅ Good', 'damaged': '🔨 Damaged', 'missing': '❌ Missing', 'new': '🆕 New' };
+  // Mensaje toast
+  const labels = { 'good': '✅ Bueno', 'damaged': '🔨 Dañado', 'missing': '❌ Faltante', 'new': '🆕 Nuevo' };
   showToast(labels[status]);
 }
 
@@ -480,13 +609,11 @@ function handlePhoto(input) {
     compressImage(e.target.result, 800, 0.7, (compressed) => {
       inspectionData[key].photos.push(compressed);
       renderPhotos(key);
-      // Update camera button
       document.querySelector('.camera-btn').classList.add('has-content');
-      showToast('📷 Photo added');
+      showToast('📷 Foto agregada');
     });
   };
   reader.readAsDataURL(file);
-  // Reset input so same file can be re-added
   input.value = '';
 }
 
@@ -517,7 +644,7 @@ function renderPhotos(key) {
   }
   strip.innerHTML = data.photos.map((p, i) =>
     `<div class="photo-thumb">
-      <img src="${p}" alt="photo">
+      <img src="${p}" alt="foto">
       <button class="remove-photo" onclick="removePhoto('${key}', ${i})">×</button>
     </div>`
   ).join('');
@@ -571,13 +698,11 @@ function nextItem() {
     renderItem();
     window.scrollTo(0, 0);
   } else {
-    // Room complete — show celebration
     showRoomComplete();
   }
 }
 
 function backToRooms() {
-  // Save notes if we're on item screen
   if (document.getElementById('step-item').classList.contains('active')) {
     saveCurrentNotes();
   }
@@ -586,17 +711,17 @@ function backToRooms() {
 }
 
 // ══════════════════════════════════════════
-// STEP 4: ROOM COMPLETE CELEBRATION
+// PASO 4: CUARTO COMPLETADO
 // ══════════════════════════════════════════
 
 function showRoomComplete() {
   const section = SECTIONS[currentSectionIndex];
   const config = ROOM_CONFIG[section.id];
 
-  document.getElementById('room-done-title').textContent = `${config.emoji} Room Done!`;
-  document.getElementById('room-done-sub').textContent = `${config.name} completed`;
+  document.getElementById('room-done-title').textContent = '¡Cuarto Listo!';
+  document.getElementById('room-done-sub').textContent = `${config.name} completado`;
 
-  // Stats
+  // Estadísticas
   const stats = { good: 0, damaged: 0, missing: 0, new: 0, none: 0 };
   section.items.forEach((_, idx) => {
     const key = `${section.id}-${idx}`;
@@ -610,54 +735,64 @@ function showRoomComplete() {
 
   const statsEl = document.getElementById('room-done-stats');
   let statsHtml = '';
-  if (stats.good) statsHtml += `<span class="stat-pill good">✅ ${stats.good} Good</span>`;
-  if (stats.damaged) statsHtml += `<span class="stat-pill damaged">🔨 ${stats.damaged} Damaged</span>`;
-  if (stats.missing) statsHtml += `<span class="stat-pill missing">❌ ${stats.missing} Missing</span>`;
-  if (stats.new) statsHtml += `<span class="stat-pill new-item">🆕 ${stats.new} New</span>`;
-  if (stats.none) statsHtml += `<span class="stat-pill" style="background:#f3f4f6;color:#888">⏭️ ${stats.none} Skipped</span>`;
+  if (stats.good) statsHtml += `<span class="stat-pill good">✅ ${stats.good} Bueno</span>`;
+  if (stats.damaged) statsHtml += `<span class="stat-pill damaged">🔨 ${stats.damaged} Dañado</span>`;
+  if (stats.missing) statsHtml += `<span class="stat-pill missing">❌ ${stats.missing} Faltante</span>`;
+  if (stats.new) statsHtml += `<span class="stat-pill new-item">🆕 ${stats.new} Nuevo</span>`;
+  if (stats.none) statsHtml += `<span class="stat-pill" style="background:#f3f4f6;color:#888">⏭️ ${stats.none} Sin revisar</span>`;
   statsEl.innerHTML = statsHtml;
 
   showStep('step-room-done');
 }
 
 // ══════════════════════════════════════════
-// STEP 5: EXPORT
+// PASO 5: EXPORTAR
 // ══════════════════════════════════════════
 
 function showExport() {
+  stopTimer();
   showStep('step-export');
 
   const total = getTotalItems();
   const completed = getTotalCompleted();
   document.getElementById('export-summary').textContent =
-    `${inspectionInfo.location} — ${completed}/${total} items`;
+    `${inspectionInfo.location} — ${completed}/${total} artículos`;
 
-  // Review
+  // Mostrar tiempo total
+  const timerFinal = document.getElementById('timer-final');
+  const elapsed = getElapsedTime();
+  if (elapsed > 0) {
+    timerFinal.innerHTML = `<span class="material-symbols-rounded">timer</span> Tiempo total: ${formatTime(elapsed)}`;
+    inspectionInfo.duration = formatTime(elapsed);
+    inspectionInfo.durationMs = elapsed;
+  }
+
+  // Revisión
   const container = document.getElementById('review-container');
   container.innerHTML = '';
 
   SECTIONS.forEach((section) => {
     const div = document.createElement('div');
     div.className = 'review-section';
-    div.innerHTML = `<h3>${ROOM_CONFIG[section.id].emoji} ${section.name}</h3>`;
+    div.innerHTML = `<h3><span class="material-symbols-rounded">${ROOM_CONFIG[section.id].icon}</span> ${section.name}</h3>`;
 
     section.items.forEach((item, idx) => {
       const key = `${section.id}-${idx}`;
       const data = inspectionData[key] || {};
-      const emoji = getItemEmoji(item.name);
+      const iconName = getItemIcon(item.name);
       const names = getItemNames(item.name);
       const statusClass = data.status || 'none';
 
       const photos = (data.photos || []).map(p =>
-        `<img src="${p}" alt="photo">`
+        `<img src="${p}" alt="foto">`
       ).join('');
 
       div.innerHTML += `
         <div class="review-item">
-          <span class="review-item-emoji">${emoji}</span>
+          <span class="material-symbols-rounded review-item-icon">${iconName}</span>
           <div class="review-item-info">
-            <div class="review-item-name">${names.en}</div>
-            <div class="review-item-detail">${item.area} · Qty: ${data.qty !== undefined ? data.qty : item.qty}${data.observations ? ' · ' + data.observations : ''}</div>
+            <div class="review-item-name">${names.es}</div>
+            <div class="review-item-detail">${item.area} · Cant: ${data.qty !== undefined ? data.qty : item.qty}${data.observations ? ' · ' + data.observations : ''}</div>
           </div>
           <div class="review-photos">${photos}</div>
           <div class="review-status-dot ${statusClass === 'new' ? 'new-item' : statusClass}"></div>
@@ -667,18 +802,167 @@ function showExport() {
 
     container.appendChild(div);
   });
+
+  // Verificar soporte de compartir
+  checkShareSupport();
 }
 
-// ── XLSX Export ──
+// ══════════════════════════════════════════
+// WEB SHARE API
+// ══════════════════════════════════════════
+
+async function shareFiles() {
+  try {
+    showToast('⏳ Preparando archivos...');
+
+    // Generar PDF como blob
+    const pdfBlob = generatePDFBlob();
+    const fileName = `Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.pdf`;
+    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    const shareData = {
+      title: `Inspección - ${inspectionInfo.location}`,
+      text: `Reporte de inspección: ${inspectionInfo.location} (${inspectionInfo.date})`,
+      files: [pdfFile],
+    };
+
+    if (navigator.canShare && navigator.canShare(shareData)) {
+      await navigator.share(shareData);
+      showToast('✅ Compartido');
+    } else {
+      // Fallback: descargar
+      exportPDF();
+      showToast('📄 Descargado (compartir no disponible)');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      // El usuario canceló — no es error
+      exportPDF();
+      showToast('📄 PDF descargado');
+    }
+  }
+}
+
+function generatePDFBlob() {
+  const { jsPDF } = window.jspdf;
+  const doc = buildPDF(jsPDF);
+  return doc.output('blob');
+}
+
+// ── Construir PDF (reutilizado para descargar y compartir) ──
+
+function buildPDF(jsPDF) {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageW = 210;
+  const margin = 15;
+  let y = margin;
+
+  function checkPage(needed) {
+    if (y + needed > 280) {
+      doc.addPage();
+      y = margin;
+    }
+  }
+
+  // Título
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('Reporte de Inspección e Inventario', margin, y);
+  y += 10;
+
+  doc.setFontSize(11);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Ubicación: ${inspectionInfo.location}`, margin, y);
+  doc.text(`Fecha: ${inspectionInfo.date}`, margin + 80, y);
+  y += 6;
+  doc.text(`Inspector: ${inspectionInfo.auditor}`, margin, y);
+  if (inspectionInfo.duration) {
+    doc.text(`Duración: ${inspectionInfo.duration}`, margin + 80, y);
+  }
+  y += 12;
+
+  SECTIONS.forEach((section, sIdx) => {
+    if (sIdx > 0) {
+      doc.addPage();
+      y = margin;
+    }
+
+    checkPage(14);
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text(section.name, margin, y);
+    y += 8;
+
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    const colX = [margin, margin + 35, margin + 75, margin + 105, margin + 135, margin + 150];
+    doc.text('Área', colX[0], y);
+    doc.text('Artículo', colX[1], y);
+    doc.text('Estado', colX[2], y);
+    doc.text('Tipo', colX[3], y);
+    doc.text('Cant', colX[4], y);
+    doc.text('Observaciones', colX[5], y);
+    y += 2;
+    doc.setDrawColor(100);
+    doc.line(margin, y, pageW - margin, y);
+    y += 4;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(7);
+
+    section.items.forEach((item, idx) => {
+      const key = `${section.id}-${idx}`;
+      const data = inspectionData[key] || {};
+      const statusLabel = STATUS_OPTIONS.find(o => o.value === data.status);
+      const hasPhotos = data.photos && data.photos.length > 0;
+      const rowHeight = hasPhotos ? 22 : 6;
+
+      checkPage(rowHeight + 4);
+
+      doc.text(item.area, colX[0], y);
+      doc.text(item.name, colX[1], y);
+      doc.text(statusLabel ? statusLabel.label : '-', colX[2], y);
+      doc.text(item.type === 'fixed' ? 'Activo Fijo' : 'Activo Variable', colX[3], y);
+      doc.text(String(data.qty !== undefined ? data.qty : item.qty), colX[4], y);
+
+      const obs = data.observations || '';
+      if (obs) {
+        const lines = doc.splitTextToSize(obs, 30);
+        doc.text(lines, colX[5], y);
+      }
+
+      if (hasPhotos) {
+        y += 3;
+        data.photos.forEach((photo, pi) => {
+          if (pi < 3) {
+            try {
+              doc.addImage(photo, 'JPEG', colX[1] + (pi * 18), y, 16, 16);
+            } catch (e) {
+              // Omitir si la imagen no se puede agregar
+            }
+          }
+        });
+        y += 18;
+      }
+
+      y += 5;
+    });
+  });
+
+  return doc;
+}
+
+// ── Exportar XLSX ──
 
 function exportXLSX() {
   const wb = XLSX.utils.book_new();
 
   SECTIONS.forEach(section => {
     const rows = [
-      [`Location: ${inspectionInfo.location}`, '', `Date: ${inspectionInfo.date}`, '', `Auditor: ${inspectionInfo.auditor}`],
+      [`Ubicación: ${inspectionInfo.location}`, '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`],
+      inspectionInfo.duration ? [`Duración: ${inspectionInfo.duration}`] : [],
       [],
-      ['Area', 'Item', 'Status', 'Asset Type', 'Quantity', 'Observations']
+      ['Área', 'Artículo', 'Estado', 'Tipo de Activo', 'Cantidad', 'Observaciones']
     ];
 
     section.items.forEach((item, idx) => {
@@ -706,108 +990,15 @@ function exportXLSX() {
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
   });
 
-  XLSX.writeFile(wb, `Inspection_${inspectionInfo.location}_${inspectionInfo.date}.xlsx`);
-  showToast('📊 Excel downloaded');
+  XLSX.writeFile(wb, `Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.xlsx`);
+  showToast('📊 Excel descargado');
 }
 
-// ── PDF Export ──
+// ── Exportar PDF ──
 
 function exportPDF() {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const pageW = 210;
-  const margin = 15;
-  let y = margin;
-
-  function checkPage(needed) {
-    if (y + needed > 280) {
-      doc.addPage();
-      y = margin;
-    }
-  }
-
-  // Title
-  doc.setFontSize(18);
-  doc.setFont(undefined, 'bold');
-  doc.text('Inspection & Inventory Report', margin, y);
-  y += 10;
-
-  doc.setFontSize(11);
-  doc.setFont(undefined, 'normal');
-  doc.text(`Location: ${inspectionInfo.location}`, margin, y);
-  doc.text(`Date: ${inspectionInfo.date}`, margin + 80, y);
-  y += 6;
-  doc.text(`Auditor: ${inspectionInfo.auditor}`, margin, y);
-  y += 12;
-
-  SECTIONS.forEach((section, sIdx) => {
-    if (sIdx > 0) {
-      doc.addPage();
-      y = margin;
-    }
-
-    checkPage(14);
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text(section.name, margin, y);
-    y += 8;
-
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'bold');
-    const colX = [margin, margin + 35, margin + 75, margin + 105, margin + 135, margin + 150];
-    doc.text('Area', colX[0], y);
-    doc.text('Item', colX[1], y);
-    doc.text('Status', colX[2], y);
-    doc.text('Type', colX[3], y);
-    doc.text('Qty', colX[4], y);
-    doc.text('Observations', colX[5], y);
-    y += 2;
-    doc.setDrawColor(100);
-    doc.line(margin, y, pageW - margin, y);
-    y += 4;
-
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(7);
-
-    section.items.forEach((item, idx) => {
-      const key = `${section.id}-${idx}`;
-      const data = inspectionData[key] || {};
-      const statusLabel = STATUS_OPTIONS.find(o => o.value === data.status);
-      const hasPhotos = data.photos && data.photos.length > 0;
-      const rowHeight = hasPhotos ? 22 : 6;
-
-      checkPage(rowHeight + 4);
-
-      doc.text(item.area, colX[0], y);
-      doc.text(item.name, colX[1], y);
-      doc.text(statusLabel ? statusLabel.label : '-', colX[2], y);
-      doc.text(item.type === 'fixed' ? 'Fixed' : 'Variable', colX[3], y);
-      doc.text(String(data.qty !== undefined ? data.qty : item.qty), colX[4], y);
-
-      const obs = data.observations || '';
-      if (obs) {
-        const lines = doc.splitTextToSize(obs, 30);
-        doc.text(lines, colX[5], y);
-      }
-
-      if (hasPhotos) {
-        y += 3;
-        data.photos.forEach((photo, pi) => {
-          if (pi < 3) {
-            try {
-              doc.addImage(photo, 'JPEG', colX[1] + (pi * 18), y, 16, 16);
-            } catch (e) {
-              // Skip if image can't be added
-            }
-          }
-        });
-        y += 18;
-      }
-
-      y += 5;
-    });
-  });
-
-  doc.save(`Inspection_${inspectionInfo.location}_${inspectionInfo.date}.pdf`);
-  showToast('📄 PDF downloaded');
+  const doc = buildPDF(jsPDF);
+  doc.save(`Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.pdf`);
+  showToast('📄 PDF descargado');
 }

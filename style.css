@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════
-   INSPECTION APP — REDESIGNED FOR SIMPLICITY
-   Visual-first, low-literacy, mobile-first
+   APP DE INSPECCIÓN — REDISEÑADA
+   Visual-first, baja literacidad, mobile-first
+   Material Symbols icons, interfaz en español
    ══════════════════════════════════════════ */
 
 /* ── Reset & Base ── */
@@ -50,8 +51,15 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Material Symbols base ── */
+
+.material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
 /* ══════════════════════════════════════════
-   STEP 1: WELCOME SCREEN
+   PASO 1: PANTALLA DE BIENVENIDA
    ══════════════════════════════════════════ */
 
 .welcome-screen {
@@ -63,9 +71,13 @@ body {
 }
 
 .welcome-icon {
-  font-size: 4rem;
   margin-bottom: 8px;
   animation: bounceIn 0.6s ease;
+}
+
+.welcome-icon .icon-hero {
+  font-size: 4rem;
+  color: #2563eb;
 }
 
 @keyframes bounceIn {
@@ -87,7 +99,7 @@ body {
   margin-bottom: 28px;
 }
 
-/* Form card */
+/* Tarjeta de formulario */
 .form-card {
   width: 100%;
   background: #fff;
@@ -118,8 +130,14 @@ body {
 }
 
 .input-icon {
-  font-size: 1.5rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon .material-symbols-rounded {
+  font-size: 1.5rem;
+  color: #2563eb;
 }
 
 .form-group input {
@@ -137,7 +155,7 @@ body {
   color: #aab;
 }
 
-/* Start button */
+/* Botón de inicio */
 .btn-start {
   width: 100%;
   padding: 20px;
@@ -162,12 +180,12 @@ body {
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
 }
 
-.btn-start-icon {
-  font-size: 1.2rem;
+.btn-start .material-symbols-rounded {
+  font-size: 1.6rem;
 }
 
 /* ══════════════════════════════════════════
-   STEP 2: ROOM SELECT
+   PASO 2: SELECCIÓN DE CUARTO
    ══════════════════════════════════════════ */
 
 .rooms-header {
@@ -182,7 +200,41 @@ body {
   color: #1a1a2e;
 }
 
-/* Overall progress */
+/* Cronómetro */
+.timer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: #f8faff;
+  border-radius: 20px;
+  margin-bottom: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #555;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.timer-icon {
+  font-size: 1.2rem;
+  color: #2563eb;
+}
+
+.topbar-timer {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Progreso general */
 .overall-progress {
   width: 100%;
   height: 12px;
@@ -206,7 +258,7 @@ body {
   font-weight: 600;
 }
 
-/* Room grid */
+/* Grid de cuartos */
 .room-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -241,14 +293,23 @@ body {
   background: #fffbeb;
 }
 
-.room-card-emoji {
-  font-size: 2.8rem;
-  margin-bottom: 8px;
-  display: block;
+/* Icono del cuarto */
+.room-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+
+.room-card-icon .material-symbols-rounded {
+  font-size: 2rem;
 }
 
 .room-card-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #1a1a2e;
   margin-bottom: 4px;
@@ -272,8 +333,10 @@ body {
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 0.9rem;
-  font-weight: 700;
+}
+
+.room-card-check .material-symbols-rounded {
+  font-size: 1rem;
 }
 
 .room-card-progress {
@@ -286,14 +349,16 @@ body {
 
 .room-card-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #059669);
   border-radius: 3px;
   transition: width 0.4s ease;
 }
 
-/* Done all button */
+/* Botón terminar inspección */
 .btn-finish-all {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: calc(100% - 40px);
   margin: 0 20px 32px;
   padding: 20px;
@@ -313,19 +378,23 @@ body {
   transform: scale(0.97);
 }
 
+.btn-finish-all .material-symbols-rounded {
+  font-size: 1.5rem;
+}
+
 .btn-finish-all.hidden {
   display: none;
 }
 
 /* ══════════════════════════════════════════
-   STEP 3: ITEM INSPECTION (ONE AT A TIME)
+   PASO 3: INSPECCIÓN DE ARTÍCULO (UNO A LA VEZ)
    ══════════════════════════════════════════ */
 
-/* Top bar */
+/* Barra superior */
 .item-topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 14px 16px 10px;
   background: #fff;
   position: sticky;
@@ -340,14 +409,16 @@ body {
   border: none;
   background: #f0f4ff;
   border-radius: 12px;
-  font-size: 1.3rem;
-  font-weight: 700;
   color: #2563eb;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.topbar-back .material-symbols-rounded {
+  font-size: 1.3rem;
 }
 
 .topbar-back:active {
@@ -377,7 +448,7 @@ body {
   flex-shrink: 0;
 }
 
-/* Area badge */
+/* Área */
 .item-area {
   text-align: center;
   padding: 10px 16px 0;
@@ -388,16 +459,25 @@ body {
   letter-spacing: 1px;
 }
 
-/* Item display */
+/* Visual del artículo */
 .item-display {
   text-align: center;
   padding: 16px 20px 20px;
 }
 
-.item-emoji {
-  font-size: 4rem;
-  margin-bottom: 8px;
+.item-icon-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
   animation: popIn 0.3s ease;
+}
+
+.item-icon-wrap .item-icon {
+  font-size: 2.8rem;
 }
 
 @keyframes popIn {
@@ -412,13 +492,13 @@ body {
   margin-bottom: 2px;
 }
 
-.item-name-es {
+.item-name-en {
   font-size: 1rem;
   color: #888;
   font-weight: 500;
 }
 
-/* ── Status Buttons (THE CORE INTERACTION) ── */
+/* ── Botones de estado (LA INTERACCIÓN PRINCIPAL) ── */
 
 .status-grid {
   display: grid;
@@ -447,9 +527,14 @@ body {
   transform: scale(0.95);
 }
 
-.status-icon {
+.status-mat-icon {
   font-size: 2rem;
 }
+
+.status-mat-icon.good-icon { color: #10b981; }
+.status-mat-icon.damaged-icon { color: #ef4444; }
+.status-mat-icon.missing-icon { color: #f59e0b; }
+.status-mat-icon.new-icon { color: #2563eb; }
 
 .status-label {
   font-size: 1rem;
@@ -457,13 +542,13 @@ body {
   color: #1a1a2e;
 }
 
-.status-label-es {
+.status-label-en {
   font-size: 0.75rem;
   color: #888;
   font-weight: 500;
 }
 
-/* Status button colors */
+/* Colores de botones de estado */
 .status-btn.good {
   border-color: #d1fae5;
 }
@@ -504,13 +589,13 @@ body {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
-/* ── Secondary actions ── */
+/* ── Acciones secundarias ── */
 
 .item-extras {
   padding: 0 20px;
 }
 
-/* Quantity stepper */
+/* Stepper de cantidad */
 .qty-row {
   display: flex;
   align-items: center;
@@ -532,14 +617,16 @@ body {
   border: 2px solid #e2e8f0;
   border-radius: 14px;
   background: #fff;
-  font-size: 1.5rem;
-  font-weight: 700;
   color: #2563eb;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
+}
+
+.qty-btn .material-symbols-rounded {
+  font-size: 1.5rem;
 }
 
 .qty-btn:active {
@@ -555,7 +642,7 @@ body {
   text-align: center;
 }
 
-/* Extra buttons row */
+/* Fila de botones extra */
 .extras-row {
   display: flex;
   gap: 12px;
@@ -584,7 +671,7 @@ body {
   border-color: #2563eb;
 }
 
-.extra-btn span {
+.extra-btn .material-symbols-rounded {
   font-size: 1.3rem;
 }
 
@@ -595,7 +682,7 @@ body {
   color: #2563eb;
 }
 
-/* Photo strip */
+/* Tira de fotos */
 .photo-strip {
   display: flex;
   gap: 8px;
@@ -642,7 +729,7 @@ body {
   justify-content: center;
 }
 
-/* Notes area */
+/* Área de notas */
 .notes-area textarea {
   width: 100%;
   padding: 14px;
@@ -661,7 +748,7 @@ body {
   border-color: #2563eb;
 }
 
-/* Item navigation */
+/* Navegación del artículo */
 .item-nav {
   display: flex;
   gap: 12px;
@@ -679,11 +766,19 @@ body {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .nav-prev {
   background: #e5e7eb;
   color: #555;
+}
+
+.nav-prev .material-symbols-rounded {
+  font-size: 1.2rem;
 }
 
 .nav-prev:active {
@@ -694,6 +789,10 @@ body {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.nav-next .material-symbols-rounded {
+  font-size: 1.2rem;
 }
 
 .nav-next:active {
@@ -710,7 +809,7 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   STEP 4: ROOM COMPLETE CELEBRATION
+   PASO 4: CELEBRACIÓN DE CUARTO COMPLETADO
    ══════════════════════════════════════════ */
 
 .celebration {
@@ -723,8 +822,12 @@ body {
 }
 
 .celebration-icon {
-  font-size: 5rem;
   animation: celebrate 0.8s ease;
+}
+
+.celebration-icon .icon-celebrate {
+  font-size: 5rem;
+  color: #f59e0b;
 }
 
 @keyframes celebrate {
@@ -749,7 +852,7 @@ body {
 
 .celebration-stats {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
   margin-bottom: 32px;
@@ -783,6 +886,14 @@ body {
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
   transition: transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-continue .material-symbols-rounded {
+  font-size: 1.4rem;
 }
 
 .btn-continue:active {
@@ -790,8 +901,31 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   STEP 5: EXPORT
+   PASO 5: EXPORTAR
    ══════════════════════════════════════════ */
+
+/* Tiempo final */
+.timer-final {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #eff6ff;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 24px;
+}
+
+.timer-final .material-symbols-rounded {
+  font-size: 1.3rem;
+}
+
+.timer-final:empty {
+  display: none;
+}
 
 .export-buttons {
   padding: 0 20px 32px;
@@ -831,7 +965,13 @@ body {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-.btn-export span {
+.btn-export.share {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.btn-export .material-symbols-rounded {
   font-size: 1.4rem;
 }
 
@@ -845,9 +985,17 @@ body {
   font-weight: 700;
   color: #555;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-/* Review container */
+.btn-back-edit .material-symbols-rounded {
+  font-size: 1.2rem;
+}
+
+/* Contenedor de revisión */
 #review-container {
   padding: 0 20px 20px;
 }
@@ -863,6 +1011,14 @@ body {
   margin-bottom: 8px;
   border-bottom: 3px solid #2563eb;
   color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-section h3 .material-symbols-rounded {
+  font-size: 1.3rem;
+  color: #2563eb;
 }
 
 .review-item {
@@ -876,8 +1032,9 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
-.review-item-emoji {
-  font-size: 1.5rem;
+.review-item-icon {
+  font-size: 1.4rem;
+  color: #555;
   flex-shrink: 0;
 }
 
@@ -928,7 +1085,7 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   TOAST NOTIFICATIONS
+   NOTIFICACIONES TOAST
    ══════════════════════════════════════════ */
 
 .toast {
@@ -953,7 +1110,7 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   VALIDATION ERROR
+   ERROR DE VALIDACIÓN
    ══════════════════════════════════════════ */
 
 .form-group.error {
@@ -981,12 +1138,17 @@ body {
     padding: 14px 8px;
   }
 
-  .status-icon {
+  .status-mat-icon {
     font-size: 1.6rem;
   }
 
-  .item-emoji {
-    font-size: 3rem;
+  .item-icon-wrap {
+    width: 72px;
+    height: 72px;
+  }
+
+  .item-icon-wrap .item-icon {
+    font-size: 2.2rem;
   }
 
   .item-name {
@@ -998,23 +1160,28 @@ body {
     padding: 12px 14px 32px;
   }
 
-  .room-card-emoji {
-    font-size: 2.2rem;
+  .room-card-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .room-card-icon .material-symbols-rounded {
+    font-size: 1.6rem;
   }
 }
 
-/* Larger phones */
+/* Teléfonos grandes */
 @media (min-width: 414px) {
   .status-btn {
     padding: 22px 14px;
   }
 
-  .status-icon {
+  .status-mat-icon {
     font-size: 2.2rem;
   }
 }
 
-/* Prevent zoom on input focus (iOS) */
+/* Prevenir zoom al enfocar input (iOS) */
 @media screen and (max-width: 768px) {
   input, select, textarea {
     font-size: 16px !important;
@@ -1022,7 +1189,7 @@ body {
 }
 
 /* ══════════════════════════════════════════
-   STATUS TRANSITION ANIMATION
+   ANIMACIONES DE TRANSICIÓN
    ══════════════════════════════════════════ */
 
 @keyframes statusPop {
@@ -1033,10 +1200,4 @@ body {
 
 .status-btn.just-selected {
   animation: statusPop 0.3s ease;
-}
-
-/* Confetti-like dots on celebration */
-@keyframes confetti {
-  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
-  100% { opacity: 0; transform: translateY(-100px) rotate(360deg); }
 }
