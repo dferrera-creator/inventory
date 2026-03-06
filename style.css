@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   APP DE INSPECCIÓN — REDISEÑADA
+   APP DE INSPECCIÓN — REDISEÑADA v2
    Visual-first, baja literacidad, mobile-first
    Material Symbols icons, interfaz en español
    ══════════════════════════════════════════ */
@@ -125,10 +125,6 @@ body {
   border-color: #2563eb;
 }
 
-.form-group:last-child {
-  margin-bottom: 0;
-}
-
 .input-icon {
   flex-shrink: 0;
   display: flex;
@@ -153,6 +149,81 @@ body {
 
 .form-group input::placeholder {
   color: #aab;
+}
+
+/* ── Stepper de recámaras/baños ── */
+
+.room-count-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 2px solid #f0f4ff;
+}
+
+.room-count-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #f8faff;
+  border-radius: 14px;
+  padding: 14px 8px;
+  border: 2px solid #e8edf5;
+}
+
+.room-count-icon {
+  display: flex;
+  align-items: center;
+}
+
+.room-count-icon .material-symbols-rounded {
+  font-size: 1.6rem;
+  color: #2563eb;
+}
+
+.room-count-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #555;
+}
+
+.room-count-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-count-btn {
+  width: 36px;
+  height: 36px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #2563eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.room-count-btn .material-symbols-rounded {
+  font-size: 1.2rem;
+}
+
+.room-count-btn:active {
+  background: #dbeafe;
+  transform: scale(0.92);
+}
+
+.room-count-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  min-width: 28px;
+  text-align: center;
 }
 
 /* Botón de inicio */
@@ -463,6 +534,7 @@ body {
 .item-display {
   text-align: center;
   padding: 16px 20px 20px;
+  position: relative;
 }
 
 .item-icon-wrap {
@@ -496,6 +568,50 @@ body {
   font-size: 1rem;
   color: #888;
   font-weight: 500;
+}
+
+/* Hint / descripción breve */
+.item-hint {
+  font-size: 0.82rem;
+  color: #7c8db0;
+  font-weight: 500;
+  margin-top: 6px;
+  padding: 4px 12px;
+  background: #f0f4ff;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.item-hint:empty {
+  display: none;
+}
+
+/* Botón de ayuda (?) */
+.help-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  background: #fff;
+  color: #2563eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.help-btn .material-symbols-rounded {
+  font-size: 1.3rem;
+}
+
+.help-btn:active {
+  background: #dbeafe;
+  transform: scale(0.92);
 }
 
 /* ── Botones de estado (LA INTERACCIÓN PRINCIPAL) ── */
@@ -1085,6 +1201,105 @@ body {
 }
 
 /* ══════════════════════════════════════════
+   MODAL DE AYUDA
+   ══════════════════════════════════════════ */
+
+.help-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  padding: 24px;
+}
+
+.help-modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.help-modal {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  animation: modalIn 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes modalIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.help-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f0f4ff;
+  border-radius: 50%;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-modal-close .material-symbols-rounded {
+  font-size: 1.1rem;
+}
+
+.help-modal-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: #f0f4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.help-modal-icon-wrap .help-modal-icon {
+  font-size: 2rem;
+  color: #2563eb;
+}
+
+.help-modal-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.help-modal-hint {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.help-modal-details {
+  font-size: 0.85rem;
+  color: #888;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════
    NOTIFICACIONES TOAST
    ══════════════════════════════════════════ */
 
@@ -1167,6 +1382,10 @@ body {
 
   .room-card-icon .material-symbols-rounded {
     font-size: 1.6rem;
+  }
+
+  .room-count-row {
+    flex-direction: column;
   }
 }
 

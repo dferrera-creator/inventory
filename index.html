@@ -33,6 +33,36 @@
             <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
             <input type="text" id="auditor" placeholder="Tu nombre..." autocomplete="off">
           </div>
+
+          <!-- Número de recámaras y baños -->
+          <div class="room-count-row">
+            <div class="room-count-item">
+              <div class="room-count-icon"><span class="material-symbols-rounded">bed</span></div>
+              <span class="room-count-label">Recámaras</span>
+              <div class="room-count-stepper">
+                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bedrooms', -1)">
+                  <span class="material-symbols-rounded">remove</span>
+                </button>
+                <span class="room-count-value" id="num-bedrooms">2</span>
+                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bedrooms', 1)">
+                  <span class="material-symbols-rounded">add</span>
+                </button>
+              </div>
+            </div>
+            <div class="room-count-item">
+              <div class="room-count-icon"><span class="material-symbols-rounded">shower</span></div>
+              <span class="room-count-label">Baños</span>
+              <div class="room-count-stepper">
+                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bathrooms', -1)">
+                  <span class="material-symbols-rounded">remove</span>
+                </button>
+                <span class="room-count-value" id="num-bathrooms">2</span>
+                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bathrooms', 1)">
+                  <span class="material-symbols-rounded">add</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button class="btn-start" onclick="startInspection()">
@@ -82,6 +112,10 @@
         </div>
         <div class="item-name" id="item-name">Estufa</div>
         <div class="item-name-en" id="item-name-en">Stove</div>
+        <div class="item-hint" id="item-hint">Quemadores, perillas, limpieza</div>
+        <button class="help-btn" onclick="showHelpModal()" title="Más información">
+          <span class="material-symbols-rounded">help</span>
+        </button>
       </div>
 
       <!-- Botones de estado (LA ACCIÓN PRINCIPAL) -->
@@ -183,6 +217,21 @@
         <button class="btn-back-edit" onclick="backToRooms()">
           <span class="material-symbols-rounded">edit</span> Editar
         </button>
+      </div>
+    </div>
+
+    <!-- ══════════ MODAL DE AYUDA ══════════ -->
+    <div class="help-modal-overlay" id="help-modal" onclick="closeHelpModal()">
+      <div class="help-modal" onclick="event.stopPropagation()">
+        <button class="help-modal-close" onclick="closeHelpModal()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="help-modal-icon-wrap">
+          <span class="material-symbols-rounded help-modal-icon" id="help-modal-icon">inventory_2</span>
+        </div>
+        <h3 class="help-modal-name" id="help-modal-name">Artículo</h3>
+        <p class="help-modal-hint" id="help-modal-hint">Descripción</p>
+        <p class="help-modal-details" id="help-modal-details">Detalles</p>
       </div>
     </div>
 

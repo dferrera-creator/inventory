@@ -1,7 +1,8 @@
 // ══════════════════════════════════════════
-// INSPECCIÓN — APP REDISEÑADA
+// INSPECCIÓN — APP REDISEÑADA v2
 // Iconos Material Symbols, interfaz en español,
-// cronómetro, Web Share API
+// cronómetro, Web Share API, cuartos dinámicos,
+// descripciones de artículos, exportes mejorados
 // ══════════════════════════════════════════
 
 // ── Mapeo de iconos Material Symbols por artículo ──
@@ -9,8 +10,12 @@
 const ITEM_ICONS = {
   'Estufa': 'local_fire_department',
   'Stove': 'local_fire_department',
+  'Parrillas estufa': 'grid_on',
+  'Stove grates': 'grid_on',
   'Refrigerador': 'kitchen',
   'Refrigerator': 'kitchen',
+  'Frigobar': 'kitchen',
+  'Mini fridge': 'kitchen',
   'Microondas': 'microwave',
   'Microwave': 'microwave',
   'Horno': 'oven_gen',
@@ -19,6 +24,12 @@ const ITEM_ICONS = {
   'Range hood': 'air',
   'Lavavajillas': 'dishwasher_gen',
   'Dishwasher': 'dishwasher_gen',
+  'Licuadora': 'blender',
+  'Blender': 'blender',
+  'Cafetera': 'coffee',
+  'Coffee maker': 'coffee',
+  'Tostador': 'breakfast_dining',
+  'Toaster': 'breakfast_dining',
   'Fregadero': 'water_drop',
   'Sink': 'water_drop',
   'Tarja': 'countertops',
@@ -27,12 +38,77 @@ const ITEM_ICONS = {
   'Counter bar': 'countertops',
   'Sillas de barra': 'chair',
   'Bar stools': 'chair',
-  'Cafetera': 'coffee',
-  'Coffee maker': 'coffee',
-  'Tostador': 'breakfast_dining',
-  'Toaster': 'breakfast_dining',
-  'Licuadora': 'blender',
-  'Blender': 'blender',
+  'Bote de basura': 'delete',
+  'Trash can': 'delete',
+  'Comal': 'skillet',
+  'Griddle': 'skillet',
+  'Salero / pimentero': 'lunch_dining',
+  'Salt & pepper': 'lunch_dining',
+  'Escurridor': 'filter_alt',
+  'Dish rack': 'filter_alt',
+  'Manteles': 'table_restaurant',
+  'Tablecloths': 'table_restaurant',
+  'Servilletero': 'note',
+  'Napkin holder': 'note',
+  'Tapetes': 'grid_on',
+  'Placemats': 'grid_on',
+  'Tapa de microondas': 'microwave',
+  'Microwave cover': 'microwave',
+  'Destapa corcho': 'liquor',
+  'Corkscrew': 'liquor',
+  'Abrelatas': 'build',
+  'Can opener': 'build',
+  'Cuchara sopera': 'flatware',
+  'Soup spoon': 'flatware',
+  'Cuchara cafetera': 'coffee',
+  'Coffee spoon': 'coffee',
+  'Tenedor': 'flatware',
+  'Fork': 'flatware',
+  'Cuchillo comedor': 'flatware',
+  'Dinner knife': 'flatware',
+  'Cuchillo cocina': 'flatware',
+  'Kitchen knife': 'flatware',
+  'Cuchillo carne': 'flatware',
+  'Steak knife': 'flatware',
+  'Exprimidor limones': 'water_lux',
+  'Lemon squeezer': 'water_lux',
+  'Cucharones / palas': 'flatware',
+  'Ladles / spatulas': 'flatware',
+  'Organizador de cubiertos': 'flatware',
+  'Cutlery organizer': 'flatware',
+  'Ollas con tapa': 'skillet',
+  'Pots with lids': 'skillet',
+  'Sartenes': 'skillet',
+  'Skillets': 'skillet',
+  'Tabla para picar': 'carpenter',
+  'Cutting board': 'carpenter',
+  'Accesorio vaporera': 'cooking',
+  'Steamer accessory': 'cooking',
+  'Bowl ensaladera': 'ramen_dining',
+  'Salad bowl': 'ramen_dining',
+  'Jarras': 'local_bar',
+  'Pitchers': 'local_bar',
+  'Base cosas calientes': 'local_fire_department',
+  'Trivet': 'local_fire_department',
+  'Base servitoallas': 'dry',
+  'Towel holder': 'dry',
+  'Plato extendido chico': 'dining',
+  'Small plate': 'dining',
+  'Plato extendido mediano': 'dining',
+  'Medium plate': 'dining',
+  'Plato extendido grande': 'dining',
+  'Large plate': 'dining',
+  'Plato hondo': 'ramen_dining',
+  'Deep plate': 'ramen_dining',
+  'Vaso chico': 'local_bar',
+  'Small glass': 'local_bar',
+  'Vaso mediano': 'local_bar',
+  'Medium glass': 'local_bar',
+  'Tasa': 'coffee',
+  'Mug': 'coffee',
+  'Copas': 'wine_bar',
+  'Wine glasses': 'wine_bar',
+  'Copas de vino': 'wine_bar',
   'Utensilios': 'flatware',
   'Utensils set': 'flatware',
   'Vajilla': 'dining',
@@ -41,8 +117,6 @@ const ITEM_ICONS = {
   'Glasses set': 'local_bar',
   'Ollas y sartenes': 'skillet',
   'Pots & pans': 'skillet',
-  'Bote de basura': 'delete',
-  'Trash can': 'delete',
   'Sofá': 'weekend',
   'Sofa': 'weekend',
   'Mesa de centro': 'table',
@@ -63,6 +137,8 @@ const ITEM_ICONS = {
   'Dining chairs': 'chair',
   'Centro de mesa': 'local_florist',
   'Centerpiece': 'local_florist',
+  'Adornos': 'local_florist',
+  'Decorations': 'local_florist',
   'Mesa exterior': 'deck',
   'Outdoor table': 'deck',
   'Sillas exteriores': 'chair',
@@ -75,6 +151,10 @@ const ITEM_ICONS = {
   'King bed': 'king_bed',
   'Cama queen': 'queen_bed',
   'Queen bed': 'queen_bed',
+  'Cama individual': 'single_bed',
+  'Twin bed': 'single_bed',
+  'Cama': 'bed',
+  'Bed': 'bed',
   'Colchón': 'bed',
   'Mattress': 'bed',
   'Ropa de cama': 'bedroom_parent',
@@ -128,100 +208,106 @@ const ROOM_COLORS = {
   'bathrooms': '#06b6d4',
 };
 
-// ── Plantilla de datos de inspección ──
+// ── Plantillas de artículos con hints y subcategorías ──
 
-const SECTIONS = [
-  {
-    id: 'kitchen-living-terrace',
-    name: 'Cocina / Sala / Terraza',
-    items: [
-      { area: 'Cocina', name: 'Estufa / Stove', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Refrigerador / Refrigerator', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Microondas / Microwave', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Horno / Oven', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Campana extractora / Range hood', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Lavavajillas / Dishwasher', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Fregadero / Sink', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Tarja / Counter sink', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Barra / Counter bar', type: 'fixed', qty: 1 },
-      { area: 'Cocina', name: 'Sillas de barra / Bar stools', type: 'variable', qty: 3 },
-      { area: 'Cocina', name: 'Cafetera / Coffee maker', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Tostador / Toaster', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Licuadora / Blender', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Utensilios / Utensils set', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Vajilla / Dinnerware set', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Vasos / Glasses set', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Ollas y sartenes / Pots & pans', type: 'variable', qty: 1 },
-      { area: 'Cocina', name: 'Bote de basura / Trash can', type: 'variable', qty: 1 },
-      { area: 'Sala', name: 'Sofá / Sofa', type: 'fixed', qty: 1 },
-      { area: 'Sala', name: 'Mesa de centro / Coffee table', type: 'fixed', qty: 1 },
-      { area: 'Sala', name: 'Televisión / TV', type: 'fixed', qty: 1 },
-      { area: 'Sala', name: 'Mueble de TV / TV stand', type: 'fixed', qty: 1 },
-      { area: 'Sala', name: 'Lámpara de piso / Floor lamp', type: 'variable', qty: 1 },
-      { area: 'Sala', name: 'Cojines decorativos / Throw pillows', type: 'variable', qty: 4 },
-      { area: 'Sala', name: 'Cortinas / Curtains', type: 'fixed', qty: 1 },
-      { area: 'Sala', name: 'Mesa de comedor / Dining table', type: 'fixed', qty: 1 },
-      { area: 'Sala', name: 'Sillas de comedor / Dining chairs', type: 'fixed', qty: 4 },
-      { area: 'Sala', name: 'Centro de mesa / Centerpiece', type: 'variable', qty: 1 },
-      { area: 'Terraza', name: 'Mesa exterior / Outdoor table', type: 'fixed', qty: 1 },
-      { area: 'Terraza', name: 'Sillas exteriores / Outdoor chairs', type: 'fixed', qty: 2 },
-      { area: 'Terraza', name: 'Sombrilla / Umbrella', type: 'variable', qty: 1 },
-      { area: 'Terraza', name: 'Macetas / Planters', type: 'variable', qty: 2 },
-    ]
-  },
-  {
-    id: 'bedrooms',
-    name: 'Recámaras',
-    items: [
-      { area: 'Recámara principal', name: 'Cama king / King bed', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Colchón / Mattress', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Ropa de cama / Bedding set', type: 'variable', qty: 1 },
-      { area: 'Recámara principal', name: 'Almohadas / Pillows', type: 'variable', qty: 4 },
-      { area: 'Recámara principal', name: 'Buró izquierdo / Left nightstand', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Buró derecho / Right nightstand', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Lámpara de buró / Nightstand lamp', type: 'variable', qty: 2 },
-      { area: 'Recámara principal', name: 'Clóset / Closet', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Ganchos / Hangers', type: 'variable', qty: 10 },
-      { area: 'Recámara principal', name: 'Televisión / TV', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Cortinas / Curtains', type: 'fixed', qty: 1 },
-      { area: 'Recámara principal', name: 'Espejo / Mirror', type: 'fixed', qty: 1 },
-      { area: 'Recámara 2', name: 'Cama queen / Queen bed', type: 'fixed', qty: 1 },
-      { area: 'Recámara 2', name: 'Colchón / Mattress', type: 'fixed', qty: 1 },
-      { area: 'Recámara 2', name: 'Ropa de cama / Bedding set', type: 'variable', qty: 1 },
-      { area: 'Recámara 2', name: 'Almohadas / Pillows', type: 'variable', qty: 2 },
-      { area: 'Recámara 2', name: 'Buró / Nightstand', type: 'fixed', qty: 1 },
-      { area: 'Recámara 2', name: 'Lámpara de buró / Nightstand lamp', type: 'variable', qty: 1 },
-      { area: 'Recámara 2', name: 'Clóset / Closet', type: 'fixed', qty: 1 },
-      { area: 'Recámara 2', name: 'Ganchos / Hangers', type: 'variable', qty: 10 },
-      { area: 'Recámara 2', name: 'Cortinas / Curtains', type: 'fixed', qty: 1 },
-    ]
-  },
-  {
-    id: 'bathrooms',
-    name: 'Baños',
-    items: [
-      { area: 'Baño principal', name: 'Inodoro / Toilet', type: 'fixed', qty: 1 },
-      { area: 'Baño principal', name: 'Lavabo / Sink', type: 'fixed', qty: 1 },
-      { area: 'Baño principal', name: 'Regadera / Shower', type: 'fixed', qty: 1 },
-      { area: 'Baño principal', name: 'Espejo / Mirror', type: 'fixed', qty: 1 },
-      { area: 'Baño principal', name: 'Toallero / Towel rack', type: 'fixed', qty: 1 },
-      { area: 'Baño principal', name: 'Toallas / Towels', type: 'variable', qty: 2 },
-      { area: 'Baño principal', name: 'Cortina de baño / Shower curtain', type: 'variable', qty: 1 },
-      { area: 'Baño principal', name: 'Tapete de baño / Bath mat', type: 'variable', qty: 1 },
-      { area: 'Baño principal', name: 'Bote de basura / Trash can', type: 'variable', qty: 1 },
-      { area: 'Baño principal', name: 'Portarrollos / Toilet paper holder', type: 'fixed', qty: 1 },
-      { area: 'Baño 2', name: 'Inodoro / Toilet', type: 'fixed', qty: 1 },
-      { area: 'Baño 2', name: 'Lavabo / Sink', type: 'fixed', qty: 1 },
-      { area: 'Baño 2', name: 'Regadera / Shower', type: 'fixed', qty: 1 },
-      { area: 'Baño 2', name: 'Espejo / Mirror', type: 'fixed', qty: 1 },
-      { area: 'Baño 2', name: 'Toallero / Towel rack', type: 'fixed', qty: 1 },
-      { area: 'Baño 2', name: 'Toallas / Towels', type: 'variable', qty: 2 },
-      { area: 'Baño 2', name: 'Cortina de baño / Shower curtain', type: 'variable', qty: 1 },
-      { area: 'Baño 2', name: 'Tapete de baño / Bath mat', type: 'variable', qty: 1 },
-      { area: 'Baño 2', name: 'Bote de basura / Trash can', type: 'variable', qty: 1 },
-      { area: 'Baño 2', name: 'Portarrollos / Toilet paper holder', type: 'fixed', qty: 1 },
-    ]
-  }
+const KITCHEN_ITEMS = [
+  { sub: 'Electrodomésticos', name: 'Estufa / Stove', type: 'fixed', qty: 1, hint: 'Quemadores, perillas, limpieza' },
+  { sub: 'Electrodomésticos', name: 'Parrillas estufa / Stove grates', type: 'fixed', qty: 1, hint: 'Completas, sin grasa acumulada' },
+  { sub: 'Electrodomésticos', name: 'Campana extractora / Range hood', type: 'fixed', qty: 1, hint: 'Enciende, filtros, succión' },
+  { sub: 'Electrodomésticos', name: 'Horno / Oven', type: 'fixed', qty: 1, hint: 'Calienta, puerta cierra bien' },
+  { sub: 'Electrodomésticos', name: 'Microondas / Microwave', type: 'fixed', qty: 1, hint: 'Funciona, plato giratorio, limpio' },
+  { sub: 'Electrodomésticos', name: 'Licuadora / Blender', type: 'variable', qty: 1, hint: 'Motor, vaso, tapa, cuchillas' },
+  { sub: 'Electrodomésticos', name: 'Cafetera / Coffee maker', type: 'variable', qty: 1, hint: 'Funciona, limpia, completa' },
+  { sub: 'Electrodomésticos', name: 'Lavavajillas / Dishwasher', type: 'fixed', qty: 1, hint: 'Ciclo completo, sin fugas' },
+  { sub: 'Electrodomésticos', name: 'Refrigerador / Refrigerator', type: 'fixed', qty: 1, hint: 'Enfría, empaque puerta, interior' },
+  { sub: 'Electrodomésticos', name: 'Frigobar / Mini fridge', type: 'fixed', qty: 0, hint: 'Enfría, limpio, empaque' },
+  { sub: 'Accesorios', name: 'Comal / Griddle', type: 'variable', qty: 0, hint: 'Sin daño, antiadherente' },
+  { sub: 'Accesorios', name: 'Salero / pimentero / Salt & pepper', type: 'variable', qty: 0, hint: 'Completos, funcionan' },
+  { sub: 'Accesorios', name: 'Escurridor / Dish rack', type: 'variable', qty: 1, hint: 'Completo, limpio' },
+  { sub: 'Accesorios', name: 'Manteles / Tablecloths', type: 'variable', qty: 0, hint: 'Limpios, sin manchas' },
+  { sub: 'Accesorios', name: 'Servilletero / Napkin holder', type: 'variable', qty: 1, hint: 'Presente, buen estado' },
+  { sub: 'Accesorios', name: 'Tapetes / Placemats', type: 'variable', qty: 0, hint: 'Limpios, cantidad correcta' },
+  { sub: 'Accesorios', name: 'Tapa de microondas / Microwave cover', type: 'variable', qty: 0, hint: 'Presente, sin grietas' },
+  { sub: 'Utensilios', name: 'Destapa corcho / Corkscrew', type: 'variable', qty: 0, hint: 'Funciona correctamente' },
+  { sub: 'Utensilios', name: 'Abrelatas / Can opener', type: 'variable', qty: 0, hint: 'Funciona correctamente' },
+  { sub: 'Utensilios', name: 'Cuchara sopera / Soup spoon', type: 'variable', qty: 8, hint: 'Cantidad y estado' },
+  { sub: 'Utensilios', name: 'Cuchara cafetera / Coffee spoon', type: 'variable', qty: 8, hint: 'Cantidad y estado' },
+  { sub: 'Utensilios', name: 'Tenedor / Fork', type: 'variable', qty: 16, hint: 'Postre + comedor, cantidad' },
+  { sub: 'Utensilios', name: 'Cuchillo comedor / Dinner knife', type: 'variable', qty: 8, hint: 'Cantidad y filo' },
+  { sub: 'Utensilios', name: 'Cuchillo cocina / Kitchen knife', type: 'variable', qty: 8, hint: 'Filo, mango firme' },
+  { sub: 'Utensilios', name: 'Cuchillo carne / Steak knife', type: 'variable', qty: 8, hint: 'Cantidad y filo' },
+  { sub: 'Utensilios', name: 'Exprimidor limones / Lemon squeezer', type: 'variable', qty: 0, hint: 'Funciona, limpio' },
+  { sub: 'Utensilios', name: 'Cucharones / palas / Ladles / spatulas', type: 'variable', qty: 6, hint: 'Completos, buen estado' },
+  { sub: 'Utensilios', name: 'Organizador de cubiertos / Cutlery organizer', type: 'variable', qty: 1, hint: 'Completo, limpio' },
+  { sub: 'Utensilios', name: 'Bote de basura / Trash can', type: 'variable', qty: 1, hint: 'Con tapa, limpio' },
+  { sub: 'Loza', name: 'Ollas con tapa / Pots with lids', type: 'variable', qty: 4, hint: 'Tapas completas, asas firmes' },
+  { sub: 'Loza', name: 'Sartenes / Skillets', type: 'variable', qty: 3, hint: 'Antiadherente, mangos firmes' },
+  { sub: 'Loza', name: 'Tabla para picar / Cutting board', type: 'variable', qty: 3, hint: 'Limpia, sin grietas profundas' },
+  { sub: 'Loza', name: 'Accesorio vaporera / Steamer accessory', type: 'variable', qty: 1, hint: 'Completo, buen estado' },
+  { sub: 'Loza', name: 'Bowl ensaladera / Salad bowl', type: 'variable', qty: 0, hint: 'Sin grietas, limpio' },
+  { sub: 'Loza', name: 'Jarras / Pitchers', type: 'variable', qty: 0, hint: 'Sin grietas, tapa' },
+  { sub: 'Loza', name: 'Base cosas calientes / Trivet', type: 'variable', qty: 0, hint: 'Presente, buen estado' },
+  { sub: 'Loza', name: 'Base servitoallas / Towel holder', type: 'variable', qty: 0, hint: 'Firme, con toallas' },
+  { sub: 'Vajilla', name: 'Plato extendido chico / Small plate', type: 'variable', qty: 7, hint: 'Cantidad, sin despostillados' },
+  { sub: 'Vajilla', name: 'Plato extendido mediano / Medium plate', type: 'variable', qty: 0, hint: 'Cantidad, sin despostillados' },
+  { sub: 'Vajilla', name: 'Plato extendido grande / Large plate', type: 'variable', qty: 8, hint: 'Cantidad, sin despostillados' },
+  { sub: 'Vajilla', name: 'Plato hondo / Deep plate', type: 'variable', qty: 7, hint: 'Cantidad, sin despostillados' },
+  { sub: 'Vajilla', name: 'Vaso chico / Small glass', type: 'variable', qty: 11, hint: 'Sin grietas, cantidad' },
+  { sub: 'Vajilla', name: 'Vaso mediano / Medium glass', type: 'variable', qty: 8, hint: 'Sin grietas, cantidad' },
+  { sub: 'Vajilla', name: 'Tasa / Mug', type: 'variable', qty: 6, hint: 'Sin grietas, asas firmes' },
+  { sub: 'Vajilla', name: 'Copas / Wine glasses', type: 'variable', qty: 8, hint: 'Sin grietas, cantidad' },
+  { sub: 'Vajilla', name: 'Copas de vino / Wine glasses', type: 'variable', qty: 0, hint: 'Sin grietas, cantidad' },
+];
+
+const LIVING_ITEMS = [
+  { sub: 'Sala', name: 'Sofá / Sofa', type: 'fixed', qty: 1, hint: 'Cojines, tela, estructura firme' },
+  { sub: 'Sala', name: 'Mesa de centro / Coffee table', type: 'fixed', qty: 1, hint: 'Superficie, patas, estable' },
+  { sub: 'Sala', name: 'Televisión / TV', type: 'fixed', qty: 1, hint: 'Enciende, imagen, control remoto' },
+  { sub: 'Sala', name: 'Mueble de TV / TV stand', type: 'fixed', qty: 1, hint: 'Puertas, cajones, estable' },
+  { sub: 'Sala', name: 'Lámpara de piso / Floor lamp', type: 'variable', qty: 1, hint: 'Enciende, foco, estable' },
+  { sub: 'Sala', name: 'Cojines decorativos / Throw pillows', type: 'variable', qty: 4, hint: 'Cantidad, limpieza' },
+  { sub: 'Sala', name: 'Cortinas / Curtains', type: 'fixed', qty: 1, hint: 'Riel, tela, blackout' },
+];
+
+const DINING_ITEMS = [
+  { sub: 'Comedor', name: 'Mesa de comedor / Dining table', type: 'fixed', qty: 1, hint: 'Superficie, patas, estable' },
+  { sub: 'Comedor', name: 'Sillas de comedor / Dining chairs', type: 'fixed', qty: 4, hint: 'Estables, cantidad, sin daños' },
+  { sub: 'Comedor', name: 'Centro de mesa / Centerpiece', type: 'variable', qty: 1, hint: 'Decoración presente' },
+  { sub: 'Comedor', name: 'Adornos / Decorations', type: 'variable', qty: 0, hint: 'Presentes, buen estado' },
+];
+
+const TERRACE_ITEMS = [
+  { sub: 'Terraza', name: 'Mesa exterior / Outdoor table', type: 'fixed', qty: 1, hint: 'Superficie, estable, limpia' },
+  { sub: 'Terraza', name: 'Sillas exteriores / Outdoor chairs', type: 'fixed', qty: 2, hint: 'Estables, cantidad correcta' },
+  { sub: 'Terraza', name: 'Sombrilla / Umbrella', type: 'variable', qty: 1, hint: 'Abre/cierra, tela, base firme' },
+  { sub: 'Terraza', name: 'Macetas / Planters', type: 'variable', qty: 2, hint: 'Plantas vivas, sin grietas' },
+];
+
+const BEDROOM_TEMPLATE = [
+  { sub: 'Dormitorio', name: 'Cama / Bed', type: 'fixed', qty: 1, hint: 'Base, cabecera, estado general' },
+  { sub: 'Dormitorio', name: 'Colchón / Mattress', type: 'fixed', qty: 1, hint: 'Manchas, firmeza, limpieza' },
+  { sub: 'Dormitorio', name: 'Ropa de cama / Bedding set', type: 'variable', qty: 1, hint: 'Sábanas, cobija, colcha completa' },
+  { sub: 'Dormitorio', name: 'Almohadas / Pillows', type: 'variable', qty: 2, hint: 'Cantidad, limpias, firmes' },
+  { sub: 'Mobiliario', name: 'Buró / Nightstand', type: 'fixed', qty: 1, hint: 'Cajones, superficie sin daños' },
+  { sub: 'Mobiliario', name: 'Lámpara de buró / Nightstand lamp', type: 'variable', qty: 1, hint: 'Enciende, foco, pantalla' },
+  { sub: 'Mobiliario', name: 'Clóset / Closet', type: 'fixed', qty: 1, hint: 'Puertas, rieles, interior limpio' },
+  { sub: 'Mobiliario', name: 'Ganchos / Hangers', type: 'variable', qty: 10, hint: 'Cantidad suficiente' },
+  { sub: 'Otros', name: 'Televisión / TV', type: 'fixed', qty: 1, hint: 'Enciende, imagen, control remoto' },
+  { sub: 'Otros', name: 'Cortinas / Curtains', type: 'fixed', qty: 1, hint: 'Riel, tela, blackout funciona' },
+  { sub: 'Otros', name: 'Espejo / Mirror', type: 'fixed', qty: 1, hint: 'Limpio, sin grietas, fijo' },
+];
+
+const BATHROOM_TEMPLATE = [
+  { sub: 'Sanitarios', name: 'Inodoro / Toilet', type: 'fixed', qty: 1, hint: 'Descarga bien, asiento, limpio' },
+  { sub: 'Sanitarios', name: 'Lavabo / Sink', type: 'fixed', qty: 1, hint: 'Grifo, desagüe, sin goteo' },
+  { sub: 'Sanitarios', name: 'Regadera / Shower', type: 'fixed', qty: 1, hint: 'Presión agua, temperatura, piso' },
+  { sub: 'Accesorios', name: 'Espejo / Mirror', type: 'fixed', qty: 1, hint: 'Limpio, sin grietas' },
+  { sub: 'Accesorios', name: 'Toallero / Towel rack', type: 'fixed', qty: 1, hint: 'Firme, bien montado' },
+  { sub: 'Accesorios', name: 'Toallas / Towels', type: 'variable', qty: 2, hint: 'Cantidad, limpias, sin manchas' },
+  { sub: 'Accesorios', name: 'Cortina de baño / Shower curtain', type: 'variable', qty: 1, hint: 'Limpia, sin moho, ganchos' },
+  { sub: 'Accesorios', name: 'Tapete de baño / Bath mat', type: 'variable', qty: 1, hint: 'Limpio, antideslizante' },
+  { sub: 'Accesorios', name: 'Bote de basura / Trash can', type: 'variable', qty: 1, hint: 'Con tapa, limpio' },
+  { sub: 'Accesorios', name: 'Portarrollos / Toilet paper holder', type: 'fixed', qty: 1, hint: 'Firme, con papel' },
 ];
 
 const STATUS_OPTIONS = [
@@ -238,12 +324,13 @@ let inspectionInfo = {};
 let inspectionData = {}; // clave: "sectionId-itemIndex"
 let currentSectionIndex = 0;
 let currentItemIndex = 0;
+let SECTIONS = []; // se construye dinámicamente
 
 // ── Cronómetro ──
 
 let timerInterval = null;
 let timerStartTime = null;
-let timerElapsed = 0; // milisegundos
+let timerElapsed = 0;
 
 function startTimer() {
   timerStartTime = Date.now();
@@ -292,6 +379,55 @@ function getElapsedTime() {
   return timerElapsed;
 }
 
+// ── Construir secciones dinámicamente ──
+
+function buildSections(numBedrooms, numBathrooms) {
+  const sections = [];
+
+  // 1. Cocina / Sala / Terraza (siempre 1)
+  const kitchenItems = [
+    ...KITCHEN_ITEMS.map(i => ({ ...i, area: 'Cocina' })),
+    ...LIVING_ITEMS.map(i => ({ ...i, area: 'Sala' })),
+    ...DINING_ITEMS.map(i => ({ ...i, area: 'Comedor' })),
+    ...TERRACE_ITEMS.map(i => ({ ...i, area: 'Terraza' })),
+  ];
+  sections.push({
+    id: 'kitchen-living-terrace',
+    name: 'Cocina / Sala / Terraza',
+    items: kitchenItems
+  });
+
+  // 2. Recámaras
+  const bedroomItems = [];
+  for (let i = 1; i <= numBedrooms; i++) {
+    const areaName = numBedrooms === 1 ? 'Recámara' : `Recámara ${i}`;
+    BEDROOM_TEMPLATE.forEach(item => {
+      bedroomItems.push({ ...item, area: areaName });
+    });
+  }
+  sections.push({
+    id: 'bedrooms',
+    name: 'Recámaras',
+    items: bedroomItems
+  });
+
+  // 3. Baños
+  const bathroomItems = [];
+  for (let i = 1; i <= numBathrooms; i++) {
+    const areaName = numBathrooms === 1 ? 'Baño' : `Baño ${i}`;
+    BATHROOM_TEMPLATE.forEach(item => {
+      bathroomItems.push({ ...item, area: areaName });
+    });
+  }
+  sections.push({
+    id: 'bathrooms',
+    name: 'Baños',
+    items: bathroomItems
+  });
+
+  return sections;
+}
+
 // ── Helpers ──
 
 function getItemIcon(name) {
@@ -300,7 +436,7 @@ function getItemIcon(name) {
     const trimmed = part.trim();
     if (ITEM_ICONS[trimmed]) return ITEM_ICONS[trimmed];
   }
-  return 'inventory_2'; // fallback icon
+  return 'inventory_2';
 }
 
 function getItemNames(name) {
@@ -358,7 +494,6 @@ function showStep(stepId) {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('date').valueAsDate = new Date();
-  // Detectar soporte de Web Share API
   checkShareSupport();
 });
 
@@ -369,12 +504,17 @@ function checkShareSupport() {
   }
 }
 
+function changeRoomCount(field, delta) {
+  const el = document.getElementById(field);
+  const val = Math.max(1, Math.min(10, parseInt(el.textContent) + delta));
+  el.textContent = val;
+}
+
 function startInspection() {
   const location = document.getElementById('location').value.trim();
   const date = document.getElementById('date').value;
   const auditor = document.getElementById('auditor').value.trim();
 
-  // Validación visual — resaltar campos vacíos
   let valid = true;
   ['location', 'date', 'auditor'].forEach(id => {
     const group = document.getElementById(id).closest('.form-group');
@@ -390,7 +530,13 @@ function startInspection() {
     return;
   }
 
-  inspectionInfo = { location, date, auditor };
+  const numBedrooms = parseInt(document.getElementById('num-bedrooms').textContent) || 2;
+  const numBathrooms = parseInt(document.getElementById('num-bathrooms').textContent) || 2;
+
+  inspectionInfo = { location, date, auditor, numBedrooms, numBathrooms };
+  SECTIONS = buildSections(numBedrooms, numBathrooms);
+  inspectionData = {};
+
   startTimer();
   showStep('step-rooms');
   renderRooms();
@@ -405,7 +551,6 @@ function renderRooms() {
   const totalItems = getTotalItems();
   const totalCompleted = getTotalCompleted();
 
-  // Progreso general
   const pct = totalItems > 0 ? (totalCompleted / totalItems) * 100 : 0;
   document.getElementById('overall-bar').style.width = pct + '%';
   document.getElementById('overall-label').textContent = `${totalCompleted} / ${totalItems} artículos`;
@@ -439,7 +584,6 @@ function renderRooms() {
     grid.appendChild(card);
   });
 
-  // Botón "Terminar" si todas las secciones están completas
   const allDone = SECTIONS.every((_, i) => isSectionCompleted(i));
   let finishBtn = document.getElementById('btn-finish-all');
   if (!finishBtn) {
@@ -456,7 +600,6 @@ function renderRooms() {
 
 function openRoom(sectionIdx) {
   currentSectionIndex = sectionIdx;
-  // Encontrar primer artículo incompleto
   const section = SECTIONS[sectionIdx];
   let startIdx = 0;
   for (let i = 0; i < section.items.length; i++) {
@@ -499,7 +642,14 @@ function renderItem() {
   document.getElementById('item-name').textContent = names.es;
   document.getElementById('item-name-en').textContent = names.en;
 
-  // Botones de estado — resaltar seleccionado
+  // Hint / descripción
+  const hintEl = document.getElementById('item-hint');
+  if (hintEl) {
+    hintEl.textContent = item.hint || '';
+    hintEl.style.display = item.hint ? 'block' : 'none';
+  }
+
+  // Botones de estado
   document.querySelectorAll('.status-btn').forEach(btn => {
     btn.classList.remove('selected', 'just-selected');
   });
@@ -522,7 +672,6 @@ function renderItem() {
   notesInput.value = data.observations || '';
   notesArea.style.display = data.observations ? 'block' : 'none';
 
-  // Estilo del botón de notas
   const notesBtn = document.querySelector('.notes-btn');
   if (data.observations) {
     notesBtn.classList.add('has-content');
@@ -530,7 +679,6 @@ function renderItem() {
     notesBtn.classList.remove('has-content');
   }
 
-  // Estilo del botón de cámara
   const cameraBtn = document.querySelector('.camera-btn');
   if (data.photos && data.photos.length > 0) {
     cameraBtn.classList.add('has-content');
@@ -552,6 +700,34 @@ function renderItem() {
   }
 }
 
+function showHelpModal() {
+  const section = SECTIONS[currentSectionIndex];
+  const item = section.items[currentItemIndex];
+  const names = getItemNames(item.name);
+  const iconName = getItemIcon(item.name);
+
+  const modal = document.getElementById('help-modal');
+  document.getElementById('help-modal-icon').textContent = iconName;
+  document.getElementById('help-modal-name').textContent = names.es;
+  document.getElementById('help-modal-hint').textContent = item.hint || 'Sin descripción adicional';
+
+  // Descripción expandida de qué revisar
+  const details = getExpandedHint(names.es, item);
+  document.getElementById('help-modal-details').textContent = details;
+
+  modal.classList.add('visible');
+}
+
+function closeHelpModal() {
+  document.getElementById('help-modal').classList.remove('visible');
+}
+
+function getExpandedHint(name, item) {
+  // Contexto adicional sobre cómo revisar el artículo
+  const typeText = item.type === 'fixed' ? 'Activo fijo — revisar estado físico, funcionamiento y limpieza.' : 'Activo variable — verificar presencia, cantidad y condición.';
+  return `${typeText} Cantidad esperada: ${item.qty}.`;
+}
+
 function setStatus(status) {
   const section = SECTIONS[currentSectionIndex];
   const item = section.items[currentItemIndex];
@@ -562,7 +738,6 @@ function setStatus(status) {
   }
   inspectionData[key].status = status;
 
-  // Retroalimentación visual
   const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing', 'new': '.new-item' };
   document.querySelectorAll('.status-btn').forEach(btn => {
     btn.classList.remove('selected', 'just-selected');
@@ -572,7 +747,6 @@ function setStatus(status) {
     sel.classList.add('selected', 'just-selected');
   }
 
-  // Mensaje toast
   const labels = { 'good': '✅ Bueno', 'damaged': '🔨 Dañado', 'missing': '❌ Faltante', 'new': '🆕 Nuevo' };
   showToast(labels[status]);
 }
@@ -721,7 +895,6 @@ function showRoomComplete() {
   document.getElementById('room-done-title').textContent = '¡Cuarto Listo!';
   document.getElementById('room-done-sub').textContent = `${config.name} completado`;
 
-  // Estadísticas
   const stats = { good: 0, damaged: 0, missing: 0, new: 0, none: 0 };
   section.items.forEach((_, idx) => {
     const key = `${section.id}-${idx}`;
@@ -758,7 +931,6 @@ function showExport() {
   document.getElementById('export-summary').textContent =
     `${inspectionInfo.location} — ${completed}/${total} artículos`;
 
-  // Mostrar tiempo total
   const timerFinal = document.getElementById('timer-final');
   const elapsed = getElapsedTime();
   if (elapsed > 0) {
@@ -803,7 +975,6 @@ function showExport() {
     container.appendChild(div);
   });
 
-  // Verificar soporte de compartir
   checkShareSupport();
 }
 
@@ -815,7 +986,6 @@ async function shareFiles() {
   try {
     showToast('⏳ Preparando archivos...');
 
-    // Generar PDF como blob
     const pdfBlob = generatePDFBlob();
     const fileName = `Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.pdf`;
     const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
@@ -830,13 +1000,11 @@ async function shareFiles() {
       await navigator.share(shareData);
       showToast('✅ Compartido');
     } else {
-      // Fallback: descargar
       exportPDF();
       showToast('📄 Descargado (compartir no disponible)');
     }
   } catch (err) {
     if (err.name !== 'AbortError') {
-      // El usuario canceló — no es error
       exportPDF();
       showToast('📄 PDF descargado');
     }
@@ -849,12 +1017,89 @@ function generatePDFBlob() {
   return doc.output('blob');
 }
 
-// ── Construir PDF (reutilizado para descargar y compartir) ──
+// ══════════════════════════════════════════
+// LOGO Y CERTIFICACIONES (Canvas → DataURL)
+// ══════════════════════════════════════════
+
+function createLogoDataURL() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 240;
+  canvas.height = 80;
+  const ctx = canvas.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, 240, 0);
+  gradient.addColorStop(0, '#c8962d');
+  gradient.addColorStop(0.5, '#e8c44a');
+  gradient.addColorStop(1, '#c8962d');
+
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(15, 55);
+  ctx.quadraticCurveTo(40, 10, 65, 45);
+  ctx.quadraticCurveTo(90, 75, 115, 30);
+  ctx.quadraticCurveTo(140, -10, 165, 45);
+  ctx.quadraticCurveTo(185, 75, 210, 25);
+  ctx.quadraticCurveTo(220, 10, 230, 18);
+  ctx.stroke();
+
+  return canvas.toDataURL('image/png');
+}
+
+function createCertificationsDataURL() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 60;
+  const ctx = canvas.getContext('2d');
+
+  const badges = [
+    { text: 'ISO 9001', color: '#d4a843', bg: '#fef3c7' },
+    { text: 'MARRIOTT', color: '#c62828', bg: '#ffebee' },
+    { text: 'SAFE TRAVELS', color: '#2e7d32', bg: '#e8f5e9' },
+    { text: 'AIRBNB', color: '#ff5a5f', bg: '#fce4ec' },
+    { text: 'APAR', color: '#1565c0', bg: '#e3f2fd' },
+    { text: 'AIRDNA', color: '#5c6bc0', bg: '#e8eaf6' },
+  ];
+
+  const spacing = 95;
+  const startX = 30;
+
+  badges.forEach((badge, i) => {
+    const cx = startX + i * spacing;
+    const cy = 30;
+    const r = 24;
+
+    // Círculo de fondo
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = badge.bg;
+    ctx.fill();
+    ctx.strokeStyle = badge.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Texto
+    ctx.fillStyle = badge.color;
+    ctx.font = 'bold 7px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badge.text, cx, cy);
+  });
+
+  return canvas.toDataURL('image/png');
+}
+
+// ══════════════════════════════════════════
+// CONSTRUIR PDF (mejorado con agrupación y logos)
+// ══════════════════════════════════════════
 
 function buildPDF(jsPDF) {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageW = 210;
-  const margin = 15;
+  const margin = 12;
+  const contentW = pageW - margin * 2;
   let y = margin;
 
   function checkPage(needed) {
@@ -864,126 +1109,298 @@ function buildPDF(jsPDF) {
     }
   }
 
-  // Título
-  doc.setFontSize(18);
-  doc.setFont(undefined, 'bold');
-  doc.text('Reporte de Inspección e Inventario', margin, y);
-  y += 10;
+  // Logo
+  try {
+    const logoData = createLogoDataURL();
+    doc.addImage(logoData, 'PNG', margin, y, 40, 13);
+    y += 16;
+  } catch (e) { /* skip if fails */ }
 
-  doc.setFontSize(11);
-  doc.setFont(undefined, 'normal');
-  doc.text(`Ubicación: ${inspectionInfo.location}`, margin, y);
-  doc.text(`Fecha: ${inspectionInfo.date}`, margin + 80, y);
+  // Título
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(37, 99, 235);
+  doc.text('Reporte de Inspección e Inventario', margin, y);
+  y += 8;
+
+  // Línea decorativa
+  doc.setDrawColor(37, 99, 235);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, margin + contentW, y);
   y += 6;
+
+  // Info
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Ubicación: ${inspectionInfo.location}`, margin, y);
+  doc.text(`Fecha: ${inspectionInfo.date}`, margin + 90, y);
+  y += 5;
   doc.text(`Inspector: ${inspectionInfo.auditor}`, margin, y);
   if (inspectionInfo.duration) {
-    doc.text(`Duración: ${inspectionInfo.duration}`, margin + 80, y);
+    doc.text(`Duración: ${inspectionInfo.duration}`, margin + 90, y);
   }
-  y += 12;
+  y += 3;
+  doc.text(`Recámaras: ${inspectionInfo.numBedrooms} | Baños: ${inspectionInfo.numBathrooms}`, margin, y);
+  y += 10;
 
+  // Cada sección
   SECTIONS.forEach((section, sIdx) => {
     if (sIdx > 0) {
       doc.addPage();
       y = margin;
     }
 
-    checkPage(14);
-    doc.setFontSize(14);
+    // Encabezado de sección
+    checkPage(20);
+    doc.setFillColor(37, 99, 235);
+    doc.rect(margin, y - 1, contentW, 8, 'F');
+    doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
-    doc.text(section.name, margin, y);
-    y += 8;
+    doc.setTextColor(255, 255, 255);
+    doc.text(section.name.toUpperCase(), margin + 3, y + 5);
+    y += 12;
 
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'bold');
-    const colX = [margin, margin + 35, margin + 75, margin + 105, margin + 135, margin + 150];
-    doc.text('Área', colX[0], y);
-    doc.text('Artículo', colX[1], y);
-    doc.text('Estado', colX[2], y);
-    doc.text('Tipo', colX[3], y);
-    doc.text('Cant', colX[4], y);
-    doc.text('Observaciones', colX[5], y);
-    y += 2;
-    doc.setDrawColor(100);
-    doc.line(margin, y, pageW - margin, y);
-    y += 4;
-
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(7);
-
+    // Agrupar por área
+    const areaGroups = [];
+    let currentArea = null;
     section.items.forEach((item, idx) => {
-      const key = `${section.id}-${idx}`;
-      const data = inspectionData[key] || {};
-      const statusLabel = STATUS_OPTIONS.find(o => o.value === data.status);
-      const hasPhotos = data.photos && data.photos.length > 0;
-      const rowHeight = hasPhotos ? 22 : 6;
-
-      checkPage(rowHeight + 4);
-
-      doc.text(item.area, colX[0], y);
-      doc.text(item.name, colX[1], y);
-      doc.text(statusLabel ? statusLabel.label : '-', colX[2], y);
-      doc.text(item.type === 'fixed' ? 'Activo Fijo' : 'Activo Variable', colX[3], y);
-      doc.text(String(data.qty !== undefined ? data.qty : item.qty), colX[4], y);
-
-      const obs = data.observations || '';
-      if (obs) {
-        const lines = doc.splitTextToSize(obs, 30);
-        doc.text(lines, colX[5], y);
+      if (item.area !== currentArea) {
+        currentArea = item.area;
+        areaGroups.push({ area: currentArea, items: [] });
       }
+      areaGroups[areaGroups.length - 1].items.push({ item, idx });
+    });
 
-      if (hasPhotos) {
-        y += 3;
-        data.photos.forEach((photo, pi) => {
-          if (pi < 3) {
-            try {
-              doc.addImage(photo, 'JPEG', colX[1] + (pi * 18), y, 16, 16);
-            } catch (e) {
-              // Omitir si la imagen no se puede agregar
+    areaGroups.forEach((group) => {
+      checkPage(16);
+
+      // Sub-encabezado de área con fondo
+      doc.setFillColor(240, 244, 255);
+      doc.rect(margin, y - 1, contentW, 6, 'F');
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(37, 99, 235);
+      doc.text(group.area.toUpperCase(), margin + 2, y + 3);
+      y += 8;
+
+      // Encabezados de columna
+      const colX = [margin + 2, margin + 40, margin + 85, margin + 115, margin + 140, margin + 155];
+      doc.setFontSize(7);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(100, 100, 100);
+      doc.text('Subcategoría', colX[0], y);
+      doc.text('Artículo', colX[1], y);
+      doc.text('Estado', colX[2], y);
+      doc.text('Tipo', colX[3], y);
+      doc.text('Cant', colX[4], y);
+      doc.text('Observaciones', colX[5], y);
+      y += 1.5;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y, margin + contentW, y);
+      y += 3;
+
+      // Agrupar por subcategoría dentro del área
+      let currentSub = null;
+
+      group.items.forEach(({ item, idx: itemIdx }) => {
+        const key = `${section.id}-${itemIdx}`;
+        const data = inspectionData[key] || {};
+        const statusLabel = STATUS_OPTIONS.find(o => o.value === data.status);
+        const names = getItemNames(item.name);
+        const hasPhotos = data.photos && data.photos.length > 0;
+        const rowHeight = hasPhotos ? 22 : 5;
+
+        checkPage(rowHeight + 4);
+
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(50, 50, 50);
+
+        // Subcategoría (solo si cambió)
+        if (item.sub !== currentSub) {
+          currentSub = item.sub;
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(100, 100, 100);
+          doc.text(item.sub || '', colX[0], y);
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(50, 50, 50);
+        }
+
+        doc.text(names.es, colX[1], y);
+
+        // Estado con color
+        if (data.status) {
+          const statusColors = { good: [16, 185, 129], damaged: [239, 68, 68], missing: [245, 158, 11], new: [37, 99, 235] };
+          const c = statusColors[data.status] || [100, 100, 100];
+          doc.setTextColor(c[0], c[1], c[2]);
+          doc.setFont(undefined, 'bold');
+        }
+        doc.text(statusLabel ? statusLabel.label : '-', colX[2], y);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(50, 50, 50);
+
+        doc.text(item.type === 'fixed' ? 'Fijo' : 'Variable', colX[3], y);
+        doc.text(String(data.qty !== undefined ? data.qty : item.qty), colX[4], y);
+
+        const obs = data.observations || '';
+        if (obs) {
+          const lines = doc.splitTextToSize(obs, 30);
+          doc.text(lines, colX[5], y);
+        }
+
+        if (hasPhotos) {
+          y += 3;
+          data.photos.forEach((photo, pi) => {
+            if (pi < 3) {
+              try {
+                doc.addImage(photo, 'JPEG', colX[1] + (pi * 18), y, 16, 16);
+              } catch (e) { /* skip */ }
             }
-          }
-        });
-        y += 18;
-      }
+          });
+          y += 18;
+        }
 
-      y += 5;
+        y += 5;
+
+        // Línea separadora sutil
+        doc.setDrawColor(230, 230, 230);
+        doc.setLineWidth(0.1);
+        doc.line(colX[1], y - 2, margin + contentW, y - 2);
+      });
+
+      y += 3;
     });
   });
+
+  // Pie de página con certificaciones
+  checkPage(30);
+  y += 5;
+  doc.setDrawColor(37, 99, 235);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, margin + contentW, y);
+  y += 5;
+
+  try {
+    const certData = createCertificationsDataURL();
+    doc.addImage(certData, 'PNG', margin + 10, y, 120, 12);
+    y += 15;
+  } catch (e) { /* skip */ }
+
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Del Mar — Gestión de Propiedades | ISO 9001 | Marriott | Safe Travels | Airbnb Prohost | APAR | AirDNA', pageW / 2, y, { align: 'center' });
 
   return doc;
 }
 
-// ── Exportar XLSX ──
+// ══════════════════════════════════════════
+// EXPORTAR XLSX (mejorado con agrupación)
+// ══════════════════════════════════════════
 
 function exportXLSX() {
   const wb = XLSX.utils.book_new();
 
   SECTIONS.forEach(section => {
-    const rows = [
-      [`Ubicación: ${inspectionInfo.location}`, '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`],
-      inspectionInfo.duration ? [`Duración: ${inspectionInfo.duration}`] : [],
-      [],
-      ['Área', 'Artículo', 'Estado', 'Tipo de Activo', 'Cantidad', 'Observaciones']
-    ];
+    const rows = [];
+    const merges = [];
 
+    // Fila 0: Título
+    rows.push(['DEL MAR — Reporte de Inspección e Inventario', '', '', '', '', '']);
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+
+    // Fila 1: Info
+    rows.push([`Ubicación: ${inspectionInfo.location}`, '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`, '']);
+
+    // Fila 2: Info adicional
+    rows.push([`Recámaras: ${inspectionInfo.numBedrooms} | Baños: ${inspectionInfo.numBathrooms}`, '', inspectionInfo.duration ? `Duración: ${inspectionInfo.duration}` : '', '', '', '']);
+
+    // Fila 3: Vacía
+    rows.push(['', '', '', '', '', '']);
+
+    // Fila 4: Encabezados de columnas
+    // Col 0: Área, Col 1: Subcategoría, Col 2: Marcar, Col 3: Descripción, Col 4: Cantidad, Col 5: Observaciones
+    rows.push(['', '', 'Marcar', 'Descripción', 'Cantidad', 'Observaciones']);
+
+    let rowIdx = 5;
+
+    // Agrupar items por área
+    const areaGroups = [];
+    let curArea = null;
     section.items.forEach((item, idx) => {
-      const key = `${section.id}-${idx}`;
-      const data = inspectionData[key] || {};
-      const statusLabel = STATUS_OPTIONS.find(o => o.value === data.status);
-
-      rows.push([
-        item.area,
-        item.name,
-        statusLabel ? statusLabel.label : '',
-        item.type === 'fixed' ? 'Activo Fijo' : 'Activo Variable',
-        data.qty !== undefined ? Number(data.qty) : item.qty,
-        data.observations || ''
-      ]);
+      if (item.area !== curArea) {
+        curArea = item.area;
+        areaGroups.push({ area: curArea, items: [] });
+      }
+      areaGroups[areaGroups.length - 1].items.push({ item, idx });
     });
 
+    areaGroups.forEach((group) => {
+      const areaStartRow = rowIdx;
+
+      // Dentro del área, agrupar por subcategoría
+      const subGroups = [];
+      let curSub = null;
+      group.items.forEach(entry => {
+        if (entry.item.sub !== curSub) {
+          curSub = entry.item.sub;
+          subGroups.push({ sub: curSub, entries: [] });
+        }
+        subGroups[subGroups.length - 1].entries.push(entry);
+      });
+
+      subGroups.forEach(subGroup => {
+        const subStartRow = rowIdx;
+
+        subGroup.entries.forEach(({ item, idx: itemIdx }, ei) => {
+          const key = `${section.id}-${itemIdx}`;
+          const data = inspectionData[key] || {};
+          const names = getItemNames(item.name);
+          const markedStr = data.status ? '☑' : '☐';
+
+          rows.push([
+            ei === 0 && subGroup === subGroups[0] ? group.area : '',
+            ei === 0 ? (subGroup.sub || '') : '',
+            markedStr,
+            names.es,
+            data.qty !== undefined ? Number(data.qty) : item.qty,
+            data.observations || ''
+          ]);
+          rowIdx++;
+        });
+
+        // Merge subcategoría (col 1)
+        if (rowIdx - 1 > subStartRow) {
+          merges.push({ s: { r: subStartRow, c: 1 }, e: { r: rowIdx - 1, c: 1 } });
+        }
+      });
+
+      // Merge área (col 0)
+      if (rowIdx - 1 > areaStartRow) {
+        merges.push({ s: { r: areaStartRow, c: 0 }, e: { r: rowIdx - 1, c: 0 } });
+      }
+
+      // Fila separadora entre áreas
+      rows.push(['', '', '', '', '', '']);
+      rowIdx++;
+    });
+
+    // Pie de página
+    rows.push(['', '', '', '', '', '']);
+    rows.push(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA', '', '', '', '', '']);
+    merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 5 } });
+
     const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 22 }, { wch: 32 }, { wch: 18 }, { wch: 16 }, { wch: 10 }, { wch: 40 }
+      { wch: 18 },  // Área
+      { wch: 18 },  // Subcategoría
+      { wch: 8 },   // Marcar
+      { wch: 32 },  // Descripción
+      { wch: 10 },  // Cantidad
+      { wch: 40 },  // Observaciones
     ];
 
     const sheetName = section.name.substring(0, 31);
