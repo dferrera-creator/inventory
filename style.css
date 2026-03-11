@@ -332,15 +332,15 @@ body {
 /* Grid de cuartos */
 .room-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding: 12px 20px 32px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 12px 16px 32px;
 }
 
 .room-card {
   background: #fff;
-  border-radius: 20px;
-  padding: 20px 16px;
+  border-radius: 16px;
+  padding: 14px 10px;
   text-align: center;
   cursor: pointer;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -380,10 +380,11 @@ body {
 }
 
 .room-card-name {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #1a1a2e;
   margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .room-card-count {
@@ -845,6 +846,19 @@ body {
   justify-content: center;
 }
 
+.photo-thumb .photo-time {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 0.6rem;
+  text-align: center;
+  padding: 1px 0;
+  font-weight: 600;
+}
+
 /* Área de notas */
 .notes-area textarea {
   width: 100%;
@@ -1200,6 +1214,20 @@ body {
   border-radius: 8px;
 }
 
+.review-photo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.review-photo-time {
+  font-size: 0.55rem;
+  color: #666;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
 /* ══════════════════════════════════════════
    MODAL DE AYUDA
    ══════════════════════════════════════════ */
@@ -1371,17 +1399,18 @@ body {
   }
 
   .room-grid {
-    gap: 10px;
-    padding: 12px 14px 32px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 12px 32px;
   }
 
   .room-card-icon {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
   }
 
   .room-card-icon .material-symbols-rounded {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .room-count-row {

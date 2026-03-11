@@ -104,7 +104,7 @@ const ITEM_ICONS = {
   'Small glass': 'local_bar',
   'Vaso mediano': 'local_bar',
   'Medium glass': 'local_bar',
-  'Tasa': 'coffee',
+  'Taza': 'coffee',
   'Mug': 'coffee',
   'Copas': 'wine_bar',
   'Wine glasses': 'wine_bar',
@@ -190,22 +190,110 @@ const ITEM_ICONS = {
   'Bath mat': 'grid_on',
   'Portarrollos': 'paper_roll',
   'Toilet paper holder': 'paper_roll',
+  'Control de TV': 'settings_remote',
+  'TV remote': 'settings_remote',
+  'Módem Internet': 'router',
+  'Internet modem': 'router',
+  'Convertidor o repetidora (Roku)': 'cast',
+  'Streaming device (Roku)': 'cast',
+  'Lámpara colgante': 'light',
+  'Pendant lamp': 'light',
+  'Cuadros': 'image',
+  'Wall art': 'image',
+  'Espejos': 'window',
+  'Mirrors': 'window',
+  'Jarrones': 'vase',
+  'Vases': 'vase',
+  'Floreros': 'local_florist',
+  'Flower vases': 'local_florist',
+  'Portavela': 'candle',
+  'Candle holder': 'candle',
+  'Dispensador de jabón': 'soap',
+  'Soap dispenser': 'soap',
+  'Dispensador jabón': 'soap',
+  'Vaso plástico': 'local_bar',
+  'Plastic cup': 'local_bar',
+  'Cuchillo pan': 'flatware',
+  'Bread knife': 'flatware',
+  'Tequilero': 'local_bar',
+  'Shot glass': 'local_bar',
+  'Tenedor ensalada (chico)': 'flatware',
+  'Salad fork': 'flatware',
+  'Pelapapas': 'build',
+  'Peeler': 'build',
+  'Rallador de queso': 'build',
+  'Cheese grater': 'build',
+  'Colador': 'filter_alt',
+  'Strainer': 'filter_alt',
+  'Microfibra cocina': 'dry_cleaning',
+  'Kitchen microfiber': 'dry_cleaning',
+  'Secador trastes': 'dry',
+  'Dish drying towel': 'dry',
+  'Tumbona': 'deck',
+  'Lounge chair': 'deck',
+  'Echadero': 'deck',
+  'Daybed': 'deck',
+  'Base de cama': 'bed',
+  'Bed frame': 'bed',
+  'Secadora de cabello': 'air',
+  'Hair dryer': 'air',
+  'Plancha': 'iron',
+  'Iron': 'iron',
+  'Accesorio colgar plancha': 'checkroom',
+  'Iron hanger': 'checkroom',
+  'Burro planchar': 'iron',
+  'Ironing board': 'iron',
+  'Caja fuerte': 'lock',
+  'Safe box': 'lock',
+  'Porta shampoo': 'shelves',
+  'Shampoo holder': 'shelves',
+  'Cepillo WC': 'cleaning_services',
+  'Toilet brush': 'cleaning_services',
+  'Puerta vidrio': 'door_front',
+  'Glass door': 'door_front',
+  'Puerta acrílico': 'door_front',
+  'Acrylic door': 'door_front',
+  'Lavadora': 'local_laundry_service',
+  'Washing machine': 'local_laundry_service',
+  'Secadora': 'local_laundry_service',
+  'Dryer': 'local_laundry_service',
+  'Centro de lavado': 'local_laundry_service',
+  'Laundry center': 'local_laundry_service',
+  'Escoba': 'cleaning_services',
+  'Broom': 'cleaning_services',
+  'Recogedor': 'cleaning_services',
+  'Dustpan': 'cleaning_services',
+  'Trapeador': 'cleaning_services',
+  'Mop': 'cleaning_services',
+  'Sponge mop': 'cleaning_services',
+  'Cubeta': 'cleaning_bucket',
+  'Bucket': 'cleaning_bucket',
+  'Colgador escobas': 'checkroom',
+  'Broom hanger': 'checkroom',
+  'Bomba WC': 'plumbing',
+  'Toilet plunger': 'plumbing',
 };
 
 // ── Configuración visual de cuartos ──
 
 const ROOM_CONFIG = {
-  'kitchen-living-terrace': { icon: 'cooking', name: 'Cocina / Sala / Terraza', shortName: 'Cocina / Sala' },
+  'kitchen': { icon: 'cooking', name: 'Cocina', shortName: 'Cocina' },
+  'living': { icon: 'weekend', name: 'Sala / Comedor', shortName: 'Sala' },
+  'terrace': { icon: 'deck', name: 'Terraza', shortName: 'Terraza' },
   'bedrooms': { icon: 'bed', name: 'Recámaras', shortName: 'Recámaras' },
   'bathrooms': { icon: 'shower', name: 'Baños', shortName: 'Baños' },
+  'laundry': { icon: 'local_laundry_service', name: 'Lavandería', shortName: 'Lavandería' },
 };
 
 // ── Colores por categoría de cuarto ──
 
 const ROOM_COLORS = {
-  'kitchen-living-terrace': '#f59e0b',
+  'kitchen': '#f59e0b',
+  'living': '#e67e22',
+  'terrace': '#27ae60',
   'bedrooms': '#8b5cf6',
   'bathrooms': '#06b6d4',
+  'laundry': '#e74c3c',
 };
 
 // ── Plantillas de artículos con hints y subcategorías ──
@@ -243,7 +331,16 @@ const KITCHEN_ITEMS = [
   { sub: 'Loza', name: 'Ollas con tapa / Pots with lids', type: 'variable', qty: 4, hint: 'Tapas completas, asas firmes' },
   { sub: 'Loza', name: 'Sartenes / Skillets', type: 'variable', qty: 3, hint: 'Antiadherente, mangos firmes' },
   { sub: 'Loza', name: 'Tabla para picar / Cutting board', type: 'variable', qty: 3, hint: 'Limpia, sin grietas profundas' },
-  { sub: 'Loza', name: 'Accesorio vaporera / Steamer accessory', type: 'variable', qty: 1, hint: 'Completo, buen estado' },
+  { sub: 'Utensilios', name: 'Cuchillo pan / Bread knife', type: 'variable', qty: 1, hint: 'Filo, mango firme' },
+  { sub: 'Utensilios', name: 'Tequilero / Shot glass', type: 'variable', qty: 6, hint: 'Sin grietas, cantidad' },
+  { sub: 'Utensilios', name: 'Tenedor ensalada (chico) / Salad fork', type: 'variable', qty: 8, hint: 'Cantidad y estado' },
+  { sub: 'Utensilios', name: 'Pelapapas / Peeler', type: 'variable', qty: 1, hint: 'Funciona, filo' },
+  { sub: 'Utensilios', name: 'Rallador de queso / Cheese grater', type: 'variable', qty: 1, hint: 'Limpio, buen estado' },
+  { sub: 'Utensilios', name: 'Colador / Strainer', type: 'variable', qty: 1, hint: 'Limpio, sin daños' },
+  { sub: 'Accesorios', name: 'Dispensador de jabón / Soap dispenser', type: 'variable', qty: 1, hint: 'Funciona, con jabón' },
+  { sub: 'Accesorios', name: 'Vaso plástico / Plastic cup', type: 'variable', qty: 4, hint: 'Sin grietas, cantidad' },
+  { sub: 'Accesorios', name: 'Microfibra cocina / Kitchen microfiber', type: 'variable', qty: 2, hint: 'Limpia, buen estado' },
+  { sub: 'Accesorios', name: 'Secador trastes / Dish drying towel', type: 'variable', qty: 1, hint: 'Limpio, buen estado' },
   { sub: 'Loza', name: 'Bowl ensaladera / Salad bowl', type: 'variable', qty: 0, hint: 'Sin grietas, limpio' },
   { sub: 'Loza', name: 'Jarras / Pitchers', type: 'variable', qty: 0, hint: 'Sin grietas, tapa' },
   { sub: 'Loza', name: 'Base cosas calientes / Trivet', type: 'variable', qty: 0, hint: 'Presente, buen estado' },
@@ -254,19 +351,26 @@ const KITCHEN_ITEMS = [
   { sub: 'Vajilla', name: 'Plato hondo / Deep plate', type: 'variable', qty: 7, hint: 'Cantidad, sin despostillados' },
   { sub: 'Vajilla', name: 'Vaso chico / Small glass', type: 'variable', qty: 11, hint: 'Sin grietas, cantidad' },
   { sub: 'Vajilla', name: 'Vaso mediano / Medium glass', type: 'variable', qty: 8, hint: 'Sin grietas, cantidad' },
-  { sub: 'Vajilla', name: 'Tasa / Mug', type: 'variable', qty: 6, hint: 'Sin grietas, asas firmes' },
+  { sub: 'Vajilla', name: 'Taza / Mug', type: 'variable', qty: 6, hint: 'Sin grietas, asas firmes' },
   { sub: 'Vajilla', name: 'Copas / Wine glasses', type: 'variable', qty: 8, hint: 'Sin grietas, cantidad' },
-  { sub: 'Vajilla', name: 'Copas de vino / Wine glasses', type: 'variable', qty: 0, hint: 'Sin grietas, cantidad' },
 ];
 
 const LIVING_ITEMS = [
   { sub: 'Sala', name: 'Sofá / Sofa', type: 'fixed', qty: 1, hint: 'Cojines, tela, estructura firme' },
   { sub: 'Sala', name: 'Mesa de centro / Coffee table', type: 'fixed', qty: 1, hint: 'Superficie, patas, estable' },
   { sub: 'Sala', name: 'Televisión / TV', type: 'fixed', qty: 1, hint: 'Enciende, imagen, control remoto' },
+  { sub: 'Sala', name: 'Control de TV / TV remote', type: 'variable', qty: 1, hint: 'Funciona, pilas' },
+  { sub: 'Sala', name: 'Módem Internet / Internet modem', type: 'fixed', qty: 1, hint: 'Funciona, luces, cables' },
+  { sub: 'Sala', name: 'Convertidor o repetidora (Roku) / Streaming device (Roku)', type: 'variable', qty: 1, hint: 'Funciona, control, cables' },
   { sub: 'Sala', name: 'Mueble de TV / TV stand', type: 'fixed', qty: 1, hint: 'Puertas, cajones, estable' },
   { sub: 'Sala', name: 'Lámpara de piso / Floor lamp', type: 'variable', qty: 1, hint: 'Enciende, foco, estable' },
-  { sub: 'Sala', name: 'Cojines decorativos / Throw pillows', type: 'variable', qty: 4, hint: 'Cantidad, limpieza' },
+  { sub: 'Sala', name: 'Lámpara colgante / Pendant lamp', type: 'variable', qty: 1, hint: 'Enciende, foco, fija' },
   { sub: 'Sala', name: 'Cortinas / Curtains', type: 'fixed', qty: 1, hint: 'Riel, tela, blackout' },
+  { sub: 'Decoración', name: 'Cuadros / Wall art', type: 'variable', qty: 0, hint: 'Fijos, buen estado' },
+  { sub: 'Decoración', name: 'Espejos / Mirrors', type: 'variable', qty: 0, hint: 'Sin grietas, fijos' },
+  { sub: 'Decoración', name: 'Jarrones / Vases', type: 'variable', qty: 0, hint: 'Sin grietas, buen estado' },
+  { sub: 'Decoración', name: 'Floreros / Flower vases', type: 'variable', qty: 0, hint: 'Sin grietas, buen estado' },
+  { sub: 'Decoración', name: 'Portavela / Candle holder', type: 'variable', qty: 0, hint: 'Buen estado, estable' },
 ];
 
 const DINING_ITEMS = [
@@ -277,14 +381,17 @@ const DINING_ITEMS = [
 ];
 
 const TERRACE_ITEMS = [
-  { sub: 'Terraza', name: 'Mesa exterior / Outdoor table', type: 'fixed', qty: 1, hint: 'Superficie, estable, limpia' },
-  { sub: 'Terraza', name: 'Sillas exteriores / Outdoor chairs', type: 'fixed', qty: 2, hint: 'Estables, cantidad correcta' },
-  { sub: 'Terraza', name: 'Sombrilla / Umbrella', type: 'variable', qty: 1, hint: 'Abre/cierra, tela, base firme' },
-  { sub: 'Terraza', name: 'Macetas / Planters', type: 'variable', qty: 2, hint: 'Plantas vivas, sin grietas' },
+  { sub: 'Mobiliario', name: 'Mesa exterior / Outdoor table', type: 'fixed', qty: 1, hint: 'Superficie, estable, limpia' },
+  { sub: 'Mobiliario', name: 'Sillas exteriores / Outdoor chairs', type: 'fixed', qty: 2, hint: 'Estables, cantidad correcta' },
+  { sub: 'Mobiliario', name: 'Sombrilla / Umbrella', type: 'variable', qty: 1, hint: 'Abre/cierra, tela, base firme' },
+  { sub: 'Mobiliario', name: 'Tumbona / Lounge chair', type: 'variable', qty: 1, hint: 'Estructura firme, limpia' },
+  { sub: 'Mobiliario', name: 'Echadero / Daybed', type: 'variable', qty: 0, hint: 'Estructura firme, cojines' },
+  { sub: 'Accesorios', name: 'Cojines decorativos / Throw pillows', type: 'variable', qty: 4, hint: 'Cantidad, limpieza' },
+  { sub: 'Accesorios', name: 'Macetas / Planters', type: 'variable', qty: 2, hint: 'Plantas vivas, sin grietas' },
 ];
 
 const BEDROOM_TEMPLATE = [
-  { sub: 'Dormitorio', name: 'Cama / Bed', type: 'fixed', qty: 1, hint: 'Base, cabecera, estado general' },
+  { sub: 'Dormitorio', name: 'Base de cama / Bed frame', type: 'fixed', qty: 1, hint: 'Estructura, cabecera, estado general' },
   { sub: 'Dormitorio', name: 'Colchón / Mattress', type: 'fixed', qty: 1, hint: 'Manchas, firmeza, limpieza' },
   { sub: 'Dormitorio', name: 'Ropa de cama / Bedding set', type: 'variable', qty: 1, hint: 'Sábanas, cobija, colcha completa' },
   { sub: 'Dormitorio', name: 'Almohadas / Pillows', type: 'variable', qty: 2, hint: 'Cantidad, limpias, firmes' },
@@ -292,22 +399,49 @@ const BEDROOM_TEMPLATE = [
   { sub: 'Mobiliario', name: 'Lámpara de buró / Nightstand lamp', type: 'variable', qty: 1, hint: 'Enciende, foco, pantalla' },
   { sub: 'Mobiliario', name: 'Clóset / Closet', type: 'fixed', qty: 1, hint: 'Puertas, rieles, interior limpio' },
   { sub: 'Mobiliario', name: 'Ganchos / Hangers', type: 'variable', qty: 10, hint: 'Cantidad suficiente' },
-  { sub: 'Otros', name: 'Televisión / TV', type: 'fixed', qty: 1, hint: 'Enciende, imagen, control remoto' },
+  { sub: 'Electrónica', name: 'Televisión / TV', type: 'fixed', qty: 1, hint: 'Enciende, imagen, pantalla' },
+  { sub: 'Electrónica', name: 'Control de TV / TV remote', type: 'variable', qty: 1, hint: 'Funciona, pilas' },
+  { sub: 'Electrónica', name: 'Módem Internet / Internet modem', type: 'fixed', qty: 0, hint: 'Funciona, luces, cables' },
+  { sub: 'Electrónica', name: 'Convertidor o repetidora (Roku) / Streaming device (Roku)', type: 'variable', qty: 0, hint: 'Funciona, control, cables' },
+  { sub: 'Otros', name: 'Secadora de cabello / Hair dryer', type: 'variable', qty: 1, hint: 'Funciona, cable, boquilla' },
+  { sub: 'Otros', name: 'Plancha / Iron', type: 'variable', qty: 1, hint: 'Funciona, cable, suela limpia' },
+  { sub: 'Otros', name: 'Accesorio colgar plancha / Iron hanger', type: 'variable', qty: 1, hint: 'Firme, buen estado' },
+  { sub: 'Otros', name: 'Burro planchar / Ironing board', type: 'variable', qty: 1, hint: 'Estable, forro, buen estado' },
+  { sub: 'Otros', name: 'Caja fuerte / Safe box', type: 'fixed', qty: 1, hint: 'Funciona, código, puerta' },
   { sub: 'Otros', name: 'Cortinas / Curtains', type: 'fixed', qty: 1, hint: 'Riel, tela, blackout funciona' },
   { sub: 'Otros', name: 'Espejo / Mirror', type: 'fixed', qty: 1, hint: 'Limpio, sin grietas, fijo' },
+  { sub: 'Otros', name: 'Adornos / Decorations', type: 'variable', qty: 0, hint: 'Presentes, buen estado' },
 ];
 
 const BATHROOM_TEMPLATE = [
   { sub: 'Sanitarios', name: 'Inodoro / Toilet', type: 'fixed', qty: 1, hint: 'Descarga bien, asiento, limpio' },
   { sub: 'Sanitarios', name: 'Lavabo / Sink', type: 'fixed', qty: 1, hint: 'Grifo, desagüe, sin goteo' },
   { sub: 'Sanitarios', name: 'Regadera / Shower', type: 'fixed', qty: 1, hint: 'Presión agua, temperatura, piso' },
+  { sub: 'Sanitarios', name: 'Puerta vidrio / Glass door', type: 'fixed', qty: 0, hint: 'Sin grietas, cierra bien' },
+  { sub: 'Sanitarios', name: 'Puerta acrílico / Acrylic door', type: 'fixed', qty: 0, hint: 'Sin grietas, cierra bien' },
   { sub: 'Accesorios', name: 'Espejo / Mirror', type: 'fixed', qty: 1, hint: 'Limpio, sin grietas' },
   { sub: 'Accesorios', name: 'Toallero / Towel rack', type: 'fixed', qty: 1, hint: 'Firme, bien montado' },
   { sub: 'Accesorios', name: 'Toallas / Towels', type: 'variable', qty: 2, hint: 'Cantidad, limpias, sin manchas' },
+  { sub: 'Accesorios', name: 'Dispensador jabón / Soap dispenser', type: 'variable', qty: 1, hint: 'Funciona, con jabón' },
+  { sub: 'Accesorios', name: 'Porta shampoo / Shampoo holder', type: 'variable', qty: 1, hint: 'Firme, buen estado' },
+  { sub: 'Accesorios', name: 'Cepillo WC / Toilet brush', type: 'variable', qty: 1, hint: 'Limpio, con base' },
   { sub: 'Accesorios', name: 'Cortina de baño / Shower curtain', type: 'variable', qty: 1, hint: 'Limpia, sin moho, ganchos' },
   { sub: 'Accesorios', name: 'Tapete de baño / Bath mat', type: 'variable', qty: 1, hint: 'Limpio, antideslizante' },
   { sub: 'Accesorios', name: 'Bote de basura / Trash can', type: 'variable', qty: 1, hint: 'Con tapa, limpio' },
   { sub: 'Accesorios', name: 'Portarrollos / Toilet paper holder', type: 'fixed', qty: 1, hint: 'Firme, con papel' },
+];
+
+const LAUNDRY_ITEMS = [
+  { sub: 'Electrodomésticos', name: 'Lavadora / Washing machine', type: 'fixed', qty: 1, hint: 'Funciona, sin fugas, ciclos' },
+  { sub: 'Electrodomésticos', name: 'Secadora / Dryer', type: 'fixed', qty: 0, hint: 'Funciona, filtro, ventilación' },
+  { sub: 'Electrodomésticos', name: 'Centro de lavado / Laundry center', type: 'fixed', qty: 0, hint: 'Funciona, sin fugas, completo' },
+  { sub: 'Limpieza', name: 'Escoba / Broom', type: 'variable', qty: 1, hint: 'Buen estado, cerdas completas' },
+  { sub: 'Limpieza', name: 'Recogedor / Dustpan', type: 'variable', qty: 1, hint: 'Buen estado, funcional' },
+  { sub: 'Limpieza', name: 'Trapeador / Mop', type: 'variable', qty: 1, hint: 'Limpio, buen estado' },
+  { sub: 'Limpieza', name: 'Cubeta / Bucket', type: 'variable', qty: 1, hint: 'Sin grietas, limpia' },
+  { sub: 'Limpieza', name: 'Mop / Sponge mop', type: 'variable', qty: 1, hint: 'Buen estado, repuesto' },
+  { sub: 'Limpieza', name: 'Colgador escobas / Broom hanger', type: 'fixed', qty: 1, hint: 'Firme, montado' },
+  { sub: 'Limpieza', name: 'Bomba WC / Toilet plunger', type: 'variable', qty: 1, hint: 'Buen estado, funcional' },
 ];
 
 const STATUS_OPTIONS = [
@@ -384,20 +518,32 @@ function getElapsedTime() {
 function buildSections(numBedrooms, numBathrooms) {
   const sections = [];
 
-  // 1. Cocina / Sala / Terraza (siempre 1)
-  const kitchenItems = [
-    ...KITCHEN_ITEMS.map(i => ({ ...i, area: 'Cocina' })),
-    ...LIVING_ITEMS.map(i => ({ ...i, area: 'Sala' })),
-    ...DINING_ITEMS.map(i => ({ ...i, area: 'Comedor' })),
-    ...TERRACE_ITEMS.map(i => ({ ...i, area: 'Terraza' })),
-  ];
+  // 1. Cocina
   sections.push({
-    id: 'kitchen-living-terrace',
-    name: 'Cocina / Sala / Terraza',
-    items: kitchenItems
+    id: 'kitchen',
+    name: 'Cocina',
+    items: KITCHEN_ITEMS.map(i => ({ ...i, area: 'Cocina' }))
   });
 
-  // 2. Recámaras
+  // 2. Sala / Comedor
+  const livingItems = [
+    ...LIVING_ITEMS.map(i => ({ ...i, area: 'Sala' })),
+    ...DINING_ITEMS.map(i => ({ ...i, area: 'Comedor' })),
+  ];
+  sections.push({
+    id: 'living',
+    name: 'Sala / Comedor',
+    items: livingItems
+  });
+
+  // 3. Terraza
+  sections.push({
+    id: 'terrace',
+    name: 'Terraza',
+    items: TERRACE_ITEMS.map(i => ({ ...i, area: 'Terraza' }))
+  });
+
+  // 4. Recámaras
   const bedroomItems = [];
   for (let i = 1; i <= numBedrooms; i++) {
     const areaName = numBedrooms === 1 ? 'Recámara' : `Recámara ${i}`;
@@ -411,7 +557,7 @@ function buildSections(numBedrooms, numBathrooms) {
     items: bedroomItems
   });
 
-  // 3. Baños
+  // 5. Baños
   const bathroomItems = [];
   for (let i = 1; i <= numBathrooms; i++) {
     const areaName = numBathrooms === 1 ? 'Baño' : `Baño ${i}`;
@@ -423,6 +569,13 @@ function buildSections(numBedrooms, numBathrooms) {
     id: 'bathrooms',
     name: 'Baños',
     items: bathroomItems
+  });
+
+  // 6. Lavandería
+  sections.push({
+    id: 'laundry',
+    name: 'Lavandería',
+    items: LAUNDRY_ITEMS.map(i => ({ ...i, area: 'Lavandería' }))
   });
 
   return sections;
@@ -780,8 +933,10 @@ function handlePhoto(input) {
   reader.onload = (e) => {
     if (!inspectionData[key]) inspectionData[key] = {};
     if (!inspectionData[key].photos) inspectionData[key].photos = [];
+    if (!inspectionData[key].photoTimes) inspectionData[key].photoTimes = [];
     compressImage(e.target.result, 800, 0.7, (compressed) => {
       inspectionData[key].photos.push(compressed);
+      inspectionData[key].photoTimes.push(new Date().toISOString());
       renderPhotos(key);
       document.querySelector('.camera-btn').classList.add('has-content');
       showToast('📷 Foto agregada');
@@ -816,16 +971,21 @@ function renderPhotos(key) {
     strip.innerHTML = '';
     return;
   }
-  strip.innerHTML = data.photos.map((p, i) =>
-    `<div class="photo-thumb">
+  strip.innerHTML = data.photos.map((p, i) => {
+    const timeStr = data.photoTimes && data.photoTimes[i]
+      ? new Date(data.photoTimes[i]).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      : '';
+    return `<div class="photo-thumb">
       <img src="${p}" alt="foto">
+      ${timeStr ? `<span class="photo-time">${timeStr}</span>` : ''}
       <button class="remove-photo" onclick="removePhoto('${key}', ${i})">×</button>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 function removePhoto(key, photoIndex) {
   inspectionData[key].photos.splice(photoIndex, 1);
+  if (inspectionData[key].photoTimes) inspectionData[key].photoTimes.splice(photoIndex, 1);
   renderPhotos(key);
   if (!inspectionData[key].photos.length) {
     document.querySelector('.camera-btn').classList.remove('has-content');
@@ -955,9 +1115,20 @@ function showExport() {
       const names = getItemNames(item.name);
       const statusClass = data.status || 'none';
 
-      const photos = (data.photos || []).map(p =>
-        `<img src="${p}" alt="foto">`
-      ).join('');
+      const photos = (data.photos || []).map((p, pi) => {
+        const timeStr = data.photoTimes && data.photoTimes[pi]
+          ? new Date(data.photoTimes[pi]).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          : '';
+        let diffStr = '';
+        if (pi > 0 && data.photoTimes && data.photoTimes[pi] && data.photoTimes[pi - 1]) {
+          const diffMs = new Date(data.photoTimes[pi]) - new Date(data.photoTimes[pi - 1]);
+          const diffSec = Math.floor(diffMs / 1000);
+          const dm = Math.floor(diffSec / 60);
+          const ds = diffSec % 60;
+          diffStr = dm > 0 ? ` (+${dm}m${ds}s)` : ` (+${ds}s)`;
+        }
+        return `<div class="review-photo-wrap"><img src="${p}" alt="foto">${timeStr ? `<span class="review-photo-time">${timeStr}${diffStr}</span>` : ''}</div>`;
+      }).join('');
 
       div.innerHTML += `
         <div class="review-item">
@@ -1255,11 +1426,29 @@ function buildPDF(jsPDF) {
           data.photos.forEach((photo, pi) => {
             if (pi < 3) {
               try {
-                doc.addImage(photo, 'JPEG', colX[1] + (pi * 18), y, 16, 16);
+                doc.addImage(photo, 'JPEG', colX[1] + (pi * 22), y, 16, 16);
               } catch (e) { /* skip */ }
+              // Mostrar hora de la foto y diferencia
+              if (data.photoTimes && data.photoTimes[pi]) {
+                const t = new Date(data.photoTimes[pi]);
+                const timeLabel = t.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                let diffLabel = '';
+                if (pi > 0 && data.photoTimes[pi - 1]) {
+                  const diffMs = t - new Date(data.photoTimes[pi - 1]);
+                  const diffSec = Math.floor(diffMs / 1000);
+                  const dm = Math.floor(diffSec / 60);
+                  const ds = diffSec % 60;
+                  diffLabel = dm > 0 ? ` (+${dm}m${ds}s)` : ` (+${ds}s)`;
+                }
+                doc.setFontSize(5);
+                doc.setTextColor(120, 120, 120);
+                doc.text(timeLabel + diffLabel, colX[1] + (pi * 22), y + 18);
+                doc.setFontSize(7);
+                doc.setTextColor(50, 50, 50);
+              }
             }
           });
-          y += 18;
+          y += 22;
         }
 
         y += 5;
