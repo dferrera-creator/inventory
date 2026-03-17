@@ -665,6 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
   checkShareSupport();
 });
 
+// Re-initialize Supabase after deferred CDN scripts load
+window.addEventListener('load', () => {
+  if (!isSupabaseReady()) initSupabase();
+});
+
 // ── Selección de modo desde la pantalla de inicio ──
 
 function selectMode(mode) {
