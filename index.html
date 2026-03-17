@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Inspección</title>
+  <title>Del Mar — Gestión de Propiedades</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap">
   <link rel="manifest" href="manifest.json">
@@ -13,17 +13,223 @@
 <body>
   <div id="app">
 
-    <!-- ══════════ PASO 1: BIENVENIDA ══════════ -->
-    <div id="step-welcome" class="step active">
+    <!-- ══════════ INICIO: SELECCIÓN DE MODO ══════════ -->
+    <div id="step-home" class="step active">
+      <div class="home-screen">
+        <div class="home-logo">
+          <span class="material-symbols-rounded icon-hero-home">apartment</span>
+        </div>
+        <h1 class="home-title">Del Mar</h1>
+        <p class="home-sub">Gestión de Propiedades</p>
+
+        <div class="mode-cards">
+          <button class="mode-card inventory-mode" onclick="selectMode('inventory')">
+            <div class="mode-card-inner">
+              <span class="material-symbols-rounded mode-icon">add_box</span>
+              <div class="mode-card-text">
+                <span class="mode-title">Inventario</span>
+                <span class="mode-desc">Registrar artículos de una unidad</span>
+              </div>
+              <span class="material-symbols-rounded mode-arrow">chevron_right</span>
+            </div>
+          </button>
+
+          <button class="mode-card inspection-mode" onclick="selectMode('inspection')">
+            <div class="mode-card-inner">
+              <span class="material-symbols-rounded mode-icon">fact_check</span>
+              <div class="mode-card-text">
+                <span class="mode-title">Inspección</span>
+                <span class="mode-desc">Revisar inventario existente</span>
+              </div>
+              <span class="material-symbols-rounded mode-arrow">chevron_right</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ INVENTARIO PASO 1: DATOS DE LA UNIDAD ══════════ -->
+    <div id="step-inv-welcome" class="step">
       <div class="welcome-screen">
-        <div class="welcome-icon"><span class="material-symbols-rounded icon-hero">assignment</span></div>
-        <h1>Inspección</h1>
-        <p class="welcome-sub">Toca para iniciar</p>
+        <button class="back-home-btn" onclick="showStep('step-home')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <div class="welcome-icon"><span class="material-symbols-rounded icon-hero" style="color:#f59e0b">add_box</span></div>
+        <h1>Nuevo Inventario</h1>
+        <p class="welcome-sub">Registra los artículos de la unidad</p>
+
+        <div class="form-card">
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">apartment</span></div>
+            <input type="text" id="inv-unit-name" placeholder="Nombre de la unidad..." autocomplete="off">
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
+            <input type="date" id="inv-date">
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
+            <input type="text" id="inv-auditor" placeholder="Tu nombre..." autocomplete="off">
+          </div>
+        </div>
+
+        <button class="btn-start" style="background:#f59e0b" onclick="startInventoryMode()">
+          <span class="material-symbols-rounded">play_arrow</span>
+          INICIAR INVENTARIO
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ INVENTARIO PASO 2: CUARTOS ══════════ -->
+    <div id="step-inv-rooms" class="step">
+      <div class="rooms-header">
+        <div class="timer-bar" id="inv-timer-bar">
+          <span class="material-symbols-rounded timer-icon">timer</span>
+          <span id="inv-timer-display">00:00</span>
+        </div>
+        <h2>Cuartos del Inventario</h2>
+        <p class="inv-unit-label" id="inv-unit-label"></p>
+      </div>
+      <div id="inv-room-grid" class="room-grid"></div>
+
+      <div class="inv-rooms-actions">
+        <button class="btn-add-room" onclick="showAddRoomModal()">
+          <span class="material-symbols-rounded">add_circle</span>
+          Agregar Cuarto
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ INVENTARIO PASO 3: ARTÍCULOS DEL CUARTO ══════════ -->
+    <div id="step-inv-item" class="step">
+      <div class="item-topbar">
+        <button class="topbar-back" onclick="backToInventoryRooms()">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <div class="topbar-room-name" id="inv-room-title">Cuarto</div>
+        <div class="topbar-timer" id="inv-topbar-timer">00:00</div>
+      </div>
+
+      <div id="inv-item-list" class="inv-item-list"></div>
+
+      <div class="inv-add-item-section">
+        <button class="btn-add-item" id="btn-show-add-item" onclick="showAddItemPanel()">
+          <span class="material-symbols-rounded">add_circle_outline</span>
+          Agregar Artículo
+        </button>
+
+        <!-- Panel para agregar artículo -->
+        <div class="add-item-panel" id="add-item-panel" style="display:none">
+          <h3 class="add-item-title">Nuevo Artículo</h3>
+
+          <div class="inv-field-group">
+            <label>Nombre del artículo *</label>
+            <input type="text" id="new-item-name" placeholder="Ej: Sofá, Televisión..." autocomplete="off">
+          </div>
+
+          <div class="inv-field-row">
+            <div class="inv-field-group half">
+              <label>SKU / Código</label>
+              <input type="text" id="new-item-sku" placeholder="Ej: SKU-001" autocomplete="off">
+            </div>
+            <div class="inv-field-group half">
+              <label>Precio ($)</label>
+              <input type="number" id="new-item-price" placeholder="0.00" min="0" step="0.01">
+            </div>
+          </div>
+
+          <div class="inv-field-group">
+            <label>Cantidad</label>
+            <div class="qty-row">
+              <button class="qty-btn" onclick="changeNewItemQty(-1)">
+                <span class="material-symbols-rounded">remove</span>
+              </button>
+              <span class="qty-value" id="new-item-qty">1</span>
+              <button class="qty-btn" onclick="changeNewItemQty(1)">
+                <span class="material-symbols-rounded">add</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="inv-field-group">
+            <label>Estado</label>
+            <div class="status-grid compact" id="new-item-status-grid">
+              <button class="status-btn good" onclick="setNewItemStatus('good')">
+                <span class="material-symbols-rounded status-mat-icon good-icon">check_circle</span>
+                <span class="status-label">Bueno</span>
+              </button>
+              <button class="status-btn damaged" onclick="setNewItemStatus('damaged')">
+                <span class="material-symbols-rounded status-mat-icon damaged-icon">build</span>
+                <span class="status-label">Dañado</span>
+              </button>
+              <button class="status-btn missing" onclick="setNewItemStatus('missing')">
+                <span class="material-symbols-rounded status-mat-icon missing-icon">cancel</span>
+                <span class="status-label">Faltante</span>
+              </button>
+              <button class="status-btn new-item" onclick="setNewItemStatus('new')">
+                <span class="material-symbols-rounded status-mat-icon new-icon">new_releases</span>
+                <span class="status-label">Nuevo</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="inv-field-group">
+            <label>Fotos</label>
+            <div class="extras-row">
+              <button class="extra-btn camera-btn" id="inv-camera-btn" onclick="triggerInvPhoto()">
+                <span class="material-symbols-rounded">photo_camera</span> Foto
+              </button>
+            </div>
+            <input type="file" id="inv-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handleInvPhoto(this)">
+            <div class="photo-strip" id="inv-photo-strip"></div>
+          </div>
+
+          <div class="inv-field-group">
+            <label>Notas</label>
+            <textarea id="new-item-notes" placeholder="Observaciones, descripción..." rows="2"></textarea>
+          </div>
+
+          <div class="add-item-actions">
+            <button class="btn-cancel-item" onclick="hideAddItemPanel()">Cancelar</button>
+            <button class="btn-save-item" onclick="saveInventoryItem()">
+              <span class="material-symbols-rounded">save</span> Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ INSPECCIÓN: SELECCIÓN DE UNIDAD ══════════ -->
+    <div id="step-insp-select" class="step">
+      <div class="insp-select-header">
+        <button class="back-home-btn-inline" onclick="showStep('step-home')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h2>Seleccionar Unidad</h2>
+        <p class="insp-select-sub">Elige la unidad a inspeccionar</p>
+      </div>
+      <div id="unit-list" class="unit-list">
+        <div class="loading-state">
+          <span class="material-symbols-rounded loading-icon">sync</span>
+          <p>Cargando inventarios...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ INSPECCIÓN PASO 1: DATOS DE INSPECCIÓN ══════════ -->
+    <div id="step-welcome" class="step">
+      <div class="welcome-screen">
+        <button class="back-home-btn" onclick="goBackFromInspection()">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <div class="welcome-icon"><span class="material-symbols-rounded icon-hero">fact_check</span></div>
+        <h1 id="insp-welcome-title">Inspección</h1>
+        <p class="welcome-sub" id="insp-welcome-sub">Toca para iniciar</p>
 
         <div class="form-card">
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">location_on</span></div>
-            <input type="text" id="location" placeholder="Ubicación..." autocomplete="off">
+            <input type="text" id="location" placeholder="Ubicación..." autocomplete="off" readonly>
           </div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
@@ -34,8 +240,8 @@
             <input type="text" id="auditor" placeholder="Tu nombre..." autocomplete="off">
           </div>
 
-          <!-- Número de recámaras y baños -->
-          <div class="room-count-row">
+          <!-- Número de recámaras y baños (oculto cuando viene de inventario) -->
+          <div class="room-count-row" id="room-count-row">
             <div class="room-count-item">
               <div class="room-count-icon"><span class="material-symbols-rounded">bed</span></div>
               <span class="room-count-label">Recámaras</span>
@@ -72,7 +278,7 @@
       </div>
     </div>
 
-    <!-- ══════════ PASO 2: SELECCIÓN DE CUARTO ══════════ -->
+    <!-- ══════════ INSPECCIÓN PASO 2: SELECCIÓN DE CUARTO ══════════ -->
     <div id="step-rooms" class="step">
       <div class="rooms-header">
         <div class="timer-bar" id="timer-bar">
@@ -88,7 +294,7 @@
       <div id="room-grid" class="room-grid"></div>
     </div>
 
-    <!-- ══════════ PASO 3: INSPECCIÓN DE ARTÍCULO (UNO A LA VEZ) ══════════ -->
+    <!-- ══════════ INSPECCIÓN PASO 3: ARTÍCULO UNO A LA VEZ ══════════ -->
     <div id="step-item" class="step">
       <!-- Barra superior de progreso -->
       <div class="item-topbar">
@@ -180,7 +386,7 @@
       </div>
     </div>
 
-    <!-- ══════════ PASO 4: CUARTO COMPLETADO ══════════ -->
+    <!-- ══════════ INSPECCIÓN PASO 4: CUARTO COMPLETADO ══════════ -->
     <div id="step-room-done" class="step">
       <div class="celebration">
         <div class="celebration-icon"><span class="material-symbols-rounded icon-celebrate">celebration</span></div>
@@ -193,11 +399,11 @@
       </div>
     </div>
 
-    <!-- ══════════ PASO 5: TODO LISTO / EXPORTAR ══════════ -->
+    <!-- ══════════ PASO FINAL: EXPORTAR ══════════ -->
     <div id="step-export" class="step">
       <div class="celebration">
-        <div class="celebration-icon"><span class="material-symbols-rounded icon-celebrate">emoji_events</span></div>
-        <h2 class="celebration-title">¡Todo Listo!</h2>
+        <div class="celebration-icon"><span class="material-symbols-rounded icon-celebrate" id="export-icon">emoji_events</span></div>
+        <h2 class="celebration-title" id="export-title">¡Todo Listo!</h2>
         <p class="celebration-sub" id="export-summary"></p>
         <div class="timer-final" id="timer-final"></div>
       </div>
@@ -205,17 +411,36 @@
       <div id="review-container"></div>
 
       <div class="export-buttons">
-        <button class="btn-export xlsx" onclick="exportXLSX()">
+        <button class="btn-export xlsx" id="btn-export-xlsx" onclick="handleExportXLSX()">
           <span class="material-symbols-rounded">table_chart</span> Descargar Excel
         </button>
-        <button class="btn-export pdf" onclick="exportPDF()">
+        <button class="btn-export pdf" id="btn-export-pdf" onclick="handleExportPDF()">
           <span class="material-symbols-rounded">picture_as_pdf</span> Descargar PDF
         </button>
-        <button class="btn-export share" onclick="shareFiles()" id="btn-share" style="display:none">
+        <button class="btn-export share" onclick="handleShare()" id="btn-share" style="display:none">
           <span class="material-symbols-rounded">share</span> Compartir
         </button>
-        <button class="btn-back-edit" onclick="backToRooms()">
+        <button class="btn-back-edit" id="btn-back-edit" onclick="handleBackEdit()">
           <span class="material-symbols-rounded">edit</span> Editar
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ MODAL: AGREGAR CUARTO ══════════ -->
+    <div class="help-modal-overlay" id="add-room-modal" onclick="closeAddRoomModal()">
+      <div class="help-modal" onclick="event.stopPropagation()">
+        <button class="help-modal-close" onclick="closeAddRoomModal()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="help-modal-icon-wrap">
+          <span class="material-symbols-rounded help-modal-icon">add_home</span>
+        </div>
+        <h3 class="help-modal-name">Nuevo Cuarto</h3>
+        <div class="inv-field-group" style="margin-top:16px">
+          <input type="text" id="new-room-name" placeholder="Ej: Cocina, Recámara 1..." autocomplete="off" style="width:100%">
+        </div>
+        <button class="btn-continue" style="margin-top:16px;width:100%" onclick="confirmAddRoom()">
+          <span class="material-symbols-rounded">check</span> Agregar
         </button>
       </div>
     </div>
@@ -242,6 +467,9 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
   <script src="app.js"></script>
+  <script src="inventory-mode.js"></script>
 </body>
 </html>

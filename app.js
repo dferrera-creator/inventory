@@ -296,6 +296,12 @@ const ROOM_COLORS = {
   'laundry': '#e74c3c',
 };
 
+// ── Colores dinámicos para cuartos de usuario ──
+const DYNAMIC_ROOM_COLORS = [
+  '#f59e0b', '#e67e22', '#27ae60', '#8b5cf6',
+  '#06b6d4', '#e74c3c', '#ec4899', '#0ea5e9'
+];
+
 // ── Plantillas de artículos con hints y subcategorías ──
 
 const KITCHEN_ITEMS = [
@@ -454,6 +460,7 @@ const STATUS_OPTIONS = [
 
 // ── Estado ──
 
+let currentMode = null; // 'inventory' | 'inspection'
 let inspectionInfo = {};
 let inspectionData = {}; // clave: "sectionId-itemIndex"
 let currentSectionIndex = 0;
@@ -487,11 +494,19 @@ function updateTimerDisplay() {
   const elapsed = Date.now() - timerStartTime;
   const formatted = formatTime(elapsed);
 
+  // Inspection timers
   const display = document.getElementById('timer-display');
   if (display) display.textContent = formatted;
 
   const topbar = document.getElementById('topbar-timer');
   if (topbar) topbar.textContent = formatted;
+
+  // Inventory timers
+  const invDisplay = document.getElementById('inv-timer-display');
+  if (invDisplay) invDisplay.textContent = formatted;
+
+  const invTopbar = document.getElementById('inv-topbar-timer');
+  if (invTopbar) invTopbar.textContent = formatted;
 }
 
 function formatTime(ms) {
@@ -646,9 +661,33 @@ function showStep(stepId) {
 // ══════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('date').valueAsDate = new Date();
+  initSupabase();
   checkShareSupport();
 });
+
+// ── Selección de modo desde la pantalla de inicio ──
+
+function selectMode(mode) {
+  currentMode = mode;
+  if (mode === 'inventory') {
+    document.getElementById('inv-date').valueAsDate = new Date();
+    showStep('step-inv-welcome');
+  } else {
+    showStep('step-insp-select');
+    loadAndRenderUnitList();
+  }
+}
+
+// ── Navegación de inspección ──
+
+function goBackFromInspection() {
+  // Si viene de un inventario, volver al selector de unidades; si es directo, ir al inicio
+  if (window._loadedInventory) {
+    showStep('step-insp-select');
+  } else {
+    showStep('step-home');
+  }
+}
 
 function checkShareSupport() {
   const shareBtn = document.getElementById('btn-share');
@@ -669,30 +708,157 @@ function startInspection() {
   const auditor = document.getElementById('auditor').value.trim();
 
   let valid = true;
-  ['location', 'date', 'auditor'].forEach(id => {
-    const group = document.getElementById(id).closest('.form-group');
-    if (!document.getElementById(id).value.trim()) {
+  ['date', 'auditor'].forEach(id => {
+    const el = document.getElementById(id);
+    const group = el.closest('.form-group');
+    if (!el.value.trim()) {
       group.classList.add('error');
       setTimeout(() => group.classList.remove('error'), 800);
       valid = false;
     }
   });
+  // location is required only when not coming from a loaded inventory
+  if (!location) {
+    const group = document.getElementById('location').closest('.form-group');
+    group.classList.add('error');
+    setTimeout(() => group.classList.remove('error'), 800);
+    valid = false;
+  }
 
   if (!valid) {
     showToast('⚠️ Llena todos los campos');
     return;
   }
 
-  const numBedrooms = parseInt(document.getElementById('num-bedrooms').textContent) || 2;
-  const numBathrooms = parseInt(document.getElementById('num-bathrooms').textContent) || 2;
+  if (window._loadedInventory) {
+    // Inspección basada en un inventario guardado en Supabase
+    const inv = window._loadedInventory;
+    inv.rooms.forEach((room, i) => {
+      ROOM_CONFIG[room.roomId] = { icon: 'inventory_2', name: room.roomName, shortName: room.roomName };
+      ROOM_COLORS[room.roomId] = DYNAMIC_ROOM_COLORS[i % DYNAMIC_ROOM_COLORS.length];
+    });
+    SECTIONS = buildSectionsFromInventory(inv);
+    inspectionInfo = { location, date, auditor, numBedrooms: 0, numBathrooms: 0, fromInventory: true };
+  } else {
+    // Inspección con plantilla estándar (sin inventario previo)
+    const numBedrooms = parseInt(document.getElementById('num-bedrooms').textContent) || 2;
+    const numBathrooms = parseInt(document.getElementById('num-bathrooms').textContent) || 2;
+    inspectionInfo = { location, date, auditor, numBedrooms, numBathrooms };
+    SECTIONS = buildSections(numBedrooms, numBathrooms);
+  }
 
-  inspectionInfo = { location, date, auditor, numBedrooms, numBathrooms };
-  SECTIONS = buildSections(numBedrooms, numBathrooms);
   inspectionData = {};
-
+  currentMode = 'inspection';
   startTimer();
   showStep('step-rooms');
   renderRooms();
+}
+
+// ── Construir secciones desde un inventario guardado en Supabase ──
+
+function buildSectionsFromInventory(inventoryDoc) {
+  return inventoryDoc.rooms.map((room) => ({
+    id: room.roomId,
+    name: room.roomName,
+    items: room.items.map(item => ({
+      name: item.name,
+      sub: item.sku || '',
+      type: 'variable',
+      qty: item.qty,
+      hint: item.notes || '',
+      area: room.roomName,
+      price: item.price,
+      inventoryItemId: item.itemId,
+    })),
+  }));
+}
+
+// ── Cargar y mostrar lista de unidades con inventario ──
+
+async function loadAndRenderUnitList() {
+  const listEl = document.getElementById('unit-list');
+  listEl.innerHTML = `
+    <div class="loading-state">
+      <span class="material-symbols-rounded loading-icon">sync</span>
+      <p>Cargando inventarios...</p>
+    </div>
+  `;
+
+  if (!isSupabaseReady()) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <span class="material-symbols-rounded">cloud_off</span>
+        <p>Supabase no configurado.<br>Configura tu proyecto en <strong>supabase.js</strong>.</p>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const units = await loadInventoryList();
+    if (units.length === 0) {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <span class="material-symbols-rounded">inventory_2</span>
+          <p>No hay inventarios guardados.<br>Crea uno primero en modo Inventario.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = units.map(u => {
+      const date = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+      return `
+        <div class="unit-card" onclick="selectUnitForInspection('${u.unitId}')">
+          <span class="material-symbols-rounded unit-card-icon">apartment</span>
+          <div class="unit-card-info">
+            <div class="unit-card-name">${u.unitName}</div>
+            <div class="unit-card-meta">${u.itemCount} artículo${u.itemCount !== 1 ? 's' : ''} · ${date}</div>
+          </div>
+          <span class="material-symbols-rounded unit-card-arrow">chevron_right</span>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <span class="material-symbols-rounded">error</span>
+        <p>Error al cargar inventarios.<br>${err.message}</p>
+      </div>
+    `;
+  }
+}
+
+async function selectUnitForInspection(unitId) {
+  showToast('⏳ Cargando inventario...');
+  try {
+    const inventoryDoc = await loadInventoryByUnit(unitId);
+    if (!inventoryDoc) {
+      showToast('❌ Inventario no encontrado');
+      return;
+    }
+
+    window._loadedInventory = inventoryDoc;
+
+    // Pre-llenar el formulario de inspección
+    document.getElementById('location').value = inventoryDoc.unitName;
+    document.getElementById('location').readOnly = true;
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('auditor').value = '';
+
+    // Ocultar controles de recámaras/baños
+    document.getElementById('room-count-row').style.display = 'none';
+
+    // Actualizar encabezado
+    document.getElementById('insp-welcome-title').textContent = 'Inspección';
+    document.getElementById('insp-welcome-sub').textContent = inventoryDoc.unitName;
+
+    showStep('step-welcome');
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error al cargar unidad');
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1085,6 +1251,10 @@ function showRoomComplete() {
 function showExport() {
   stopTimer();
   showStep('step-export');
+
+  // Reset export screen for inspection mode
+  document.getElementById('export-icon').textContent = 'emoji_events';
+  document.getElementById('export-title').textContent = '¡Todo Listo!';
 
   const total = getTotalItems();
   const completed = getTotalCompleted();
@@ -1607,4 +1777,39 @@ function exportPDF() {
   const doc = buildPDF(jsPDF);
   doc.save(`Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.pdf`);
   showToast('📄 PDF descargado');
+}
+
+// ── Manejadores de exportación (enrutan según modo activo) ──
+
+function handleExportXLSX() {
+  if (currentMode === 'inventory') {
+    exportInventoryXLSX();
+  } else {
+    exportXLSX();
+  }
+}
+
+function handleExportPDF() {
+  if (currentMode === 'inventory') {
+    exportInventoryPDF();
+  } else {
+    exportPDF();
+  }
+}
+
+function handleShare() {
+  if (currentMode === 'inventory') {
+    shareInventoryFiles();
+  } else {
+    shareFiles();
+  }
+}
+
+function handleBackEdit() {
+  if (currentMode === 'inventory') {
+    showStep('step-inv-rooms');
+    renderInventoryRooms();
+  } else {
+    backToRooms();
+  }
 }
