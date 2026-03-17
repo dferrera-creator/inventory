@@ -6,8 +6,8 @@
 // 2. En SQL Editor ejecuta el script de creación de tabla (ver README o plan)
 // 3. Copia tu Project URL y anon key aquí
 
-const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';
-const SUPABASE_KEY = 'TU_CLAVE_ANONIMA';
+const SUPABASE_URL = 'https://esuiqcqfkhpvnjpcxcxo.supabase.co';
+const SUPABASE_KEY = 'sb_secret_TrWy8j05UAaDJK-TsiESEw_H-_Uobaz';
 
 let _sb = null;
 
