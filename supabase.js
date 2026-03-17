@@ -7,7 +7,7 @@
 // 3. Copia tu Project URL y anon key aquí
 
 const SUPABASE_URL = 'https://esuiqcqfkhpvnjpcxcxo.supabase.co';
-const SUPABASE_KEY = 'sb_secret_TrWy8j05UAaDJK-TsiESEw_H-_Uobaz';
+const SUPABASE_KEY = 'sb_publishable_dLtQG61B7gn9ByJrRB2WqQ_5Zn5LSLj';
 
 let _sb = null;
 
