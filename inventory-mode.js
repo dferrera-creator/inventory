@@ -22,38 +22,43 @@ const DYNAMIC_ROOM_COLORS = [
 // ── Inicio del modo inventario ──
 
 function startInventoryMode() {
-  const unitName = document.getElementById('inv-unit-name').value.trim();
-  const date = document.getElementById('inv-date').value;
-  const auditor = document.getElementById('inv-auditor').value.trim();
+  try {
+    const unitName = document.getElementById('inv-unit-name').value.trim();
+    const date = document.getElementById('inv-date').value;
+    const auditor = document.getElementById('inv-auditor').value.trim();
 
-  let valid = true;
-  ['inv-unit-name', 'inv-date', 'inv-auditor'].forEach(id => {
-    const el = document.getElementById(id);
-    const group = el.closest('.form-group');
-    if (!el.value.trim()) {
-      group.classList.add('error');
-      setTimeout(() => group.classList.remove('error'), 800);
-      valid = false;
+    let valid = true;
+    ['inv-unit-name', 'inv-date', 'inv-auditor'].forEach(id => {
+      const el = document.getElementById(id);
+      const group = el.closest('.form-group');
+      if (!el.value.trim()) {
+        group.classList.add('error');
+        setTimeout(() => group.classList.remove('error'), 800);
+        valid = false;
+      }
+    });
+
+    if (!valid) {
+      showToast('⚠️ Llena todos los campos');
+      return;
     }
-  });
 
-  if (!valid) {
-    showToast('⚠️ Llena todos los campos');
-    return;
+    inventoryInfo = {
+      unitId: unitName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now(),
+      unitName,
+      date,
+      auditor,
+    };
+    inventoryRooms = [];
+
+    startTimer();
+    document.getElementById('inv-unit-label').textContent = unitName;
+    showStep('step-inv-rooms');
+    renderInventoryRooms();
+  } catch (err) {
+    console.error('Error en startInventoryMode:', err);
+    showToast('❌ Error: ' + err.message);
   }
-
-  inventoryInfo = {
-    unitId: unitName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now(),
-    unitName,
-    date,
-    auditor,
-  };
-  inventoryRooms = [];
-
-  startTimer();
-  document.getElementById('inv-unit-label').textContent = unitName;
-  showStep('step-inv-rooms');
-  renderInventoryRooms();
 }
 
 // ── Renderizar cuadrícula de cuartos ──
@@ -92,7 +97,8 @@ function renderInventoryRooms() {
     finishBtn.className = 'btn-finish-all';
     finishBtn.innerHTML = '<span class="material-symbols-rounded">cloud_upload</span> Guardar Inventario';
     finishBtn.onclick = finishInventory;
-    document.getElementById('inv-room-grid').parentElement.querySelector('.inv-rooms-actions').after(finishBtn);
+    const container = document.getElementById('inv-room-grid').parentElement;
+    container.appendChild(finishBtn);
   }
 
   const hasItems = inventoryRooms.some(r => r.items.length > 0);
