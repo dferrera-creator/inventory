@@ -23,12 +23,22 @@ const DYNAMIC_ROOM_COLORS = [
 
 function startInventoryMode() {
   try {
+    // Auto-fill date if empty
+    const dateEl = document.getElementById('inv-date');
+    if (!dateEl.value) {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      dateEl.value = `${yyyy}-${mm}-${dd}`;
+    }
+
     const unitName = document.getElementById('inv-unit-name').value.trim();
     const date = document.getElementById('inv-date').value;
     const auditor = document.getElementById('inv-auditor').value.trim();
 
     let valid = true;
-    ['inv-unit-name', 'inv-date', 'inv-auditor'].forEach(id => {
+    ['inv-unit-name', 'inv-auditor'].forEach(id => {
       const el = document.getElementById(id);
       const group = el.closest('.form-group');
       if (!el.value.trim()) {
@@ -55,6 +65,8 @@ function startInventoryMode() {
     document.getElementById('inv-unit-label').textContent = unitName;
     showStep('step-inv-rooms');
     renderInventoryRooms();
+    // Prompt user to add first room immediately
+    showAddRoomModal();
   } catch (err) {
     console.error('Error en startInventoryMode:', err);
     showToast('❌ Error: ' + err.message);
