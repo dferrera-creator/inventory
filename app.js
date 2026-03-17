@@ -670,7 +670,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function selectMode(mode) {
   currentMode = mode;
   if (mode === 'inventory') {
-    document.getElementById('inv-date').valueAsDate = new Date();
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('inv-date').value = `${yyyy}-${mm}-${dd}`;
     showStep('step-inv-welcome');
   } else {
     showStep('step-insp-select');
@@ -844,7 +848,9 @@ async function selectUnitForInspection(unitId) {
     // Pre-llenar el formulario de inspección
     document.getElementById('location').value = inventoryDoc.unitName;
     document.getElementById('location').readOnly = true;
-    document.getElementById('date').valueAsDate = new Date();
+    const _today = new Date();
+    document.getElementById('date').value = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, '0')}-${String(_today.getDate()).padStart(2, '0')}`;
+
     document.getElementById('auditor').value = '';
 
     // Ocultar controles de recámaras/baños
