@@ -44,6 +44,17 @@
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
           </button>
+
+          <button class="mode-card historico-mode" onclick="selectMode('historico')">
+            <div class="mode-card-inner">
+              <span class="material-symbols-rounded mode-icon">history</span>
+              <div class="mode-card-text">
+                <span class="mode-title">Histórico</span>
+                <span class="mode-desc">Ver inventarios e inspecciones</span>
+              </div>
+              <span class="material-symbols-rounded mode-arrow">chevron_right</span>
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -77,6 +88,13 @@
           <span class="material-symbols-rounded">play_arrow</span>
           INICIAR INVENTARIO
         </button>
+
+        <div class="import-divider"><span>o importar existente</span></div>
+        <button class="btn-import" onclick="document.getElementById('xlsx-import-input').click()">
+          <span class="material-symbols-rounded">upload_file</span>
+          Importar desde Excel
+        </button>
+        <input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none" onchange="importInventoryFromXLSX(this)">
       </div>
     </div>
 
@@ -225,12 +243,16 @@
         </button>
         <div class="welcome-icon"><span class="material-symbols-rounded icon-hero">fact_check</span></div>
         <h1 id="insp-welcome-title">Inspección</h1>
-        <p class="welcome-sub" id="insp-welcome-sub">Toca para iniciar</p>
+        <p class="welcome-sub" id="insp-welcome-sub">Selecciona una unidad existente</p>
 
         <div class="form-card">
-          <div class="form-group">
-            <div class="input-icon"><span class="material-symbols-rounded">location_on</span></div>
-            <input type="text" id="location" placeholder="Ubicación..." autocomplete="off" readonly>
+          <div class="form-group unit-search-group">
+            <div class="input-icon"><span class="material-symbols-rounded">apartment</span></div>
+            <input type="text" id="location" placeholder="Buscar unidad..." autocomplete="off" oninput="onUnitSearchInput(this.value)">
+            <button class="unit-search-clear" id="unit-search-clear" onclick="clearUnitSelection()" style="display:none">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+            <div class="unit-search-dropdown" id="unit-search-dropdown"></div>
           </div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
@@ -240,39 +262,9 @@
             <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
             <input type="text" id="auditor" placeholder="Tu nombre..." autocomplete="off">
           </div>
-
-          <!-- Número de recámaras y baños (oculto cuando viene de inventario) -->
-          <div class="room-count-row" id="room-count-row">
-            <div class="room-count-item">
-              <div class="room-count-icon"><span class="material-symbols-rounded">bed</span></div>
-              <span class="room-count-label">Recámaras</span>
-              <div class="room-count-stepper">
-                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bedrooms', -1)">
-                  <span class="material-symbols-rounded">remove</span>
-                </button>
-                <span class="room-count-value" id="num-bedrooms">2</span>
-                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bedrooms', 1)">
-                  <span class="material-symbols-rounded">add</span>
-                </button>
-              </div>
-            </div>
-            <div class="room-count-item">
-              <div class="room-count-icon"><span class="material-symbols-rounded">shower</span></div>
-              <span class="room-count-label">Baños</span>
-              <div class="room-count-stepper">
-                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bathrooms', -1)">
-                  <span class="material-symbols-rounded">remove</span>
-                </button>
-                <span class="room-count-value" id="num-bathrooms">2</span>
-                <button type="button" class="room-count-btn" onclick="changeRoomCount('num-bathrooms', 1)">
-                  <span class="material-symbols-rounded">add</span>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <button class="btn-start" onclick="startInspection()">
+        <button class="btn-start" id="btn-start-inspection" onclick="startInspection()" disabled>
           <span class="material-symbols-rounded">play_arrow</span>
           INICIAR
         </button>
@@ -398,6 +390,46 @@
           Continuar <span class="material-symbols-rounded">arrow_forward</span>
         </button>
       </div>
+    </div>
+
+    <!-- ══════════ HISTÓRICO ══════════ -->
+    <div id="step-historico" class="step">
+      <div class="historico-header">
+        <button class="back-home-btn-inline" onclick="showStep('step-home')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h2>Histórico</h2>
+        <p class="historico-sub">Inventarios e inspecciones completados</p>
+      </div>
+      <div class="historico-controls">
+        <div class="historico-search">
+          <span class="material-symbols-rounded">search</span>
+          <input type="text" id="historico-search" placeholder="Buscar unidad..." oninput="filterHistorico()">
+        </div>
+        <div class="historico-filters">
+          <input type="date" id="historico-date-from" onchange="filterHistorico()" placeholder="Desde">
+          <input type="date" id="historico-date-to" onchange="filterHistorico()" placeholder="Hasta">
+          <select id="historico-sort" onchange="filterHistorico()">
+            <option value="recent">Más reciente</option>
+            <option value="oldest">Menos reciente</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+          </select>
+        </div>
+      </div>
+      <div id="historico-list" class="historico-list"></div>
+    </div>
+
+    <!-- ══════════ HISTÓRICO: DETALLE DE UNIDAD ══════════ -->
+    <div id="step-historico-unit" class="step">
+      <div class="historico-header">
+        <button class="back-home-btn-inline" onclick="showStep('step-historico')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h2 id="historico-unit-title">Unidad</h2>
+        <p class="historico-sub" id="historico-unit-sub">Registros de esta unidad</p>
+      </div>
+      <div id="historico-unit-records" class="historico-list"></div>
     </div>
 
     <!-- ══════════ PASO FINAL: EXPORTAR ══════════ -->

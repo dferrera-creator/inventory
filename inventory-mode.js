@@ -63,6 +63,115 @@ function getRoomItemSuggestions(roomName) {
   return [];
 }
 
+// ── Importar inventario desde XLSX ──
+// Formato esperado: Hoja única o múltiples hojas (una por cuarto)
+// Columnas: Cuarto | Nombre | SKU | Precio | Cantidad | Estado | Notas
+// Si hay múltiples hojas, el nombre de la hoja = nombre del cuarto
+
+function importInventoryFromXLSX(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const rooms = [];
+
+      if (wb.SheetNames.length === 1) {
+        // Single-sheet format: needs "Cuarto" column
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        const roomMap = {};
+        rows.forEach(row => {
+          const roomName = (row['Cuarto'] || row['Room'] || row['cuarto'] || row['room'] || '').toString().trim();
+          const itemName = (row['Nombre'] || row['Name'] || row['nombre'] || row['name'] || row['Artículo'] || row['articulo'] || '').toString().trim();
+          if (!roomName || !itemName) return;
+          if (!roomMap[roomName]) roomMap[roomName] = [];
+          roomMap[roomName].push(parseRowToItem(row));
+        });
+        Object.entries(roomMap).forEach(([roomName, items]) => {
+          rooms.push(makeImportRoom(roomName, items));
+        });
+      } else {
+        // Multi-sheet format: each sheet = a room
+        wb.SheetNames.forEach(sheetName => {
+          const sheet = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          const items = rows
+            .map(row => parseRowToItem(row))
+            .filter(i => i.name);
+          if (items.length > 0) {
+            rooms.push(makeImportRoom(sheetName, items));
+          }
+        });
+      }
+
+      if (rooms.length === 0) {
+        showToast('⚠️ No se encontraron datos en el archivo');
+        input.value = '';
+        return;
+      }
+
+      // Derive unit name from filename
+      const unitName = file.name.replace(/\.(xlsx|xls)$/i, '').replace(/[_-]/g, ' ');
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      inventoryInfo = {
+        unitId: unitName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now(),
+        unitName,
+        date: dateStr,
+        auditor: document.getElementById('inv-auditor').value.trim() || '',
+      };
+      inventoryRooms = rooms;
+      isEditingInventory = false;
+
+      // Pre-fill form fields
+      document.getElementById('inv-unit-name').value = unitName;
+      document.getElementById('inv-date').value = dateStr;
+
+      startTimer();
+      document.getElementById('inv-unit-label').textContent = unitName;
+      showStep('step-inv-rooms');
+      renderInventoryRooms();
+
+      const totalItems = rooms.reduce((s, r) => s + r.items.length, 0);
+      showToast(`✅ Importado: ${rooms.length} cuartos, ${totalItems} artículos`);
+    } catch (err) {
+      console.error('Error importando XLSX:', err);
+      showToast('❌ Error al leer el archivo Excel');
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseRowToItem(row) {
+  const name = (row['Nombre'] || row['Name'] || row['nombre'] || row['name'] || row['Artículo'] || row['articulo'] || '').toString().trim();
+  const statusRaw = (row['Estado'] || row['Status'] || row['estado'] || row['status'] || '').toString().trim().toLowerCase();
+  const statusMap = { bueno: 'good', good: 'good', dañado: 'damaged', damaged: 'damaged', faltante: 'missing', missing: 'missing', nuevo: 'new', 'new': 'new' };
+  return {
+    itemId: 'imp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    name,
+    sku: (row['SKU'] || row['sku'] || row['Código'] || row['codigo'] || '').toString().trim(),
+    price: parseFloat(row['Precio'] || row['Price'] || row['precio'] || row['price'] || 0) || 0,
+    qty: parseInt(row['Cantidad'] || row['Qty'] || row['cantidad'] || row['qty'] || 1) || 1,
+    status: statusMap[statusRaw] || null,
+    notes: (row['Notas'] || row['Notes'] || row['notas'] || row['notes'] || '').toString().trim(),
+    photos: [],
+    photoTimes: [],
+  };
+}
+
+function makeImportRoom(name, items) {
+  return {
+    roomId: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now() + Math.random().toString(36).slice(2, 6),
+    roomName: name,
+    items,
+  };
+}
+
 // ── Inicio del modo inventario ──
 
 function startInventoryMode() {
@@ -481,6 +590,7 @@ async function finishInventory() {
   const elapsed = getElapsedTime();
   inventoryInfo.duration = formatTime(elapsed);
   inventoryInfo.durationMs = elapsed;
+  inventoryInfo.type = 'inventory';
   inventoryInfo.rooms = inventoryRooms;
 
   // Mostrar pantalla de exportación primero (modo inventario)

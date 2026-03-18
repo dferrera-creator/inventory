@@ -89,6 +89,70 @@ async function loadInventoryList() {
   });
 }
 
+// ── Guardar resultado de inspección (siempre inserta, nunca actualiza) ──
+
+async function saveInspectionResult(inspectionDoc) {
+  if (!isSupabaseReady()) {
+    throw new Error('Supabase no configurado');
+  }
+
+  const record = {
+    unit_id: inspectionDoc.unitId,
+    unit_name: inspectionDoc.unitName,
+    auditor: inspectionDoc.auditor,
+    updated_at: new Date().toISOString(),
+    data: inspectionDoc,
+  };
+
+  const { data, error } = await _sb
+    .from('inventories')
+    .insert(record)
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data.id;
+}
+
+// ── Cargar todos los registros (inventarios + inspecciones) para Histórico ──
+
+async function loadAllRecords() {
+  if (!isSupabaseReady()) {
+    throw new Error('Supabase no configurado');
+  }
+
+  const { data, error } = await _sb
+    .from('inventories')
+    .select('id, unit_id, unit_name, auditor, updated_at, data')
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map(row => {
+    const d = row.data || {};
+    const rooms = d.rooms || [];
+    const itemCount = rooms.reduce((sum, r) => sum + (r.items ? r.items.length : 0), 0);
+    const type = d.type || 'inventory';
+    let completedCount = 0;
+    if (type === 'inspection') {
+      completedCount = rooms.reduce((sum, r) =>
+        sum + (r.items ? r.items.filter(i => i.status).length : 0), 0);
+    }
+    return {
+      id: row.id,
+      unitId: row.unit_id,
+      unitName: row.unit_name,
+      auditor: row.auditor,
+      updatedAt: row.updated_at,
+      date: d.date || '',
+      type,
+      itemCount,
+      completedCount,
+      sourceUnitId: d.sourceUnitId || null,
+    };
+  });
+}
+
 // ── Cargar inventario completo por unit_id ──
 
 async function loadInventoryByUnit(unitId) {
