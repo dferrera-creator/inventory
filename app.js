@@ -1110,8 +1110,9 @@ function renderHistoricoList() {
   const dateTo = document.getElementById('historico-date-to').value;
   const sort = document.getElementById('historico-sort').value;
 
-  // Filter
+  // Filter (exclude onboarding — shown in its own folder)
   let records = _allRecords.filter(r => {
+    if (r.type === 'onboarding') return false;
     if (search && !r.unitName.toLowerCase().includes(search)) return false;
     if (dateFrom && r.date < dateFrom) return false;
     if (dateTo && r.date > dateTo) return false;
@@ -1147,7 +1148,19 @@ function renderHistoricoList() {
     });
   }
 
-  if (sortedKeys.length === 0) {
+  // Build onboarding folder card (pinned, not affected by search/date filters)
+  const allOnbRecords = _allRecords.filter(r => r.type === 'onboarding');
+  const onbFolderHtml = allOnbRecords.length > 0 ? `
+    <div class="historico-unit-card onboarding-folder-card" onclick="openOnboardingHistorico()">
+      <span class="material-symbols-rounded historico-unit-icon" style="color:#10b981">home_work</span>
+      <div class="historico-unit-info">
+        <div class="historico-unit-name">Inspecciones de Onboarding</div>
+        <div class="historico-unit-meta">${allOnbRecords.length} inspección${allOnbRecords.length !== 1 ? 'es' : ''} · ${[...new Set(allOnbRecords.map(r => r.unitName))].length} propiedad${[...new Set(allOnbRecords.map(r => r.unitName))].length !== 1 ? 'es' : ''}</div>
+      </div>
+      <span class="material-symbols-rounded unit-card-arrow">chevron_right</span>
+    </div>` : '';
+
+  if (sortedKeys.length === 0 && !onbFolderHtml) {
     listEl.innerHTML = `
       <div class="empty-state">
         <span class="material-symbols-rounded">inventory_2</span>
@@ -1157,15 +1170,13 @@ function renderHistoricoList() {
     return;
   }
 
-  listEl.innerHTML = sortedKeys.map(unitName => {
+  const unitCardsHtml = sortedKeys.map(unitName => {
     const recs = groups[unitName];
-    const invCount = recs.filter(r => r.type === 'inventory').length;
+    const invCount  = recs.filter(r => r.type === 'inventory').length;
     const inspCount = recs.filter(r => r.type === 'inspection').length;
-    const onbCount = recs.filter(r => r.type === 'onboarding').length;
     const meta = [];
-    if (invCount) meta.push(`${invCount} inventario${invCount > 1 ? 's' : ''}`);
+    if (invCount)  meta.push(`${invCount} inventario${invCount > 1 ? 's' : ''}`);
     if (inspCount) meta.push(`${inspCount} inspección${inspCount > 1 ? 'es' : ''}`);
-    if (onbCount) meta.push(`${onbCount} onboarding${onbCount > 1 ? 's' : ''}`);
     return `
       <div class="historico-unit-card" onclick="openHistoricoUnit('${unitName.replace(/'/g, "\\'")}')">
         <span class="material-symbols-rounded historico-unit-icon">apartment</span>
@@ -1174,9 +1185,50 @@ function renderHistoricoList() {
           <div class="historico-unit-meta">${meta.join(' · ')}</div>
         </div>
         <span class="material-symbols-rounded unit-card-arrow">chevron_right</span>
-      </div>
-    `;
+      </div>`;
   }).join('');
+
+  listEl.innerHTML = onbFolderHtml + unitCardsHtml;
+}
+
+function openOnboardingHistorico() {
+  const onbRecords = _allRecords.filter(r => r.type === 'onboarding');
+  onbRecords.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+  const count = onbRecords.length;
+  document.getElementById('historico-onboarding-sub').textContent =
+    `${count} inspección${count !== 1 ? 'es' : ''} en ${[...new Set(onbRecords.map(r => r.unitName))].length} propiedad${[...new Set(onbRecords.map(r => r.unitName))].length !== 1 ? 'es' : ''}`;
+
+  const listEl = document.getElementById('historico-onboarding-list');
+  if (onbRecords.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><span class="material-symbols-rounded">home_work</span><p>No hay inspecciones de onboarding.</p></div>`;
+    showStep('step-historico-onboarding');
+    return;
+  }
+
+  listEl.innerHTML = onbRecords.map(r => {
+    const dateStr = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const safeId  = r.unitId.replace(/'/g, "\\'");
+    const delDesc = `Onboarding: ${r.unitName} · ${dateStr}`.replace(/'/g, "\\'");
+    return `
+      <div class="historico-record-card" onclick="viewOnboardingRecord('${safeId}')">
+        <span class="material-symbols-rounded historico-record-icon onboarding">home_work</span>
+        <div class="historico-record-info">
+          <div class="historico-record-type">Onboarding${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}</div>
+          <div class="historico-record-meta">${r.unitName} · ${dateStr} · ${r.auditor || 'Sin responsable'}</div>
+        </div>
+        <div class="unit-card-actions">
+          <button class="unit-action-btn" onclick="event.stopPropagation(); editOnboardingFromHistorico('${safeId}')" title="Editar">
+            <span class="material-symbols-rounded">edit</span>
+          </button>
+          <button class="unit-action-btn danger" onclick="event.stopPropagation(); showDeleteModal('${safeId}','${delDesc}')" title="Eliminar">
+            <span class="material-symbols-rounded">delete</span>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  showStep('step-historico-onboarding');
 }
 
 function openHistoricoUnit(unitName) {

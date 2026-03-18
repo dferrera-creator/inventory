@@ -215,6 +215,7 @@ const ONBOARDING_BANO_TEMPLATE = [
   },
 ];
 
+
 // ── Estado ──
 
 let onboardingInfo = {};
@@ -224,29 +225,25 @@ let isEditingOnboarding = false;
 let _onboardingTimerInterval = null;
 let _onboardingTimerStart = null;
 let _onboardingTimerElapsed = 0;
-let _currentOnbPhotoKey = null;
+
+// One-at-a-time navigation state
+let _onbCurrentSectionId = null;
+let _onbFlatItems = [];          // [{ gIdx, iIdx, item, groupLabel }, ...]
+let _onbCurrentItemIdx = 0;
 
 // ── Helpers ──
 
 function changeOnbCount(elId, delta) {
   const el = document.getElementById(elId);
-  const val = Math.max(0, Math.min(10, parseInt(el.textContent) + delta));
-  el.textContent = val;
+  el.textContent = Math.max(0, Math.min(10, parseInt(el.textContent) + delta));
 }
 
 function buildOnboardingSections(numBedrooms, numBathrooms) {
   const sections = [];
-
-  sections.push({ id: 'checklist-general', name: 'Checklist General', type: 'checklist', icon: 'checklist',   data: ONBOARDING_CHECKLIST });
-  sections.push({ id: 'cocina',            name: 'Cocina',            type: 'inventory', icon: 'kitchen',     data: ONBOARDING_COCINA });
-
-  for (let i = 1; i <= numBedrooms; i++) {
-    sections.push({ id: `habitacion-${i}`, name: `Habitación ${i}`, type: 'bedroom',  icon: 'bed',     data: ONBOARDING_HABITACION_TEMPLATE });
-  }
-  for (let i = 1; i <= numBathrooms; i++) {
-    sections.push({ id: `bano-${i}`,       name: `Baño ${i}`,        type: 'bathroom', icon: 'bathtub', data: ONBOARDING_BANO_TEMPLATE });
-  }
-
+  sections.push({ id: 'checklist-general', name: 'Checklist General', type: 'checklist', icon: 'checklist', data: ONBOARDING_CHECKLIST });
+  sections.push({ id: 'cocina',            name: 'Cocina',            type: 'inventory', icon: 'kitchen',   data: ONBOARDING_COCINA });
+  for (let i = 1; i <= numBedrooms;  i++) sections.push({ id: `habitacion-${i}`, name: `Habitación ${i}`, type: 'bedroom',  icon: 'bed',     data: ONBOARDING_HABITACION_TEMPLATE });
+  for (let i = 1; i <= numBathrooms; i++) sections.push({ id: `bano-${i}`,       name: `Baño ${i}`,        type: 'bathroom', icon: 'bathtub', data: ONBOARDING_BANO_TEMPLATE });
   return sections;
 }
 
@@ -265,28 +262,24 @@ function stopOnbTimer() {
 function updateOnbTimer() {
   _onboardingTimerElapsed = Date.now() - _onboardingTimerStart;
   const display = formatOnbTime(_onboardingTimerElapsed);
-  document.querySelectorAll('#onb-timer-display, #onb-topbar-timer').forEach(el => { if (el) el.textContent = display; });
+  document.querySelectorAll('#onb-timer-display, #onb-item-timer').forEach(el => { if (el) el.textContent = display; });
 }
 
-function getOnbElapsed() {
-  return _onboardingTimerStart ? Date.now() - _onboardingTimerStart : _onboardingTimerElapsed;
-}
+function getOnbElapsed() { return _onboardingTimerStart ? Date.now() - _onboardingTimerStart : _onboardingTimerElapsed; }
 
 function formatOnbTime(ms) {
   const s = Math.floor(ms / 1000);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
-  const ss = String(s % 60).padStart(2, '0');
-  const mm = String(m).padStart(2, '0');
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  return (h > 0 ? `${h}:` : '') + String(m).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
 }
 
 // ── Paso 1: Inicio ──
 
 function startOnboarding() {
-  const unitName = document.getElementById('onb-unit-name').value.trim();
-  const date     = document.getElementById('onb-date').value;
-  const auditor  = document.getElementById('onb-auditor').value.trim();
+  const unitName    = document.getElementById('onb-unit-name').value.trim();
+  const date        = document.getElementById('onb-date').value;
+  const auditor     = document.getElementById('onb-auditor').value.trim();
   const numBedrooms  = parseInt(document.getElementById('onb-bedrooms-count').textContent)  || 0;
   const numBathrooms = parseInt(document.getElementById('onb-bathrooms-count').textContent) || 0;
 
@@ -307,7 +300,6 @@ function startOnboarding() {
     unitId: onboardingInfo.unitId || ('onb-' + Date.now()),
     unitName, date, auditor, numBedrooms, numBathrooms,
   };
-
   onboardingSections = buildOnboardingSections(numBedrooms, numBathrooms);
   _onboardingTimerElapsed = 0;
   startOnbTimer();
@@ -322,23 +314,21 @@ function startOnboarding() {
 function renderOnboardingSections() {
   const grid   = document.getElementById('onb-section-grid');
   const COLORS = ['#10b981','#2563eb','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
-
-  const totalItems     = countOnbTotalItems();
-  const completedItems = countOnbCompletedItems();
-  const pct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const total  = countOnbTotalItems();
+  const done   = countOnbCompletedItems();
+  const pct    = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const bar = document.getElementById('onb-overall-bar');
   if (bar) bar.style.width = pct + '%';
   const lbl = document.getElementById('onb-overall-label');
-  if (lbl) lbl.textContent = `${completedItems} / ${totalItems} ítems completados`;
+  if (lbl) lbl.textContent = `${done} / ${total} ítems completados`;
 
   grid.innerHTML = onboardingSections.map((section, idx) => {
-    const color       = COLORS[idx % COLORS.length];
-    const total       = countOnbSectionItems(section);
-    const done        = countOnbSectionCompleted(section);
-    const sectionPct  = total > 0 ? Math.round((done / total) * 100) : 0;
-    const isComplete  = total > 0 && done === total;
-
+    const color      = COLORS[idx % COLORS.length];
+    const secTotal   = countOnbSectionItems(section);
+    const secDone    = countOnbSectionCompleted(section);
+    const secPct     = secTotal > 0 ? Math.round((secDone / secTotal) * 100) : 0;
+    const isComplete = secTotal > 0 && secDone === secTotal;
     return `
       <div class="room-card${isComplete ? ' completed' : ''}" onclick="openOnboardingSection('${section.id}')">
         <div class="room-card-icon" style="background:${color}22">
@@ -346,9 +336,9 @@ function renderOnboardingSections() {
         </div>
         ${isComplete ? '<span class="room-card-check material-symbols-rounded">check_circle</span>' : ''}
         <div class="room-card-name">${section.name}</div>
-        <div class="room-card-count">${done}/${total}</div>
+        <div class="room-card-count">${secDone}/${secTotal}</div>
         <div class="room-card-progress">
-          <div class="room-card-progress-bar" style="width:${sectionPct}%;background:${color}"></div>
+          <div class="room-card-progress-bar" style="width:${secPct}%;background:${color}"></div>
         </div>
       </div>`;
   }).join('');
@@ -356,206 +346,221 @@ function renderOnboardingSections() {
 
 function countOnbTotalItems()     { return onboardingSections.reduce((s, sec) => s + countOnbSectionItems(sec), 0); }
 function countOnbCompletedItems() { return onboardingSections.reduce((s, sec) => s + countOnbSectionCompleted(sec), 0); }
-function countOnbSectionItems(section)     { return section.data.reduce((s, g) => s + g.items.length, 0); }
+function countOnbSectionItems(section) { return section.data.reduce((s, g) => s + g.items.length, 0); }
 function countOnbSectionCompleted(section) {
-  let count = 0;
-  section.data.forEach((group, gIdx) => {
-    group.items.forEach((item, iIdx) => {
-      if ((onboardingData[`${section.id}__${gIdx}__${iIdx}`] || {}).status) count++;
-    });
-  });
-  return count;
+  return section.data.reduce((sum, group, gIdx) =>
+    sum + group.items.filter((_, iIdx) => (onboardingData[`${section.id}__${gIdx}__${iIdx}`] || {}).status).length, 0);
 }
 
-// ── Paso 3: Detalle de sección ──
+// ── Paso 3: Ítem uno a la vez ──
+
+const SECTION_ICON_MAP = {
+  checklist: 'checklist', inventory: 'kitchen', bedroom: 'bed', bathroom: 'bathtub',
+};
 
 function openOnboardingSection(sectionId) {
   const section = onboardingSections.find(s => s.id === sectionId);
   if (!section) return;
-  document.getElementById('onb-section-title').textContent = section.name;
-  renderOnboardingSectionDetail(section);
-  showStep('step-onboarding-section');
-}
 
-function renderOnboardingSectionDetail(section) {
-  const container  = document.getElementById('onb-section-items');
-  const isChecklist = section.type === 'checklist';
-  let html = '';
-
+  _onbCurrentSectionId = sectionId;
+  _onbFlatItems = [];
   section.data.forEach((group, gIdx) => {
-    const groupLabel = isChecklist ? group.category : group.group;
-    html += `<div class="onb-group-header">${groupLabel}</div>`;
-
+    const groupLabel = section.type === 'checklist' ? group.category : group.group;
     group.items.forEach((item, iIdx) => {
-      const key    = `${section.id}__${gIdx}__${iIdx}`;
-      const d      = onboardingData[key] || {};
-      const status = d.status || null;
-      const qty    = d.qty !== undefined ? d.qty : (item.qty !== undefined ? item.qty : 1);
-      const notes  = d.notes || '';
-      const photos = d.photos || [];
-
-      const statusClass = status ? (status === 'new' ? 'status-new has-status' : `status-${status} has-status`) : '';
-
-      const statusBtns = [
-        { val: 'good',    icon: 'check_circle', label: 'Bueno'    },
-        { val: 'damaged', icon: 'build',         label: 'Dañado'   },
-        { val: 'missing', icon: 'cancel',        label: 'Faltante' },
-        { val: 'new',     icon: 'new_releases',  label: 'Nuevo'    },
-      ].map(s => {
-        const cls = s.val === 'new' ? 'new-item' : s.val;
-        const sel = status === s.val ? ' selected' : '';
-        return `<button class="onb-status-btn ${cls}${sel}" onclick="setOnbItemStatus('${section.id}',${gIdx},${iIdx},'${s.val}')">
-          <span class="material-symbols-rounded">${s.icon}</span>
-          <span>${s.label}</span>
-        </button>`;
-      }).join('');
-
-      const qtyHtml = !isChecklist ? `
-        <div class="onb-qty-row">
-          <span class="onb-qty-label">Cant:</span>
-          <button class="onb-qty-btn" onclick="changeOnbItemQty('${section.id}',${gIdx},${iIdx},-1)"><span class="material-symbols-rounded">remove</span></button>
-          <span class="onb-qty-val" id="onb-qty-${key}">${qty}</span>
-          <button class="onb-qty-btn" onclick="changeOnbItemQty('${section.id}',${gIdx},${iIdx},1)"><span class="material-symbols-rounded">add</span></button>
-        </div>` : '';
-
-      const photoStripHtml = photos.length > 0
-        ? `<div class="onb-photo-strip" id="onb-strip-${key}">${photos.map((p, pi) => `<img src="${p}" class="onb-photo-thumb" onclick="removeOnbPhoto('${section.id}',${gIdx},${iIdx},${pi})" title="Toca para eliminar">`).join('')}</div>`
-        : `<div class="onb-photo-strip" id="onb-strip-${key}"></div>`;
-
-      const notesDisplay = notes ? 'style="display:block"' : '';
-
-      html += `
-        <div class="onb-item-card ${statusClass}" id="onb-card-${key}">
-          <div class="onb-item-name">${item.name}</div>
-          ${item.hint ? `<div class="onb-item-hint">${item.hint}</div>` : ''}
-          <div class="onb-status-btns">${statusBtns}</div>
-          <div class="onb-item-footer">
-            ${qtyHtml}
-            <button class="onb-extra-btn camera-btn" onclick="triggerOnbPhoto('${key}')">
-              <span class="material-symbols-rounded">photo_camera</span> Foto
-            </button>
-            <button class="onb-extra-btn notes-btn${notes ? ' has-content' : ''}" onclick="toggleOnbNotes('${key}')">
-              <span class="material-symbols-rounded">edit_note</span> Notas
-            </button>
-          </div>
-          ${photoStripHtml}
-          <div class="onb-notes-area" id="onb-notes-${key}" ${notesDisplay}>
-            <textarea placeholder="Observaciones..." rows="2" oninput="saveOnbNotes('${section.id}',${gIdx},${iIdx},this.value)">${notes}</textarea>
-          </div>
-        </div>`;
+      _onbFlatItems.push({ gIdx, iIdx, item, groupLabel, isChecklist: section.type === 'checklist' });
     });
   });
 
-  container.innerHTML = html;
+  _onbCurrentItemIdx = 0;
+  renderOnbCurrentItem();
+  showStep('step-onboarding-item');
 }
 
-// ── Acciones por ítem ──
+function renderOnbCurrentItem() {
+  const { gIdx, iIdx, item, groupLabel, isChecklist } = _onbFlatItems[_onbCurrentItemIdx];
+  const key  = `${_onbCurrentSectionId}__${gIdx}__${iIdx}`;
+  const d    = onboardingData[key] || {};
+  const total = _onbFlatItems.length;
+  const pct  = (((_onbCurrentItemIdx + 1) / total) * 100);
 
-function setOnbItemStatus(sectionId, gIdx, iIdx, status) {
-  const key = `${sectionId}__${gIdx}__${iIdx}`;
+  // Progress bar
+  document.getElementById('onb-item-progress-bar').style.width = pct + '%';
+  document.getElementById('onb-item-count').textContent = `${_onbCurrentItemIdx + 1}/${total}`;
+
+  // Area / group
+  document.getElementById('onb-item-area').textContent = groupLabel;
+
+  // Icon — reuse ITEM_ICONS map if available, else section default
+  const section = onboardingSections.find(s => s.id === _onbCurrentSectionId);
+  const iconName = (typeof ITEM_ICONS !== 'undefined' && ITEM_ICONS[item.name]) || SECTION_ICON_MAP[section.type] || 'inventory_2';
+  document.getElementById('onb-item-icon').textContent = iconName;
+  document.getElementById('onb-item-icon-wrap').style.background = '';
+
+  // Names
+  document.getElementById('onb-item-name').textContent  = item.name;
+  document.getElementById('onb-item-group').textContent = groupLabel;
+
+  // Hint
+  const hintEl = document.getElementById('onb-item-hint');
+  hintEl.textContent    = item.hint || '';
+  hintEl.style.display  = item.hint ? 'block' : 'none';
+
+  // Status buttons
+  document.querySelectorAll('#onb-status-grid .status-btn').forEach(btn => btn.classList.remove('selected'));
+  if (d.status) {
+    const map = { good: '.good', damaged: '.damaged', missing: '.missing', new: '.new-item' };
+    const sel = document.querySelector(`#onb-status-grid .status-btn${map[d.status]}`);
+    if (sel) sel.classList.add('selected');
+  }
+
+  // Qty row (hidden for checklist items)
+  const qtyRow = document.getElementById('onb-qty-row');
+  qtyRow.style.display = isChecklist ? 'none' : '';
+  const qty = d.qty !== undefined ? d.qty : (item.qty !== undefined ? item.qty : 1);
+  document.getElementById('onb-item-qty').textContent = qty;
+
+  // Camera button state
+  document.getElementById('onb-item-camera-btn').classList.toggle('has-content', (d.photos || []).length > 0);
+
+  // Photo strip
+  _renderOnbPhotoStrip(d.photos || []);
+
+  // Notes
+  document.getElementById('onb-item-notes-area').style.display = 'none';
+  document.getElementById('onb-item-notes-input').value = d.notes || '';
+
+  // Navigation buttons
+  document.getElementById('onb-nav-prev').style.visibility = _onbCurrentItemIdx === 0 ? 'hidden' : 'visible';
+  const isLast = _onbCurrentItemIdx === total - 1;
+  document.getElementById('onb-nav-next').innerHTML = isLast
+    ? 'Finalizar <span class="material-symbols-rounded">check_circle</span>'
+    : 'Siguiente <span class="material-symbols-rounded">arrow_forward</span>';
+
+  window.scrollTo(0, 0);
+}
+
+function setOnbCurrentStatus(status) {
+  const { gIdx, iIdx } = _onbFlatItems[_onbCurrentItemIdx];
+  const key = `${_onbCurrentSectionId}__${gIdx}__${iIdx}`;
   if (!onboardingData[key]) onboardingData[key] = {};
 
   onboardingData[key].status = onboardingData[key].status === status ? null : status;
 
-  const card = document.getElementById(`onb-card-${key}`);
-  if (card) {
-    card.className = 'onb-item-card';
-    const s = onboardingData[key].status;
-    if (s) card.classList.add('has-status', s === 'new' ? 'status-new' : `status-${s}`);
+  document.querySelectorAll('#onb-status-grid .status-btn').forEach(btn => btn.classList.remove('selected'));
+  if (onboardingData[key].status) {
+    const map = { good: '.good', damaged: '.damaged', missing: '.missing', new: '.new-item' };
+    const sel = document.querySelector(`#onb-status-grid .status-btn${map[onboardingData[key].status]}`);
+    if (sel) sel.classList.add('selected');
+  }
 
-    card.querySelectorAll('.onb-status-btn').forEach(btn => {
-      btn.classList.remove('selected');
-      const v = btn.classList.contains('good') ? 'good' : btn.classList.contains('damaged') ? 'damaged' : btn.classList.contains('missing') ? 'missing' : 'new';
-      if (v === s) btn.classList.add('selected');
-    });
+  const labels = { good: '✅ Bueno', damaged: '🔨 Dañado', missing: '❌ Faltante', new: '🆕 Nuevo' };
+  if (onboardingData[key].status) showToast(labels[onboardingData[key].status]);
+}
+
+function changeOnbCurrentQty(delta) {
+  const { gIdx, iIdx, item } = _onbFlatItems[_onbCurrentItemIdx];
+  const key = `${_onbCurrentSectionId}__${gIdx}__${iIdx}`;
+  if (!onboardingData[key]) onboardingData[key] = {};
+  const current = onboardingData[key].qty !== undefined ? onboardingData[key].qty : (item.qty || 0);
+  onboardingData[key].qty = Math.max(0, current + delta);
+  document.getElementById('onb-item-qty').textContent = onboardingData[key].qty;
+}
+
+function toggleOnbCurrentNotes() {
+  const area = document.getElementById('onb-item-notes-area');
+  area.style.display = area.style.display === 'none' || !area.style.display ? 'block' : 'none';
+}
+
+function _saveOnbCurrentNotes() {
+  const { gIdx, iIdx } = _onbFlatItems[_onbCurrentItemIdx];
+  const key = `${_onbCurrentSectionId}__${gIdx}__${iIdx}`;
+  if (!onboardingData[key]) onboardingData[key] = {};
+  onboardingData[key].notes = document.getElementById('onb-item-notes-input').value;
+}
+
+function prevOnbItem() {
+  _saveOnbCurrentNotes();
+  if (_onbCurrentItemIdx > 0) {
+    _onbCurrentItemIdx--;
+    renderOnbCurrentItem();
   }
 }
 
-function changeOnbItemQty(sectionId, gIdx, iIdx, delta) {
-  const key = `${sectionId}__${gIdx}__${iIdx}`;
-  if (!onboardingData[key]) onboardingData[key] = {};
-  const section     = onboardingSections.find(s => s.id === sectionId);
-  const templateQty = section.data[gIdx].items[iIdx].qty || 0;
-  const current     = onboardingData[key].qty !== undefined ? onboardingData[key].qty : templateQty;
-  onboardingData[key].qty = Math.max(0, current + delta);
-  const el = document.getElementById(`onb-qty-${key}`);
-  if (el) el.textContent = onboardingData[key].qty;
+function nextOnbItem() {
+  _saveOnbCurrentNotes();
+  if (_onbCurrentItemIdx < _onbFlatItems.length - 1) {
+    _onbCurrentItemIdx++;
+    renderOnbCurrentItem();
+  } else {
+    backToOnboardingSections();
+  }
 }
 
-function toggleOnbNotes(key) {
-  const el = document.getElementById(`onb-notes-${key}`);
-  if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
-}
-
-function saveOnbNotes(sectionId, gIdx, iIdx, value) {
-  const key = `${sectionId}__${gIdx}__${iIdx}`;
-  if (!onboardingData[key]) onboardingData[key] = {};
-  onboardingData[key].notes = value;
+function backToOnboardingSections() {
+  if (_onbFlatItems.length > 0) _saveOnbCurrentNotes();
+  renderOnboardingSections();
+  showStep('step-onboarding-sections');
 }
 
 // ── Fotos ──
 
-function triggerOnbPhoto(key) {
-  _currentOnbPhotoKey = key;
-  const input = document.getElementById('onb-photo-input');
+function triggerOnbCurrentPhoto() {
+  const input = document.getElementById('onb-item-photo-input');
   input.value = '';
   input.click();
 }
 
-function handleOnbPhoto(input) {
-  const key = _currentOnbPhotoKey;
-  if (!key || !input.files || !input.files[0]) return;
+function handleOnbCurrentPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const { gIdx, iIdx } = _onbFlatItems[_onbCurrentItemIdx];
+  const key = `${_onbCurrentSectionId}__${gIdx}__${iIdx}`;
+  if (!onboardingData[key]) onboardingData[key] = {};
+  if (!onboardingData[key].photos)     onboardingData[key].photos     = [];
+  if (!onboardingData[key].photoTimes) onboardingData[key].photoTimes = [];
 
-  const file   = input.files[0];
   const reader = new FileReader();
   reader.onload = (e) => {
-    if (!onboardingData[key]) onboardingData[key] = {};
-    if (!onboardingData[key].photos)     onboardingData[key].photos     = [];
-    if (!onboardingData[key].photoTimes) onboardingData[key].photoTimes = [];
-
     onboardingData[key].photos.push(e.target.result);
     onboardingData[key].photoTimes.push(new Date().toISOString());
-
-    _updateOnbPhotoStrip(key);
-
-    const camBtn = document.querySelector(`[onclick="triggerOnbPhoto('${key}')"]`);
-    if (camBtn) camBtn.classList.add('has-content');
+    _renderOnbPhotoStrip(onboardingData[key].photos);
+    document.getElementById('onb-item-camera-btn').classList.add('has-content');
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(input.files[0]);
 }
 
-function removeOnbPhoto(sectionId, gIdx, iIdx, photoIdx) {
-  const key = `${sectionId}__${gIdx}__${iIdx}`;
+function _renderOnbPhotoStrip(photos) {
+  const strip = document.getElementById('onb-item-photo-strip');
+  strip.innerHTML = photos.map((p, pi) =>
+    `<div class="photo-thumb"><img src="${p}" alt="foto" onclick="removeOnbCurrentPhoto(${pi})" title="Toca para eliminar"></div>`
+  ).join('');
+}
+
+function removeOnbCurrentPhoto(photoIdx) {
+  const { gIdx, iIdx } = _onbFlatItems[_onbCurrentItemIdx];
+  const key = `${_onbCurrentSectionId}__${gIdx}__${iIdx}`;
   if (!onboardingData[key]) return;
   onboardingData[key].photos.splice(photoIdx, 1);
   onboardingData[key].photoTimes.splice(photoIdx, 1);
-  _updateOnbPhotoStrip(key);
-  if (onboardingData[key].photos.length === 0) {
-    const camBtn = document.querySelector(`[onclick="triggerOnbPhoto('${key}')"]`);
-    if (camBtn) camBtn.classList.remove('has-content');
-  }
+  _renderOnbPhotoStrip(onboardingData[key].photos);
+  if (!onboardingData[key].photos.length) document.getElementById('onb-item-camera-btn').classList.remove('has-content');
 }
 
-function _updateOnbPhotoStrip(key) {
-  const strip  = document.getElementById(`onb-strip-${key}`);
-  if (!strip) return;
-  const photos = (onboardingData[key] || {}).photos || [];
-  strip.innerHTML = photos.map((p, pi) => {
-    const [sId, gIdx, iIdx] = key.split('__');
-    return `<img src="${p}" class="onb-photo-thumb" onclick="removeOnbPhoto('${sId}',${gIdx},${iIdx},${pi})" title="Toca para eliminar">`;
-  }).join('');
-}
+// ── Help modal (shows hint) ──
 
-function backToOnboardingSections() {
-  renderOnboardingSections();
-  showStep('step-onboarding-sections');
+function showOnbHelpModal() {
+  if (!_onbFlatItems.length) return;
+  const { item, groupLabel } = _onbFlatItems[_onbCurrentItemIdx];
+  document.getElementById('help-modal-icon').textContent = 'home_work';
+  document.getElementById('help-modal-name').textContent = item.name;
+  document.getElementById('help-modal-hint').textContent = item.hint || groupLabel;
+  document.getElementById('help-modal-details').textContent = groupLabel;
+  document.getElementById('help-modal').classList.add('visible');
 }
 
 // ── Finalizar / Guardar ──
 
 async function finishOnboarding() {
   stopOnbTimer();
-
   const elapsed = getOnbElapsed();
   onboardingInfo.duration   = formatOnbTime(elapsed);
   onboardingInfo.durationMs = elapsed;
@@ -568,8 +573,7 @@ async function finishOnboarding() {
     groups: section.data.map((group, gIdx) => ({
       label: section.type === 'checklist' ? group.category : group.group,
       items: group.items.map((item, iIdx) => {
-        const key = `${section.id}__${gIdx}__${iIdx}`;
-        const d   = onboardingData[key] || {};
+        const d = onboardingData[`${section.id}__${gIdx}__${iIdx}`] || {};
         return {
           name:       item.name,
           qty:        d.qty !== undefined ? d.qty : (item.qty !== undefined ? item.qty : 1),
@@ -600,8 +604,8 @@ async function finishOnboarding() {
 
 function showOnboardingExport() {
   showStep('step-export');
-  document.getElementById('export-icon').textContent    = 'home_work';
-  document.getElementById('export-title').textContent   = '¡Onboarding Listo!';
+  document.getElementById('export-icon').textContent  = 'home_work';
+  document.getElementById('export-title').textContent = '¡Onboarding Listo!';
 
   const total     = countOnbTotalItems();
   const completed = countOnbCompletedItems();
@@ -616,7 +620,7 @@ function showOnboardingExport() {
   container.innerHTML = '';
   const COLORS = ['#10b981','#2563eb','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4'];
 
-  onboardingInfo.sections.forEach((section, sIdx) => {
+  (onboardingInfo.sections || []).forEach((section, sIdx) => {
     const color   = COLORS[sIdx % COLORS.length];
     const secIcon = onboardingSections[sIdx] ? onboardingSections[sIdx].icon : 'inventory_2';
     const div     = document.createElement('div');
@@ -627,9 +631,8 @@ function showOnboardingExport() {
       div.innerHTML += `<div style="font-size:.75rem;font-weight:700;color:#059669;text-transform:uppercase;padding:6px 0 2px;letter-spacing:.04em">${group.label}</div>`;
       group.items.forEach(item => {
         if (!item.status && !item.notes && !(item.photos && item.photos.length)) return;
-        const statusMap  = { good: 'good', damaged: 'damaged', missing: 'missing', new: 'new-item', none: '' };
-        const statusClass = statusMap[item.status || 'none'] || '';
-        const photoHtml  = (item.photos || []).slice(0, 3).map(p => `<div class="review-photo-wrap"><img src="${p}" alt="foto"></div>`).join('');
+        const sMap = { good: 'good', damaged: 'damaged', missing: 'missing', new: 'new-item' };
+        const photoHtml = (item.photos || []).slice(0,3).map(p => `<div class="review-photo-wrap"><img src="${p}" alt="foto"></div>`).join('');
         div.innerHTML += `
           <div class="review-item">
             <span class="material-symbols-rounded review-item-icon">inventory_2</span>
@@ -638,7 +641,7 @@ function showOnboardingExport() {
               <div class="review-item-detail">${section.sectionType !== 'checklist' ? `Cant: ${item.qty}` : ''}${item.notes ? ' · ' + item.notes : ''}</div>
             </div>
             <div class="review-photos">${photoHtml}</div>
-            <div class="review-status-dot ${statusClass}"></div>
+            <div class="review-status-dot ${sMap[item.status] || ''}"></div>
           </div>`;
       });
     });
@@ -657,16 +660,8 @@ async function editOnboardingFromHistorico(unitId) {
     const doc = await loadInventoryByUnit(unitId);
     if (!doc) { showToast('❌ No encontrado'); return; }
 
-    onboardingInfo = {
-      unitId:       doc.unitId,
-      unitName:     doc.unitName,
-      date:         doc.date,
-      auditor:      doc.auditor,
-      numBedrooms:  doc.numBedrooms  || 1,
-      numBathrooms: doc.numBathrooms || 1,
-    };
-
-    onboardingData    = {};
+    onboardingInfo     = { unitId: doc.unitId, unitName: doc.unitName, date: doc.date, auditor: doc.auditor, numBedrooms: doc.numBedrooms || 1, numBathrooms: doc.numBathrooms || 1 };
+    onboardingData     = {};
     onboardingSections = buildOnboardingSections(onboardingInfo.numBedrooms, onboardingInfo.numBathrooms);
 
     if (doc.sections) {
@@ -677,11 +672,8 @@ async function editOnboardingFromHistorico(unitId) {
           if (!section.data[gIdx]) return;
           savedGroup.items.forEach((savedItem, iIdx) => {
             onboardingData[`${savedSection.sectionId}__${gIdx}__${iIdx}`] = {
-              status:     savedItem.status || null,
-              qty:        savedItem.qty,
-              notes:      savedItem.notes || '',
-              photos:     savedItem.photos || [],
-              photoTimes: savedItem.photoTimes || [],
+              status: savedItem.status || null, qty: savedItem.qty, notes: savedItem.notes || '',
+              photos: savedItem.photos || [], photoTimes: savedItem.photoTimes || [],
             };
           });
         });
@@ -689,12 +681,11 @@ async function editOnboardingFromHistorico(unitId) {
     }
 
     isEditingOnboarding = true;
-
-    document.getElementById('onb-unit-name').value              = doc.unitName;
-    document.getElementById('onb-date').value                   = doc.date || '';
-    document.getElementById('onb-auditor').value                = doc.auditor || '';
-    document.getElementById('onb-bedrooms-count').textContent   = onboardingInfo.numBedrooms;
-    document.getElementById('onb-bathrooms-count').textContent  = onboardingInfo.numBathrooms;
+    document.getElementById('onb-unit-name').value             = doc.unitName;
+    document.getElementById('onb-date').value                  = doc.date || '';
+    document.getElementById('onb-auditor').value               = doc.auditor || '';
+    document.getElementById('onb-bedrooms-count').textContent  = onboardingInfo.numBedrooms;
+    document.getElementById('onb-bathrooms-count').textContent = onboardingInfo.numBathrooms;
 
     showStep('step-onboarding-welcome');
     showToast(`✏️ Editando onboarding de ${doc.unitName}`);
@@ -712,16 +703,7 @@ async function viewOnboardingRecord(unitId) {
     const doc = await loadInventoryByUnit(unitId);
     if (!doc) { showToast('❌ No encontrado'); return; }
 
-    onboardingInfo = {
-      unitId:       doc.unitId,
-      unitName:     doc.unitName,
-      date:         doc.date,
-      auditor:      doc.auditor,
-      duration:     doc.duration,
-      numBedrooms:  doc.numBedrooms  || 1,
-      numBathrooms: doc.numBathrooms || 1,
-      sections:     doc.sections || [],
-    };
+    onboardingInfo     = { unitId: doc.unitId, unitName: doc.unitName, date: doc.date, auditor: doc.auditor, duration: doc.duration, numBedrooms: doc.numBedrooms || 1, numBathrooms: doc.numBathrooms || 1, sections: doc.sections || [] };
     onboardingSections = buildOnboardingSections(onboardingInfo.numBedrooms, onboardingInfo.numBathrooms);
 
     showOnboardingExport();

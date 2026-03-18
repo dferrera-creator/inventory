@@ -146,22 +146,102 @@
       </div>
     </div>
 
-    <!-- ══════════ ONBOARDING PASO 3: DETALLE DE SECCIÓN ══════════ -->
-    <div id="step-onboarding-section" class="step">
+    <!-- ══════════ ONBOARDING PASO 3: ÍTEM UNO A LA VEZ ══════════ -->
+    <div id="step-onboarding-item" class="step">
       <div class="item-topbar">
         <button class="topbar-back" onclick="backToOnboardingSections()">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <div class="topbar-room-name" id="onb-section-title">Sección</div>
-        <div class="topbar-timer" id="onb-topbar-timer">00:00</div>
+        <div class="topbar-progress">
+          <div class="topbar-progress-bar" id="onb-item-progress-bar"></div>
+        </div>
+        <span class="topbar-count" id="onb-item-count">1/10</span>
+        <div class="topbar-timer" id="onb-item-timer">00:00</div>
       </div>
-      <div id="onb-section-items" class="onb-section-items"></div>
-      <input type="file" id="onb-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handleOnbPhoto(this)">
-      <div style="padding:16px">
-        <button class="btn-finish-all" style="background:#10b981;box-shadow:0 6px 20px rgba(16,185,129,0.35);width:calc(100% - 32px);margin:0 16px 8px" onclick="backToOnboardingSections()">
-          <span class="material-symbols-rounded">check</span> Guardar Sección
+
+      <div class="item-area" id="onb-item-area">Electrodomésticos</div>
+
+      <div class="item-display">
+        <div class="item-icon-wrap" id="onb-item-icon-wrap">
+          <span class="material-symbols-rounded item-icon" id="onb-item-icon">inventory_2</span>
+        </div>
+        <div class="item-name" id="onb-item-name">Artículo</div>
+        <div class="item-name-en" id="onb-item-group">Grupo</div>
+        <div class="item-hint" id="onb-item-hint"></div>
+        <button class="help-btn" onclick="showOnbHelpModal()" title="Qué revisar">
+          <span class="material-symbols-rounded">help</span>
         </button>
       </div>
+
+      <div class="status-grid" id="onb-status-grid">
+        <button class="status-btn good" onclick="setOnbCurrentStatus('good')">
+          <span class="material-symbols-rounded status-mat-icon good-icon">check_circle</span>
+          <span class="status-label">Bueno</span>
+          <span class="status-label-en">Good</span>
+        </button>
+        <button class="status-btn damaged" onclick="setOnbCurrentStatus('damaged')">
+          <span class="material-symbols-rounded status-mat-icon damaged-icon">build</span>
+          <span class="status-label">Dañado</span>
+          <span class="status-label-en">Damaged</span>
+        </button>
+        <button class="status-btn missing" onclick="setOnbCurrentStatus('missing')">
+          <span class="material-symbols-rounded status-mat-icon missing-icon">cancel</span>
+          <span class="status-label">Faltante</span>
+          <span class="status-label-en">Missing</span>
+        </button>
+        <button class="status-btn new-item" onclick="setOnbCurrentStatus('new')">
+          <span class="material-symbols-rounded status-mat-icon new-icon">new_releases</span>
+          <span class="status-label">Nuevo</span>
+          <span class="status-label-en">New</span>
+        </button>
+      </div>
+
+      <div class="item-extras">
+        <div class="qty-row" id="onb-qty-row">
+          <span class="qty-label">Cant:</span>
+          <button class="qty-btn" onclick="changeOnbCurrentQty(-1)">
+            <span class="material-symbols-rounded">remove</span>
+          </button>
+          <span class="qty-value" id="onb-item-qty">1</span>
+          <button class="qty-btn" onclick="changeOnbCurrentQty(1)">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+        <div class="extras-row">
+          <button class="extra-btn camera-btn" id="onb-item-camera-btn" onclick="triggerOnbCurrentPhoto()">
+            <span class="material-symbols-rounded">photo_camera</span> Foto
+          </button>
+          <button class="extra-btn notes-btn" onclick="toggleOnbCurrentNotes()">
+            <span class="material-symbols-rounded">edit_note</span> Notas
+          </button>
+        </div>
+        <input type="file" id="onb-item-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handleOnbCurrentPhoto(this)">
+        <div class="photo-strip" id="onb-item-photo-strip"></div>
+        <div class="notes-area" id="onb-item-notes-area" style="display:none">
+          <textarea id="onb-item-notes-input" placeholder="Notas..." rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="item-nav">
+        <button class="nav-prev" id="onb-nav-prev" onclick="prevOnbItem()">
+          <span class="material-symbols-rounded">arrow_back</span> Atrás
+        </button>
+        <button class="nav-next" id="onb-nav-next" onclick="nextOnbItem()">
+          Siguiente <span class="material-symbols-rounded">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ HISTÓRICO: ONBOARDING ══════════ -->
+    <div id="step-historico-onboarding" class="step">
+      <div class="historico-header">
+        <button class="back-home-btn-inline" onclick="showStep('step-historico')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <h2>Inspecciones de Onboarding</h2>
+        <p class="historico-sub" id="historico-onboarding-sub">Todos los registros de onboarding</p>
+      </div>
+      <div id="historico-onboarding-list" class="historico-list"></div>
     </div>
 
     <!-- ══════════ INVENTARIO PASO 1: DATOS DE LA UNIDAD ══════════ -->
