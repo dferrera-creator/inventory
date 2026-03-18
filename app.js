@@ -20,13 +20,13 @@ function showDeleteModal(unitId, description) {
   document.getElementById('delete-modal-desc').textContent = description || 'Esta acción no se puede deshacer.';
   document.getElementById('delete-password-input').value = '';
   document.getElementById('delete-pw-error').style.display = 'none';
-  document.getElementById('delete-modal').classList.add('active');
+  document.getElementById('delete-modal').classList.add('visible');
   setTimeout(() => document.getElementById('delete-password-input').focus(), 100);
 }
 
 function closeDeleteModal() {
   _pendingDeleteUnitId = null;
-  document.getElementById('delete-modal').classList.remove('active');
+  document.getElementById('delete-modal').classList.remove('visible');
 }
 
 function toggleDeletePwVisibility() {
@@ -769,6 +769,18 @@ function selectMode(mode) {
     const dd = String(today.getDate()).padStart(2, '0');
     document.getElementById('inv-date').value = `${yyyy}-${mm}-${dd}`;
     showStep('step-inv-welcome');
+  } else if (mode === 'onboarding') {
+    // Onboarding mode
+    isEditingOnboarding = false;
+    onboardingInfo = {};
+    onboardingData = {};
+    const today = new Date();
+    document.getElementById('onb-date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    document.getElementById('onb-unit-name').value = '';
+    document.getElementById('onb-auditor').value = '';
+    document.getElementById('onb-bedrooms-count').textContent = '1';
+    document.getElementById('onb-bathrooms-count').textContent = '1';
+    showStep('step-onboarding-welcome');
   } else if (mode === 'historico') {
     showStep('step-historico');
     loadAndRenderHistorico();
@@ -1149,9 +1161,11 @@ function renderHistoricoList() {
     const recs = groups[unitName];
     const invCount = recs.filter(r => r.type === 'inventory').length;
     const inspCount = recs.filter(r => r.type === 'inspection').length;
+    const onbCount = recs.filter(r => r.type === 'onboarding').length;
     const meta = [];
     if (invCount) meta.push(`${invCount} inventario${invCount > 1 ? 's' : ''}`);
     if (inspCount) meta.push(`${inspCount} inspección${inspCount > 1 ? 'es' : ''}`);
+    if (onbCount) meta.push(`${onbCount} onboarding${onbCount > 1 ? 's' : ''}`);
     return `
       <div class="historico-unit-card" onclick="openHistoricoUnit('${unitName.replace(/'/g, "\\'")}')">
         <span class="material-symbols-rounded historico-unit-icon">apartment</span>
@@ -1174,24 +1188,32 @@ function openHistoricoUnit(unitName) {
 
   const invSub = recs.filter(r => r.type === 'inventory').length;
   const inspSub = recs.filter(r => r.type === 'inspection').length;
-  document.getElementById('historico-unit-sub').textContent =
-    `${invSub} inventario${invSub !== 1 ? 's' : ''}, ${inspSub} inspección${inspSub !== 1 ? 'es' : ''}`;
+  const onbSub = recs.filter(r => r.type === 'onboarding').length;
+  const subParts = [];
+  if (invSub) subParts.push(`${invSub} inventario${invSub !== 1 ? 's' : ''}`);
+  if (inspSub) subParts.push(`${inspSub} inspección${inspSub !== 1 ? 'es' : ''}`);
+  if (onbSub) subParts.push(`${onbSub} onboarding${onbSub !== 1 ? 's' : ''}`);
+  document.getElementById('historico-unit-sub').textContent = subParts.join(', ');
 
   const listEl = document.getElementById('historico-unit-records');
   listEl.innerHTML = recs.map(r => {
     const isInsp = r.type === 'inspection';
-    const icon = isInsp ? 'fact_check' : 'inventory_2';
-    const typeLabel = isInsp ? 'Inspección' : 'Inventario';
+    const isOnb = r.type === 'onboarding';
+    const icon = isOnb ? 'home_work' : (isInsp ? 'fact_check' : 'inventory_2');
+    const typeLabel = isOnb ? 'Onboarding' : (isInsp ? 'Inspección' : 'Inventario');
     const dateStr = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
     const detail = isInsp
       ? `${r.completedCount}/${r.itemCount} artículos`
       : `${r.itemCount} artículo${r.itemCount !== 1 ? 's' : ''}`;
     const safeId = r.unitId.replace(/'/g, "\\'");
-    const editFn = isInsp ? `editInspectionFromHistorico('${safeId}')` : `editInventory('${safeId}')`;
+    const editFn = isOnb
+      ? `editOnboardingFromHistorico('${safeId}')`
+      : (isInsp ? `editInspectionFromHistorico('${safeId}')` : `editInventory('${safeId}')`);
+    const clickFn = isOnb ? `viewOnboardingRecord('${safeId}')` : `viewHistoricoRecord('${safeId}')`;
     const delDesc = `${typeLabel}: ${r.unitName} · ${dateStr}`;
 
     return `
-      <div class="historico-record-card" onclick="viewHistoricoRecord('${safeId}')">
+      <div class="historico-record-card" onclick="${clickFn}">
         <span class="material-symbols-rounded historico-record-icon ${r.type}">${icon}</span>
         <div class="historico-record-info">
           <div class="historico-record-type">${typeLabel}${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}</div>
@@ -1279,6 +1301,7 @@ async function viewHistoricoRecord(unitId) {
       });
       inspectionInfo = { location: doc.unitName, date: doc.date, auditor: doc.auditor, duration: doc.duration };
       currentMode = 'inspection';
+      window._viewingRecord = true;
       showExport();
     } else {
       // Show inventory in export/review mode
@@ -1771,10 +1794,11 @@ function showExport() {
 
   checkShareSupport();
 
-  // Save inspection result to Supabase
-  if (currentMode === 'inspection' && isSupabaseReady()) {
+  // Save inspection result to Supabase (skip when just viewing a historic record)
+  if (currentMode === 'inspection' && !window._viewingRecord && isSupabaseReady()) {
     saveInspectionToSupabase();
   }
+  window._viewingRecord = false;
 }
 
 async function saveInspectionToSupabase() {
