@@ -149,6 +149,7 @@ async function loadAllRecords() {
       itemCount,
       completedCount,
       sourceUnitId: d.sourceUnitId || null,
+      versionCount: (d.versions || []).length,
     };
   });
 }
@@ -172,4 +173,64 @@ async function loadInventoryByUnit(unitId) {
   }
 
   return data ? data.data : null;
+}
+
+// ── Eliminar registro por unit_id ──
+
+async function deleteRecord(unitId) {
+  if (!isSupabaseReady()) {
+    throw new Error('Supabase no configurado');
+  }
+
+  const { error } = await _sb
+    .from('inventories')
+    .delete()
+    .eq('unit_id', unitId);
+
+  if (error) throw error;
+}
+
+// ── Actualizar inspección existente (guarda versión anterior) ──
+
+async function updateInspectionResult(unitId, newInspDoc) {
+  if (!isSupabaseReady()) {
+    throw new Error('Supabase no configurado');
+  }
+
+  // Load existing record to get current data for version history
+  const { data: existing, error: loadErr } = await _sb
+    .from('inventories')
+    .select('data')
+    .eq('unit_id', unitId)
+    .single();
+
+  if (loadErr && loadErr.code !== 'PGRST116') throw loadErr;
+
+  const prevData = existing ? existing.data : null;
+  const versions = prevData ? (prevData.versions || []) : [];
+
+  if (prevData) {
+    // Push snapshot of previous version (rooms + metadata, without nested versions)
+    const snapshot = { ...prevData };
+    delete snapshot.versions;
+    versions.push({ savedAt: prevData.updatedAt || new Date().toISOString(), ...snapshot });
+  }
+
+  const updatedDoc = {
+    ...newInspDoc,
+    versions,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const { error } = await _sb
+    .from('inventories')
+    .update({
+      unit_name: updatedDoc.unitName,
+      auditor: updatedDoc.auditor,
+      updated_at: updatedDoc.updatedAt,
+      data: updatedDoc,
+    })
+    .eq('unit_id', unitId);
+
+  if (error) throw error;
 }

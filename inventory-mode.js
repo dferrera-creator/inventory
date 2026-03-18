@@ -61,6 +61,75 @@ function getRoomItemSuggestions(roomName) {
   return [];
 }
 
+// ── Descargar plantilla XLSX ──
+
+function downloadXLSXTemplate() {
+  if (typeof XLSX === 'undefined') {
+    showToast('⏳ Cargando Excel, intenta de nuevo...');
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+
+  // === Sheet 1: Format A (single flat sheet with Cuarto column) ===
+  const flatData = [
+    ['Cuarto', 'Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
+    ['Cocina', 'Refrigerador', 'SKU-001', 8500, 1, 'Bueno', 'Samsung 15 pies'],
+    ['Cocina', 'Estufa', 'SKU-002', 5200, 1, 'Bueno', '4 quemadores'],
+    ['Cocina', 'Microondas', 'SKU-003', 1800, 1, 'Bueno', ''],
+    ['Sala', 'Sofá 3 plazas', 'SKU-010', 12000, 1, 'Bueno', 'Color gris'],
+    ['Sala', 'Mesa de centro', 'SKU-011', 3500, 1, 'Dañado', 'Rayada esquina derecha'],
+    ['Dormitorio 1', 'Cama matrimonial', 'SKU-020', 9000, 1, 'Bueno', 'Con colchón incluido'],
+    ['Dormitorio 1', 'Buró', 'SKU-021', 1500, 2, 'Bueno', ''],
+    ['Baño', 'Toallero', 'SKU-030', 450, 1, 'Bueno', ''],
+    ['Baño', 'Tapete de baño', 'SKU-031', 280, 1, 'Nuevo', 'Recién colocado'],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(flatData);
+  ws1['!cols'] = [16, 22, 12, 10, 10, 12, 28].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Formato Plano (Recomendado)');
+
+  // === Sheet 2: Format B (multi-sheet — one sheet per room) ===
+  const roomSheets = [
+    { name: 'Cocina', rows: [
+      ['Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
+      ['Refrigerador', 'SKU-001', 8500, 1, 'Bueno', 'Samsung 15 pies'],
+      ['Estufa', 'SKU-002', 5200, 1, 'Bueno', '4 quemadores'],
+      ['Microondas', 'SKU-003', 1800, 1, 'Bueno', ''],
+    ]},
+    { name: 'Sala', rows: [
+      ['Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
+      ['Sofá 3 plazas', 'SKU-010', 12000, 1, 'Bueno', 'Color gris'],
+      ['Mesa de centro', 'SKU-011', 3500, 1, 'Dañado', 'Rayada esquina derecha'],
+    ]},
+    { name: 'Dormitorio 1', rows: [
+      ['Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
+      ['Cama matrimonial', 'SKU-020', 9000, 1, 'Bueno', 'Con colchón incluido'],
+      ['Buró', 'SKU-021', 1500, 2, 'Bueno', ''],
+    ]},
+  ];
+  roomSheets.forEach(({ name, rows }) => {
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [22, 12, 10, 10, 12, 28].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  });
+
+  // === Sheet 3: Estado values reference ===
+  const estadoData = [
+    ['Estado (valor en Excel)', 'Significado'],
+    ['Bueno', 'El artículo está en buenas condiciones'],
+    ['Dañado', 'El artículo tiene daños visibles'],
+    ['Faltante', 'El artículo no está presente'],
+    ['Nuevo', 'Artículo nuevo o recién adquirido'],
+    ['(dejar vacío)', 'Sin estado registrado'],
+  ];
+  const ws3 = XLSX.utils.aoa_to_sheet(estadoData);
+  ws3['!cols'] = [26, 40].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws3, 'Valores de Estado');
+
+  XLSX.writeFile(wb, 'Plantilla_Inventario_DelMar.xlsx');
+  showToast('📥 Plantilla descargada');
+}
+
 // ── Importar inventario desde XLSX ──
 // Formato esperado: Hoja única o múltiples hojas (una por cuarto)
 // Columnas: Cuarto | Nombre | SKU | Precio | Cantidad | Estado | Notas

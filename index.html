@@ -90,10 +90,16 @@
         </button>
 
         <div class="import-divider"><span>o importar existente</span></div>
-        <button class="btn-import" onclick="document.getElementById('xlsx-import-input').click()">
-          <span class="material-symbols-rounded">upload_file</span>
-          Importar desde Excel
-        </button>
+        <div class="import-row">
+          <button class="btn-import" onclick="document.getElementById('xlsx-import-input').click()">
+            <span class="material-symbols-rounded">upload_file</span>
+            Importar Excel
+          </button>
+          <button class="btn-import btn-template" onclick="downloadXLSXTemplate()">
+            <span class="material-symbols-rounded">download</span>
+            Plantilla
+          </button>
+        </div>
         <input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none" onchange="importInventoryFromXLSX(this)">
       </div>
     </div>
@@ -455,6 +461,33 @@
         </button>
         <button class="btn-back-edit" id="btn-back-edit" onclick="handleBackEdit()">
           <span class="material-symbols-rounded">edit</span> Editar
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ MODAL: CONFIRMAR ELIMINACIÓN ══════════ -->
+    <div class="help-modal-overlay" id="delete-modal" onclick="closeDeleteModal()">
+      <div class="help-modal delete-modal" onclick="event.stopPropagation()">
+        <button class="help-modal-close" onclick="closeDeleteModal()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="help-modal-icon-wrap" style="background:#fee2e2">
+          <span class="material-symbols-rounded help-modal-icon" style="color:#ef4444">delete_forever</span>
+        </div>
+        <h3 class="help-modal-name">Eliminar Registro</h3>
+        <p class="help-modal-hint" id="delete-modal-desc">Esta acción no se puede deshacer.</p>
+        <div class="inv-field-group" style="margin-top:16px">
+          <label style="font-size:0.82rem;color:#6b7280;margin-bottom:6px;display:block">Ingresa la contraseña para continuar</label>
+          <div style="position:relative">
+            <input type="password" id="delete-password-input" placeholder="Contraseña..." style="width:100%;padding-right:44px" autocomplete="off" onkeydown="if(event.key==='Enter')confirmDelete()">
+            <button type="button" class="delete-pw-toggle" onclick="toggleDeletePwVisibility()">
+              <span class="material-symbols-rounded" id="delete-pw-eye">visibility</span>
+            </button>
+          </div>
+          <p class="delete-pw-error" id="delete-pw-error" style="display:none">Contraseña incorrecta</p>
+        </div>
+        <button class="btn-continue btn-delete-confirm" style="margin-top:16px;width:100%;background:#ef4444" onclick="confirmDelete()">
+          <span class="material-symbols-rounded">delete_forever</span> Eliminar
         </button>
       </div>
     </div>

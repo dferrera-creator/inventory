@@ -2126,27 +2126,39 @@ body {
   white-space: nowrap;
 }
 
+.import-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+}
+
 .btn-import {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  max-width: 380px;
-  padding: 12px 24px;
+  gap: 6px;
+  flex: 1;
+  padding: 12px 14px;
   border-radius: 14px;
   border: 2px dashed #d1d5db;
   background: transparent;
   color: #6b7280;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
 .btn-import:active {
   border-color: #f59e0b;
   color: #f59e0b;
+}
+
+.btn-template:active {
+  border-color: #2563eb !important;
+  color: #2563eb !important;
 }
 
 /* ══════════════════════════════════════════
@@ -2387,4 +2399,61 @@ body {
   font-size: 0.78rem;
   color: #6b7280;
   margin-top: 2px;
+}
+
+/* ══════════════════════════════════════════
+   DELETE MODAL + DANGER BUTTON
+   ══════════════════════════════════════════ */
+
+.delete-modal {
+  border-top: 4px solid #ef4444;
+}
+
+.delete-pw-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  padding: 4px;
+}
+
+.delete-pw-toggle .material-symbols-rounded {
+  font-size: 1.1rem;
+}
+
+.delete-pw-error {
+  color: #ef4444;
+  font-size: 0.78rem;
+  margin-top: 6px;
+}
+
+.unit-action-btn.danger {
+  color: #ef4444;
+}
+
+.unit-action-btn.danger:active {
+  background: #fee2e2;
+}
+
+/* ══════════════════════════════════════════
+   VERSION HISTORY BADGE
+   ══════════════════════════════════════════ */
+
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #ede9fe;
+  color: #7c3aed;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
 }
