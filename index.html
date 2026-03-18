@@ -125,6 +125,7 @@
           <div class="inv-field-group">
             <label>Nombre del artículo *</label>
             <input type="text" id="new-item-name" placeholder="Ej: Sofá, Televisión..." autocomplete="off">
+            <div id="item-suggestions" class="suggestion-chips-row"></div>
           </div>
 
           <div class="inv-field-row">
@@ -439,6 +440,7 @@
         <div class="inv-field-group" style="margin-top:16px">
           <input type="text" id="new-room-name" placeholder="Ej: Cocina, Recámara 1..." autocomplete="off" style="width:100%">
         </div>
+        <div id="room-suggestions" class="suggestion-chips-row"></div>
         <button class="btn-continue" style="margin-top:16px;width:100%" onclick="confirmAddRoom()">
           <span class="material-symbols-rounded">check</span> Agregar
         </button>
