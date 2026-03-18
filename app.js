@@ -818,13 +818,20 @@ async function loadAndRenderUnitList() {
     listEl.innerHTML = units.map(u => {
       const date = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
       return `
-        <div class="unit-card" onclick="selectUnitForInspection('${u.unitId}')">
+        <div class="unit-card">
           <span class="material-symbols-rounded unit-card-icon">apartment</span>
           <div class="unit-card-info">
             <div class="unit-card-name">${u.unitName}</div>
             <div class="unit-card-meta">${u.itemCount} artículo${u.itemCount !== 1 ? 's' : ''} · ${date}</div>
           </div>
-          <span class="material-symbols-rounded unit-card-arrow">chevron_right</span>
+          <div class="unit-card-actions">
+            <button class="unit-action-btn" onclick="editInventory('${u.unitId}')" title="Editar inventario">
+              <span class="material-symbols-rounded">edit</span>
+            </button>
+            <button class="unit-action-btn primary" onclick="selectUnitForInspection('${u.unitId}')" title="Iniciar inspección">
+              <span class="material-symbols-rounded">fact_check</span>
+            </button>
+          </div>
         </div>
       `;
     }).join('');

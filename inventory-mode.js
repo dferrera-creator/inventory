@@ -13,6 +13,7 @@ let currentAddItemPhotoTimes = [];
 let newItemQty = 1;
 let newItemStatus = null;
 let editingItemIdx = null;      // null = nuevo, número = editando existente
+let isEditingInventory = false; // true when loading an existing saved inventory
 
 // ── Sugerencias de cuartos ──
 const ROOM_SUGGESTIONS = [
@@ -107,6 +108,7 @@ function startInventoryMode() {
       items: []
     });
     inventoryRooms = [makeRoom('Cocina'), makeRoom('Dormitorio 1'), makeRoom('Baño')];
+    isEditingInventory = false;
 
     startTimer();
     document.getElementById('inv-unit-label').textContent = unitName;
@@ -152,7 +154,9 @@ function renderInventoryRooms() {
     finishBtn = document.createElement('button');
     finishBtn.id = 'btn-finish-inventory';
     finishBtn.className = 'btn-finish-all';
-    finishBtn.innerHTML = '<span class="material-symbols-rounded">cloud_upload</span> Guardar Inventario';
+    finishBtn.innerHTML = isEditingInventory
+      ? '<span class="material-symbols-rounded">save</span> Guardar Cambios'
+      : '<span class="material-symbols-rounded">cloud_upload</span> Guardar Inventario';
     finishBtn.onclick = finishInventory;
     const container = document.getElementById('inv-room-grid').parentElement;
     container.appendChild(finishBtn);
@@ -484,13 +488,51 @@ async function finishInventory() {
   if (isSupabaseReady()) {
     try {
       await saveInventory(inventoryInfo);
-      showToast('☁️ Inventario guardado en la nube');
+      showToast(isEditingInventory ? '✅ Cambios guardados en la nube' : '☁️ Inventario guardado en la nube');
     } catch (err) {
       console.error('Error guardando en Supabase:', err);
       showToast('⚠️ No se pudo guardar en la nube');
     }
   } else {
     showToast('ℹ️ Configura Supabase para guardar en la nube');
+  }
+}
+
+// ── Editar inventario existente ──
+
+async function editInventory(unitId) {
+  showToast('⏳ Cargando inventario...');
+  try {
+    const doc = await loadInventoryByUnit(unitId);
+    if (!doc) {
+      showToast('❌ Inventario no encontrado');
+      return;
+    }
+
+    // Restore metadata (preserve original unitId so save overwrites same record)
+    inventoryInfo = {
+      unitId: doc.unitId,
+      unitName: doc.unitName,
+      date: doc.date,
+      auditor: doc.auditor,
+    };
+
+    // Deep-copy rooms and items
+    inventoryRooms = (doc.rooms || []).map(r => ({
+      ...r,
+      items: (r.items || []).map(i => ({ ...i, photos: [...(i.photos || [])], photoTimes: [...(i.photoTimes || [])] }))
+    }));
+
+    isEditingInventory = true;
+
+    startTimer();
+    document.getElementById('inv-unit-label').textContent = doc.unitName;
+    showStep('step-inv-rooms');
+    renderInventoryRooms();
+    showToast(`✏️ Editando "${doc.unitName}"`);
+  } catch (err) {
+    console.error('Error cargando inventario para editar:', err);
+    showToast('❌ Error al cargar inventario');
   }
 }
 
