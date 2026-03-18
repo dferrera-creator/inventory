@@ -419,8 +419,8 @@ function renderInventoryItemList() {
   if (room.items.length === 0) {
     list.innerHTML = `
       <div class="inv-empty-state">
-        <span class="material-symbols-rounded">inventory_2</span>
-        <p>Sin artículos. Agrega el primero.</p>
+        <span class="material-symbols-rounded">add_circle_outline</span>
+        <p>Toca <strong>Agregar Artículo</strong> para comenzar</p>
       </div>
     `;
     return;
@@ -469,6 +469,10 @@ function showAddItemPanel() {
   document.querySelector('.add-item-title').textContent = 'Nuevo Artículo';
   document.getElementById('add-item-panel').style.display = 'block';
   document.getElementById('btn-show-add-item').style.display = 'none';
+  // Always start with optional fields collapsed
+  document.getElementById('optional-fields').style.display = 'none';
+  const toggleBtn = document.getElementById('toggle-optional-btn');
+  if (toggleBtn) toggleBtn.classList.remove('open');
   renderItemSuggestions();
   document.getElementById('new-item-name').focus();
 }
@@ -486,6 +490,14 @@ function renderItemSuggestions() {
     available.map(s =>
       `<button class="suggestion-chip" onclick="pickItemSuggestion('${s.replace(/'/g, "\\'")}')">${s}</button>`
     ).join('');
+}
+
+function toggleOptionalFields() {
+  const optFields = document.getElementById('optional-fields');
+  const toggleBtn = document.getElementById('toggle-optional-btn');
+  const isOpen = optFields.style.display !== 'none';
+  optFields.style.display = isOpen ? 'none' : 'block';
+  toggleBtn.classList.toggle('open', !isOpen);
 }
 
 function pickItemSuggestion(name) {
@@ -513,6 +525,11 @@ function resetAddItemForm() {
   document.querySelectorAll('#new-item-status-grid .status-btn').forEach(b => b.classList.remove('selected', 'just-selected'));
   document.getElementById('inv-photo-strip').innerHTML = '';
   document.getElementById('inv-camera-btn').classList.remove('has-content');
+  // Hide optional fields
+  const optFields = document.getElementById('optional-fields');
+  if (optFields) optFields.style.display = 'none';
+  const toggleBtn = document.getElementById('toggle-optional-btn');
+  if (toggleBtn) toggleBtn.classList.remove('open');
 }
 
 function changeNewItemQty(delta) {
@@ -631,6 +648,15 @@ function editInventoryItem(idx) {
   renderInvPhotoStrip();
   if (currentAddItemPhotos.length > 0) {
     document.getElementById('inv-camera-btn').classList.add('has-content');
+  }
+
+  // Show optional fields if item already has SKU or price
+  const optFields = document.getElementById('optional-fields');
+  const toggleBtn = document.getElementById('toggle-optional-btn');
+  if (optFields) {
+    const hasOptional = !!(item.sku || item.price);
+    optFields.style.display = hasOptional ? 'block' : 'none';
+    if (toggleBtn) toggleBtn.classList.toggle('open', hasOptional);
   }
 
   document.querySelector('.add-item-title').textContent = 'Editar Artículo';

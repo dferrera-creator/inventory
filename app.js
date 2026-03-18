@@ -537,6 +537,14 @@ let inspectionData = {}; // clave: "sectionId-itemIndex"
 let currentSectionIndex = 0;
 let currentItemIndex = 0;
 let SECTIONS = []; // se construye dinámicamente
+let _autoAdvanceTimer = null;
+
+function cancelAutoAdvance() {
+  if (_autoAdvanceTimer) {
+    clearTimeout(_autoAdvanceTimer);
+    _autoAdvanceTimer = null;
+  }
+}
 
 // ── Cronómetro ──
 
@@ -1502,6 +1510,12 @@ function setStatus(status) {
 
   const labels = { 'good': '✅ Bueno', 'damaged': '🔨 Dañado', 'missing': '❌ Faltante', 'new': '🆕 Nuevo' };
   showToast(labels[status]);
+
+  cancelAutoAdvance();
+  const notesOpen = document.getElementById('notes-area').style.display !== 'none';
+  if (!notesOpen) {
+    _autoAdvanceTimer = setTimeout(() => { _autoAdvanceTimer = null; nextItem(); }, 500);
+  }
 }
 
 function changeQty(delta) {
@@ -1519,6 +1533,7 @@ function changeQty(delta) {
 }
 
 function triggerPhoto() {
+  cancelAutoAdvance();
   document.getElementById('photo-input').click();
 }
 
@@ -1593,6 +1608,7 @@ function removePhoto(key, photoIndex) {
 }
 
 function toggleNotes() {
+  cancelAutoAdvance();
   const notesArea = document.getElementById('notes-area');
   const isVisible = notesArea.style.display !== 'none';
   notesArea.style.display = isVisible ? 'none' : 'block';
@@ -1615,6 +1631,7 @@ function saveCurrentNotes() {
 }
 
 function prevItem() {
+  cancelAutoAdvance();
   saveCurrentNotes();
   if (currentItemIndex > 0) {
     currentItemIndex--;
@@ -1624,6 +1641,7 @@ function prevItem() {
 }
 
 function nextItem() {
+  cancelAutoAdvance();
   saveCurrentNotes();
   const section = SECTIONS[currentSectionIndex];
 
@@ -1637,6 +1655,7 @@ function nextItem() {
 }
 
 function backToRooms() {
+  cancelAutoAdvance();
   if (document.getElementById('step-item').classList.contains('active')) {
     saveCurrentNotes();
   }

@@ -28,7 +28,7 @@
               <span class="material-symbols-rounded mode-icon">add_box</span>
               <div class="mode-card-text">
                 <span class="mode-title">Inventario</span>
-                <span class="mode-desc">Registrar artículos de una unidad</span>
+                <span class="mode-desc">Crear inventario de una unidad</span>
               </div>
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
@@ -39,7 +39,7 @@
               <span class="material-symbols-rounded mode-icon">fact_check</span>
               <div class="mode-card-text">
                 <span class="mode-title">Inspección</span>
-                <span class="mode-desc">Revisar inventario existente</span>
+                <span class="mode-desc">Inspeccionar una unidad existente</span>
               </div>
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
@@ -50,7 +50,7 @@
               <span class="material-symbols-rounded mode-icon">history</span>
               <div class="mode-card-text">
                 <span class="mode-title">Histórico</span>
-                <span class="mode-desc">Ver inventarios e inspecciones</span>
+                <span class="mode-desc">Ver registros anteriores</span>
               </div>
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
@@ -67,7 +67,7 @@
         </button>
         <div class="welcome-icon"><span class="material-symbols-rounded icon-hero" style="color:#f59e0b">add_box</span></div>
         <h1>Nuevo Inventario</h1>
-        <p class="welcome-sub">Registra los artículos de la unidad</p>
+        <p class="welcome-sub">Completa los datos y toca Comenzar</p>
 
         <div class="form-card">
           <div class="form-group">
@@ -86,7 +86,7 @@
 
         <button class="btn-start" style="background:#f59e0b" onclick="startInventoryMode()">
           <span class="material-symbols-rounded">play_arrow</span>
-          INICIAR INVENTARIO
+          COMENZAR
         </button>
 
         <div class="import-divider"><span>o importar existente</span></div>
@@ -111,7 +111,7 @@
           <span class="material-symbols-rounded timer-icon">timer</span>
           <span id="inv-timer-display">00:00</span>
         </div>
-        <h2>Cuartos del Inventario</h2>
+        <h2>Cuartos</h2>
         <p class="inv-unit-label" id="inv-unit-label"></p>
       </div>
       <div id="inv-room-grid" class="room-grid"></div>
@@ -147,21 +147,26 @@
           <h3 class="add-item-title">Nuevo Artículo</h3>
 
           <div class="inv-field-group">
-            <label>Nombre del artículo *</label>
+            <label>Artículo *</label>
             <input type="text" id="new-item-name" placeholder="Ej: Sofá, Televisión..." autocomplete="off">
             <div id="item-suggestions" class="suggestion-chips-row"></div>
           </div>
 
-          <div class="inv-field-row">
-            <div class="inv-field-group half">
-              <label>SKU / Código</label>
-              <input type="text" id="new-item-sku" placeholder="Ej: SKU-001" autocomplete="off">
-            </div>
-            <div class="inv-field-group half">
-              <label>Precio ($)</label>
-              <input type="number" id="new-item-price" placeholder="0.00" min="0" step="0.01">
+          <div class="optional-fields" id="optional-fields" style="display:none">
+            <div class="inv-field-row">
+              <div class="inv-field-group half">
+                <label>SKU / Código</label>
+                <input type="text" id="new-item-sku" placeholder="Ej: SKU-001" autocomplete="off">
+              </div>
+              <div class="inv-field-group half">
+                <label>Precio ($)</label>
+                <input type="number" id="new-item-price" placeholder="0.00" min="0" step="0.01">
+              </div>
             </div>
           </div>
+          <button class="toggle-optional" id="toggle-optional-btn" type="button" onclick="toggleOptionalFields()">
+            <span class="material-symbols-rounded">expand_more</span> SKU y Precio
+          </button>
 
           <div class="inv-field-group">
             <label>Cantidad</label>
@@ -249,7 +254,7 @@
         </button>
         <div class="welcome-icon"><span class="material-symbols-rounded icon-hero">fact_check</span></div>
         <h1 id="insp-welcome-title">Inspección</h1>
-        <p class="welcome-sub" id="insp-welcome-sub">Selecciona una unidad existente</p>
+        <p class="welcome-sub" id="insp-welcome-sub">¿Qué unidad vas a inspeccionar?</p>
 
         <div class="form-card">
           <div class="form-group unit-search-group">
@@ -272,7 +277,7 @@
 
         <button class="btn-start" id="btn-start-inspection" onclick="startInspection()" disabled>
           <span class="material-symbols-rounded">play_arrow</span>
-          INICIAR
+          COMENZAR
         </button>
       </div>
     </div>
