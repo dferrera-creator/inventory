@@ -2671,3 +2671,57 @@ body {
 .onb-item-card.status-new { border-left-color: #2563eb; }
 
 .historico-record-icon.onboarding { color: #10b981; }
+
+/* ── Onboarding: hint text, photo strip, extra buttons ── */
+
+.onb-item-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.onb-qty-label {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-right: 2px;
+}
+
+.onb-extra-btn {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: inherit;
+}
+
+.onb-extra-btn .material-symbols-rounded { font-size: 0.9rem; }
+
+.onb-extra-btn.camera-btn { color: #2563eb; background: #eff6ff; }
+.onb-extra-btn.camera-btn.has-content { background: #2563eb; color: #fff; }
+.onb-extra-btn.notes-btn.has-content { background: #f59e0b; color: #fff; }
+
+.onb-photo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.onb-photo-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid #e5e7eb;
+}
+
+.onb-photo-thumb:active { opacity: 0.7; }

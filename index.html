@@ -156,6 +156,7 @@
         <div class="topbar-timer" id="onb-topbar-timer">00:00</div>
       </div>
       <div id="onb-section-items" class="onb-section-items"></div>
+      <input type="file" id="onb-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handleOnbPhoto(this)">
       <div style="padding:16px">
         <button class="btn-finish-all" style="background:#10b981;box-shadow:0 6px 20px rgba(16,185,129,0.35);width:calc(100% - 32px);margin:0 16px 8px" onclick="backToOnboardingSections()">
           <span class="material-symbols-rounded">check</span> Guardar Sección

@@ -1533,12 +1533,6 @@ function setStatus(status) {
 
   const labels = { 'good': '✅ Bueno', 'damaged': '🔨 Dañado', 'missing': '❌ Faltante', 'new': '🆕 Nuevo' };
   showToast(labels[status]);
-
-  cancelAutoAdvance();
-  const notesOpen = document.getElementById('notes-area').style.display !== 'none';
-  if (!notesOpen) {
-    _autoAdvanceTimer = setTimeout(() => { _autoAdvanceTimer = null; nextItem(); }, 500);
-  }
 }
 
 function changeQty(delta) {
