@@ -5,6 +5,77 @@
 // descripciones de artículos, exportes mejorados
 // ══════════════════════════════════════════
 
+// ── Contraseña de eliminación (SHA-256) ──
+const DELETE_PASSWORD_HASH = 'e901284b0c60f39416612ccd9ba16960d11c28b545d2b8f7f47362a171d8d84e';
+
+async function hashString(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+let _pendingDeleteUnitId = null;
+
+function showDeleteModal(unitId, description) {
+  _pendingDeleteUnitId = unitId;
+  document.getElementById('delete-modal-desc').textContent = description || 'Esta acción no se puede deshacer.';
+  document.getElementById('delete-password-input').value = '';
+  document.getElementById('delete-pw-error').style.display = 'none';
+  document.getElementById('delete-modal').classList.add('active');
+  setTimeout(() => document.getElementById('delete-password-input').focus(), 100);
+}
+
+function closeDeleteModal() {
+  _pendingDeleteUnitId = null;
+  document.getElementById('delete-modal').classList.remove('active');
+}
+
+function toggleDeletePwVisibility() {
+  const input = document.getElementById('delete-password-input');
+  const eye = document.getElementById('delete-pw-eye');
+  if (input.type === 'password') {
+    input.type = 'text';
+    eye.textContent = 'visibility_off';
+  } else {
+    input.type = 'password';
+    eye.textContent = 'visibility';
+  }
+}
+
+async function confirmDelete() {
+  const pw = document.getElementById('delete-password-input').value;
+  const errEl = document.getElementById('delete-pw-error');
+
+  const hash = await hashString(pw);
+  if (hash !== DELETE_PASSWORD_HASH) {
+    errEl.style.display = 'block';
+    document.getElementById('delete-password-input').value = '';
+    document.getElementById('delete-password-input').focus();
+    return;
+  }
+
+  const unitId = _pendingDeleteUnitId;
+  closeDeleteModal();
+
+  try {
+    await deleteRecord(unitId);
+    _allRecords = _allRecords.filter(r => r.unitId !== unitId);
+    showToast('🗑️ Registro eliminado');
+
+    // Refresh current view
+    const unitTitle = document.getElementById('historico-unit-title').textContent;
+    const remaining = _allRecords.filter(r => r.unitName === unitTitle);
+    if (remaining.length === 0) {
+      showStep('step-historico');
+      renderHistoricoList();
+    } else {
+      openHistoricoUnit(unitTitle);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error al eliminar: ' + err.message);
+  }
+}
+
 // ── Mapeo de iconos Material Symbols por artículo ──
 
 const ITEM_ICONS = {
@@ -697,6 +768,7 @@ function selectMode(mode) {
     // Inspection mode — show redesigned welcome with unit search
     window._loadedInventory = null;
     window._selectedUnitId = null;
+    window._editingInspectionId = null;
     document.getElementById('location').value = '';
     document.getElementById('location').readOnly = false;
     document.getElementById('unit-search-clear').style.display = 'none';
@@ -1106,17 +1178,23 @@ function openHistoricoUnit(unitName) {
     const detail = isInsp
       ? `${r.completedCount}/${r.itemCount} artículos`
       : `${r.itemCount} artículo${r.itemCount !== 1 ? 's' : ''}`;
+    const safeId = r.unitId.replace(/'/g, "\\'");
+    const editFn = isInsp ? `editInspectionFromHistorico('${safeId}')` : `editInventory('${safeId}')`;
+    const delDesc = `${typeLabel}: ${r.unitName} · ${dateStr}`;
 
     return `
-      <div class="historico-record-card" onclick="viewHistoricoRecord('${r.unitId.replace(/'/g, "\\'")}')">
+      <div class="historico-record-card" onclick="viewHistoricoRecord('${safeId}')">
         <span class="material-symbols-rounded historico-record-icon ${r.type}">${icon}</span>
         <div class="historico-record-info">
-          <div class="historico-record-type">${typeLabel}</div>
+          <div class="historico-record-type">${typeLabel}${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}</div>
           <div class="historico-record-meta">${dateStr} · ${detail} · ${r.auditor || 'Sin responsable'}</div>
         </div>
         <div class="unit-card-actions">
-          <button class="unit-action-btn" onclick="event.stopPropagation(); editInventory('${r.unitId.replace(/'/g, "\\'")}')" title="Editar">
+          <button class="unit-action-btn" onclick="event.stopPropagation(); ${editFn}" title="Editar">
             <span class="material-symbols-rounded">edit</span>
+          </button>
+          <button class="unit-action-btn danger" onclick="event.stopPropagation(); showDeleteModal('${safeId}', '${delDesc.replace(/'/g, "\\'")}')" title="Eliminar">
+            <span class="material-symbols-rounded">delete</span>
           </button>
         </div>
       </div>
@@ -1124,6 +1202,39 @@ function openHistoricoUnit(unitName) {
   }).join('');
 
   showStep('step-historico-unit');
+}
+
+async function editInspectionFromHistorico(unitId) {
+  showToast('⏳ Cargando...');
+  try {
+    const doc = await loadInventoryByUnit(unitId);
+    if (!doc) { showToast('❌ No encontrado'); return; }
+
+    const sourceId = doc.sourceUnitId;
+    if (!sourceId) { showToast('❌ Sin inventario base'); return; }
+
+    const sourceInv = await loadInventoryByUnit(sourceId);
+    if (!sourceInv) { showToast('❌ Inventario base no encontrado'); return; }
+
+    window._loadedInventory = sourceInv;
+    window._selectedUnitId = sourceId;
+    window._editingInspectionId = unitId;
+
+    document.getElementById('location').value = sourceInv.unitName;
+    document.getElementById('location').readOnly = true;
+    document.getElementById('unit-search-clear').style.display = 'flex';
+    document.getElementById('btn-start-inspection').disabled = false;
+
+    const today = new Date();
+    document.getElementById('date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    document.getElementById('auditor').value = doc.auditor || '';
+
+    showStep('step-welcome');
+    showToast(`✅ Editando inspección de ${sourceInv.unitName}`);
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error al cargar inspección');
+  }
 }
 
 async function viewHistoricoRecord(unitId) {
@@ -1652,10 +1763,11 @@ async function saveInspectionToSupabase() {
     const total = getTotalItems();
     const completed = getTotalCompleted();
     const elapsed = getElapsedTime();
+    const editingId = window._editingInspectionId || null;
 
     const inspDoc = {
       type: 'inspection',
-      unitId: 'insp-' + Date.now(),
+      unitId: editingId || ('insp-' + Date.now()),
       sourceUnitId: inspectionInfo.sourceUnitId || null,
       unitName: inspectionInfo.location,
       date: inspectionInfo.date,
@@ -1685,8 +1797,14 @@ async function saveInspectionToSupabase() {
       })),
     };
 
-    await saveInspectionResult(inspDoc);
-    showToast('☁️ Inspección guardada');
+    if (editingId) {
+      await updateInspectionResult(editingId, inspDoc);
+      window._editingInspectionId = null;
+      showToast('☁️ Inspección actualizada');
+    } else {
+      await saveInspectionResult(inspDoc);
+      showToast('☁️ Inspección guardada');
+    }
   } catch (err) {
     console.error('Error guardando inspección:', err);
   }
