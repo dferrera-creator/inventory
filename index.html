@@ -45,6 +45,17 @@
             </div>
           </button>
 
+          <button class="mode-card onboarding-mode" onclick="selectMode('onboarding')">
+            <div class="mode-card-inner">
+              <span class="material-symbols-rounded mode-icon">home_work</span>
+              <div class="mode-card-text">
+                <span class="mode-title">Onboarding</span>
+                <span class="mode-desc">Inspección de ingreso de unidad</span>
+              </div>
+              <span class="material-symbols-rounded mode-arrow">chevron_right</span>
+            </div>
+          </button>
+
           <button class="mode-card historico-mode" onclick="selectMode('historico')">
             <div class="mode-card-inner">
               <span class="material-symbols-rounded mode-icon">history</span>
@@ -56,6 +67,99 @@
             </div>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- ══════════ ONBOARDING PASO 1: DATOS ══════════ -->
+    <div id="step-onboarding-welcome" class="step">
+      <div class="welcome-screen">
+        <button class="back-home-btn" onclick="showStep('step-home')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <div class="welcome-icon"><span class="material-symbols-rounded icon-hero" style="color:#10b981">home_work</span></div>
+        <h1>Inspección de Onboarding</h1>
+        <p class="welcome-sub">Completa los datos y toca Comenzar</p>
+
+        <div class="form-card">
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">apartment</span></div>
+            <input type="text" id="onb-unit-name" placeholder="Nombre de la unidad..." autocomplete="off">
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
+            <input type="date" id="onb-date">
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
+            <input type="text" id="onb-auditor" placeholder="Nombre del inspector..." autocomplete="off">
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">bed</span></div>
+            <div style="display:flex;align-items:center;gap:12px;flex:1;padding:8px 0">
+              <span style="font-size:0.9rem;color:#374151;flex:1">Número de recámaras</span>
+              <div class="qty-row">
+                <button class="qty-btn" onclick="changeOnbCount('onb-bedrooms-count',-1)"><span class="material-symbols-rounded">remove</span></button>
+                <span class="qty-value" id="onb-bedrooms-count">1</span>
+                <button class="qty-btn" onclick="changeOnbCount('onb-bedrooms-count',1)"><span class="material-symbols-rounded">add</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">bathtub</span></div>
+            <div style="display:flex;align-items:center;gap:12px;flex:1;padding:8px 0">
+              <span style="font-size:0.9rem;color:#374151;flex:1">Número de baños</span>
+              <div class="qty-row">
+                <button class="qty-btn" onclick="changeOnbCount('onb-bathrooms-count',-1)"><span class="material-symbols-rounded">remove</span></button>
+                <span class="qty-value" id="onb-bathrooms-count">1</span>
+                <button class="qty-btn" onclick="changeOnbCount('onb-bathrooms-count',1)"><span class="material-symbols-rounded">add</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-start" style="background:#10b981" onclick="startOnboarding()">
+          <span class="material-symbols-rounded">play_arrow</span>
+          COMENZAR
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ ONBOARDING PASO 2: SECCIONES ══════════ -->
+    <div id="step-onboarding-sections" class="step">
+      <div class="rooms-header">
+        <div class="timer-bar" id="onb-timer-bar">
+          <span class="material-symbols-rounded timer-icon">timer</span>
+          <span id="onb-timer-display">00:00</span>
+        </div>
+        <h2>Inspección de Onboarding</h2>
+        <p class="inv-unit-label" id="onb-unit-label"></p>
+        <div class="overall-progress">
+          <div class="overall-progress-bar" id="onb-overall-bar"></div>
+        </div>
+        <p class="overall-label" id="onb-overall-label">0 secciones completadas</p>
+      </div>
+      <div id="onb-section-grid" class="room-grid"></div>
+      <div class="inv-rooms-actions">
+        <button class="btn-finish-all" style="background:#10b981;box-shadow:0 6px 20px rgba(16,185,129,0.35)" onclick="finishOnboarding()">
+          <span class="material-symbols-rounded">check_circle</span> Finalizar Inspección
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ ONBOARDING PASO 3: DETALLE DE SECCIÓN ══════════ -->
+    <div id="step-onboarding-section" class="step">
+      <div class="item-topbar">
+        <button class="topbar-back" onclick="backToOnboardingSections()">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <div class="topbar-room-name" id="onb-section-title">Sección</div>
+        <div class="topbar-timer" id="onb-topbar-timer">00:00</div>
+      </div>
+      <div id="onb-section-items" class="onb-section-items"></div>
+      <div style="padding:16px">
+        <button class="btn-finish-all" style="background:#10b981;box-shadow:0 6px 20px rgba(16,185,129,0.35);width:calc(100% - 32px);margin:0 16px 8px" onclick="backToOnboardingSections()">
+          <span class="material-symbols-rounded">check</span> Guardar Sección
+        </button>
       </div>
     </div>
 
@@ -540,6 +644,7 @@
   <script src="supabase.js"></script>
   <script src="app.js"></script>
   <script src="inventory-mode.js"></script>
+  <script src="onboarding-mode.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>

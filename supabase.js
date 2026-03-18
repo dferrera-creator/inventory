@@ -130,14 +130,27 @@ async function loadAllRecords() {
 
   return (data || []).map(row => {
     const d = row.data || {};
-    const rooms = d.rooms || [];
-    const itemCount = rooms.reduce((sum, r) => sum + (r.items ? r.items.length : 0), 0);
     const type = d.type || 'inventory';
+    let itemCount = 0;
     let completedCount = 0;
-    if (type === 'inspection') {
-      completedCount = rooms.reduce((sum, r) =>
-        sum + (r.items ? r.items.filter(i => i.status).length : 0), 0);
+
+    if (type === 'onboarding') {
+      const sections = d.sections || [];
+      sections.forEach(section => {
+        section.groups && section.groups.forEach(group => {
+          itemCount += (group.items || []).length;
+          completedCount += (group.items || []).filter(i => i.status).length;
+        });
+      });
+    } else {
+      const rooms = d.rooms || [];
+      itemCount = rooms.reduce((sum, r) => sum + (r.items ? r.items.length : 0), 0);
+      if (type === 'inspection') {
+        completedCount = rooms.reduce((sum, r) =>
+          sum + (r.items ? r.items.filter(i => i.status).length : 0), 0);
+      }
     }
+
     return {
       id: row.id,
       unitId: row.unit_id,
@@ -173,6 +186,51 @@ async function loadInventoryByUnit(unitId) {
   }
 
   return data ? data.data : null;
+}
+
+// ── Guardar / actualizar inspección de Onboarding ──
+
+async function saveOnboardingRecord(onbDoc) {
+  if (!isSupabaseReady()) {
+    throw new Error('Supabase no configurado');
+  }
+
+  const record = {
+    unit_id: onbDoc.unitId,
+    unit_name: onbDoc.unitName,
+    auditor: onbDoc.auditor,
+    updated_at: new Date().toISOString(),
+    data: onbDoc,
+  };
+
+  // Check if a record already exists for this unit_id
+  const { data: existing } = await _sb
+    .from('inventories')
+    .select('id, data')
+    .eq('unit_id', onbDoc.unitId)
+    .single();
+
+  if (existing) {
+    // Save version history
+    const prevData = existing.data;
+    const versions = prevData ? (prevData.versions || []) : [];
+    if (prevData) {
+      const snapshot = { ...prevData };
+      delete snapshot.versions;
+      versions.push({ savedAt: prevData.updatedAt || new Date().toISOString(), ...snapshot });
+    }
+    const updatedDoc = { ...onbDoc, versions, updatedAt: new Date().toISOString() };
+    const { error } = await _sb
+      .from('inventories')
+      .update({ ...record, data: updatedDoc })
+      .eq('unit_id', onbDoc.unitId);
+    if (error) throw error;
+  } else {
+    const { error } = await _sb
+      .from('inventories')
+      .insert(record);
+    if (error) throw error;
+  }
 }
 
 // ── Eliminar registro por unit_id ──
