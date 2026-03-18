@@ -15,6 +15,53 @@ let currentAddItemPhotoTimes = [];
 let newItemQty = 1;
 let newItemStatus = null;
 let editingItemIdx = null;      // null = nuevo, número = editando existente
+let isEditingInventory = false; // true when loading an existing saved inventory
+
+// ── Sugerencias de cuartos ──
+const ROOM_SUGGESTIONS = [
+  'Cocina', 'Sala', 'Comedor', 'Sala-Comedor',
+  'Dormitorio 1', 'Dormitorio 2', 'Dormitorio 3',
+  'Baño', 'Baño 2', 'Medio Baño',
+  'Lavandería', 'Terraza', 'Garage',
+  'Estudio', 'Cuarto de Servicio', 'Pasillo', 'Bodega'
+];
+
+// ── Sugerencias de artículos por tipo de cuarto ──
+const ITEM_SUGGESTIONS_BY_ROOM = {
+  cocina:     ['Refrigerador', 'Estufa', 'Horno', 'Microondas', 'Licuadora', 'Cafetera',
+               'Tostadora', 'Extractor / Campana', 'Mesa de cocina', 'Sillas', 'Alacena', 'Fregadero'],
+  sala:       ['Sofá', 'Sillón', 'Mesa de centro', 'Televisión', 'Mueble de TV',
+               'Lámpara', 'Alfombra', 'Estantería', 'Mesa auxiliar', 'Cortinas'],
+  comedor:    ['Mesa de comedor', 'Sillas', 'Aparador', 'Vitrina', 'Lámpara de techo', 'Alfombra'],
+  dormitorio: ['Cama matrimonial', 'Cama individual', 'Ropero', 'Cómoda', 'Velador',
+               'Espejo', 'Lámpara de noche', 'Escritorio', 'Silla', 'Cortinas', 'Perchero'],
+  baño:       ['WC / Inodoro', 'Lavamanos', 'Regadera / Ducha', 'Espejo', 'Toallero',
+               'Jabonera', 'Botiquín', 'Canasta de ropa', 'Cortina de baño'],
+  lavandería: ['Lavadora', 'Secadora', 'Tabla de planchar', 'Plancha', 'Tendedero', 'Alacena'],
+  terraza:    ['Mesa exterior', 'Sillas exteriores', 'Sombrilla', 'Macetas', 'Asador / Parrilla', 'Manguera'],
+  garage:     ['Estantería', 'Herramientas', 'Bicicleta', 'Mueble de herramientas', 'Escalera'],
+  estudio:    ['Escritorio', 'Silla de oficina', 'Estantería', 'Lámpara', 'Computadora', 'Impresora'],
+};
+
+function getRoomItemSuggestions(roomName) {
+  const lower = roomName.toLowerCase();
+  if (lower.includes('cocina'))                          return ITEM_SUGGESTIONS_BY_ROOM.cocina;
+  if (lower.includes('sala') && lower.includes('com'))  return [...ITEM_SUGGESTIONS_BY_ROOM.sala, ...ITEM_SUGGESTIONS_BY_ROOM.comedor];
+  if (lower.includes('sala'))                            return ITEM_SUGGESTIONS_BY_ROOM.sala;
+  if (lower.includes('comedor'))                         return ITEM_SUGGESTIONS_BY_ROOM.comedor;
+  if (lower.includes('dormitorio') || lower.includes('recámara') || lower.includes('recamara') || lower.includes('habitación') || lower.includes('cuarto'))
+                                                         return ITEM_SUGGESTIONS_BY_ROOM.dormitorio;
+  if (lower.includes('baño') || lower.includes('bano')) return ITEM_SUGGESTIONS_BY_ROOM.baño;
+  if (lower.includes('lavandería') || lower.includes('lavanderia') || lower.includes('lavado'))
+                                                         return ITEM_SUGGESTIONS_BY_ROOM.lavandería;
+  if (lower.includes('terraza') || lower.includes('patio') || lower.includes('jardín') || lower.includes('jardin'))
+                                                         return ITEM_SUGGESTIONS_BY_ROOM.terraza;
+  if (lower.includes('garage') || lower.includes('garaje'))
+                                                         return ITEM_SUGGESTIONS_BY_ROOM.garage;
+  if (lower.includes('estudio') || lower.includes('oficina'))
+                                                         return ITEM_SUGGESTIONS_BY_ROOM.estudio;
+  return [];
+}
 
 // ── Inicio del modo inventario ──
 
@@ -56,14 +103,19 @@ function startInventoryMode() {
       date,
       auditor,
     };
-    inventoryRooms = [];
+    // Pre-populate with default rooms
+    const makeRoom = name => ({
+      roomId: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now() + Math.random().toString(36).slice(2,6),
+      roomName: name,
+      items: []
+    });
+    inventoryRooms = [makeRoom('Cocina'), makeRoom('Dormitorio 1'), makeRoom('Baño')];
+    isEditingInventory = false;
 
     startTimer();
     document.getElementById('inv-unit-label').textContent = unitName;
     showStep('step-inv-rooms');
     renderInventoryRooms();
-    // Prompt user to add first room immediately
-    showAddRoomModal();
   } catch (err) {
     console.error('Error en startInventoryMode:', err);
     showToast('❌ Error: ' + err.message);
@@ -104,7 +156,9 @@ function renderInventoryRooms() {
     finishBtn = document.createElement('button');
     finishBtn.id = 'btn-finish-inventory';
     finishBtn.className = 'btn-finish-all';
-    finishBtn.innerHTML = '<span class="material-symbols-rounded">cloud_upload</span> Guardar Inventario';
+    finishBtn.innerHTML = isEditingInventory
+      ? '<span class="material-symbols-rounded">save</span> Guardar Cambios'
+      : '<span class="material-symbols-rounded">cloud_upload</span> Guardar Inventario';
     finishBtn.onclick = finishInventory;
     const container = document.getElementById('inv-room-grid').parentElement;
     container.appendChild(finishBtn);
@@ -118,8 +172,28 @@ function renderInventoryRooms() {
 
 function showAddRoomModal() {
   document.getElementById('new-room-name').value = '';
+  renderRoomSuggestions();
   document.getElementById('add-room-modal').classList.add('visible');
   setTimeout(() => document.getElementById('new-room-name').focus(), 100);
+}
+
+function renderRoomSuggestions() {
+  const existing = new Set(inventoryRooms.map(r => r.roomName));
+  const available = ROOM_SUGGESTIONS.filter(s => !existing.has(s));
+  const container = document.getElementById('room-suggestions');
+  if (!container) return;
+  if (available.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = available.map(s =>
+    `<button class="suggestion-chip" onclick="pickRoomSuggestion('${s.replace(/'/g, "\\'")}')">${s}</button>`
+  ).join('');
+}
+
+function pickRoomSuggestion(name) {
+  document.getElementById('new-room-name').value = name;
+  document.getElementById('new-room-name').focus();
 }
 
 function closeAddRoomModal() {
@@ -217,6 +291,27 @@ function showAddItemPanel() {
   document.querySelector('.add-item-title').textContent = 'Nuevo Artículo';
   document.getElementById('add-item-panel').style.display = 'block';
   document.getElementById('btn-show-add-item').style.display = 'none';
+  renderItemSuggestions();
+  document.getElementById('new-item-name').focus();
+}
+
+function renderItemSuggestions() {
+  const container = document.getElementById('item-suggestions');
+  if (!container) return;
+  const room = inventoryRooms[currentInvRoomIdx];
+  if (!room) { container.innerHTML = ''; return; }
+  const suggestions = getRoomItemSuggestions(room.roomName);
+  const existing = new Set(room.items.map(i => i.name));
+  const available = suggestions.filter(s => !existing.has(s));
+  if (available.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = `<div class="suggestion-label">Sugerencias:</div>` +
+    available.map(s =>
+      `<button class="suggestion-chip" onclick="pickItemSuggestion('${s.replace(/'/g, "\\'")}')">${s}</button>`
+    ).join('');
+}
+
+function pickItemSuggestion(name) {
+  document.getElementById('new-item-name').value = name;
   document.getElementById('new-item-name').focus();
 }
 
@@ -395,13 +490,51 @@ async function finishInventory() {
   if (isSupabaseReady()) {
     try {
       await saveInventory(inventoryInfo);
-      showToast('☁️ Inventario guardado en la nube');
+      showToast(isEditingInventory ? '✅ Cambios guardados en la nube' : '☁️ Inventario guardado en la nube');
     } catch (err) {
       console.error('Error guardando en Supabase:', err);
       showToast('⚠️ No se pudo guardar en la nube');
     }
   } else {
     showToast('ℹ️ Configura Supabase para guardar en la nube');
+  }
+}
+
+// ── Editar inventario existente ──
+
+async function editInventory(unitId) {
+  showToast('⏳ Cargando inventario...');
+  try {
+    const doc = await loadInventoryByUnit(unitId);
+    if (!doc) {
+      showToast('❌ Inventario no encontrado');
+      return;
+    }
+
+    // Restore metadata (preserve original unitId so save overwrites same record)
+    inventoryInfo = {
+      unitId: doc.unitId,
+      unitName: doc.unitName,
+      date: doc.date,
+      auditor: doc.auditor,
+    };
+
+    // Deep-copy rooms and items
+    inventoryRooms = (doc.rooms || []).map(r => ({
+      ...r,
+      items: (r.items || []).map(i => ({ ...i, photos: [...(i.photos || [])], photoTimes: [...(i.photoTimes || [])] }))
+    }));
+
+    isEditingInventory = true;
+
+    startTimer();
+    document.getElementById('inv-unit-label').textContent = doc.unitName;
+    showStep('step-inv-rooms');
+    renderInventoryRooms();
+    showToast(`✏️ Editando "${doc.unitName}"`);
+  } catch (err) {
+    console.error('Error cargando inventario para editar:', err);
+    showToast('❌ Error al cargar inventario');
   }
 }
 

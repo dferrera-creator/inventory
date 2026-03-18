@@ -125,6 +125,7 @@
           <div class="inv-field-group">
             <label>Nombre del artículo *</label>
             <input type="text" id="new-item-name" placeholder="Ej: Sofá, Televisión..." autocomplete="off">
+            <div id="item-suggestions" class="suggestion-chips-row"></div>
           </div>
 
           <div class="inv-field-row">
@@ -205,8 +206,8 @@
         <button class="back-home-btn-inline" onclick="showStep('step-home')">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
-        <h2>Seleccionar Unidad</h2>
-        <p class="insp-select-sub">Elige la unidad a inspeccionar</p>
+        <h2>Mis Unidades</h2>
+        <p class="insp-select-sub">Inspecciona <span class="material-symbols-rounded" style="font-size:14px;vertical-align:middle">fact_check</span> o edita <span class="material-symbols-rounded" style="font-size:14px;vertical-align:middle">edit</span> una unidad</p>
       </div>
       <div id="unit-list" class="unit-list">
         <div class="loading-state">
@@ -439,6 +440,7 @@
         <div class="inv-field-group" style="margin-top:16px">
           <input type="text" id="new-room-name" placeholder="Ej: Cocina, Recámara 1..." autocomplete="off" style="width:100%">
         </div>
+        <div id="room-suggestions" class="suggestion-chips-row"></div>
         <button class="btn-continue" style="margin-top:16px;width:100%" onclick="confirmAddRoom()">
           <span class="material-symbols-rounded">check</span> Agregar
         </button>
