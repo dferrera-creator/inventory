@@ -14,11 +14,6 @@ let newItemQty = 1;
 let newItemStatus = null;
 let editingItemIdx = null;      // null = nuevo, número = editando existente
 
-const DYNAMIC_ROOM_COLORS = [
-  '#f59e0b', '#e67e22', '#27ae60', '#8b5cf6',
-  '#06b6d4', '#e74c3c', '#ec4899', '#0ea5e9'
-];
-
 // ── Inicio del modo inventario ──
 
 function startInventoryMode() {
