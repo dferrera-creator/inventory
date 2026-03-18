@@ -566,9 +566,9 @@ body {
 }
 
 .item-name-en {
-  font-size: 1rem;
-  color: #888;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: #bbb;
+  font-weight: 400;
 }
 
 /* Hint / descripción breve */
@@ -1805,10 +1805,17 @@ body {
   gap: 10px;
   padding: 40px 24px;
   color: #9ca3af;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
 .inv-empty-state .material-symbols-rounded {
-  font-size: 3rem;
+  font-size: 2.5rem;
+  color: #d1d5db;
+}
+
+.inv-empty-state strong {
+  color: #6b7280;
 }
 
 .inv-item-card {
@@ -1947,10 +1954,7 @@ body {
 }
 
 .add-item-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin-bottom: 16px;
+  display: none;
 }
 
 .inv-field-group {
@@ -2456,4 +2460,44 @@ body {
   padding: 2px 6px;
   margin-left: 6px;
   vertical-align: middle;
+}
+
+/* ══════════════════════════════════════════
+   OPTIONAL FIELDS TOGGLE (SKU / Precio)
+   ══════════════════════════════════════════ */
+
+.toggle-optional {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 8px;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  margin-bottom: 14px;
+  width: 100%;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.toggle-optional:hover {
+  color: #6b7280;
+  border-color: #9ca3af;
+}
+
+.toggle-optional .material-symbols-rounded {
+  font-size: 1.1rem;
+  transition: transform 0.2s;
+}
+
+.toggle-optional.open .material-symbols-rounded {
+  transform: rotate(180deg);
+}
+
+.optional-fields {
+  animation: fadeIn 0.2s ease;
 }
