@@ -1,3 +1,5 @@
+console.log('inventory-mode.js loaded');
+
 // ══════════════════════════════════════════
 // MODO INVENTARIO
 // Lógica para crear y guardar inventarios desde cero
@@ -740,3 +742,24 @@ async function shareInventoryFiles() {
     }
   }
 }
+
+window.startInventoryMode = startInventoryMode;
+window.showAddRoomModal = showAddRoomModal;
+window.closeAddRoomModal = closeAddRoomModal;
+window.confirmAddRoom = confirmAddRoom;
+window.openInventoryRoom = openInventoryRoom;
+window.backToInventoryRooms = backToInventoryRooms;
+window.showAddItemPanel = showAddItemPanel;
+window.hideAddItemPanel = hideAddItemPanel;
+window.changeNewItemQty = changeNewItemQty;
+window.setNewItemStatus = setNewItemStatus;
+window.triggerInvPhoto = triggerInvPhoto;
+window.handleInvPhoto = handleInvPhoto;
+window.removeInvPhoto = removeInvPhoto;
+window.saveInventoryItem = saveInventoryItem;
+window.editInventoryItem = editInventoryItem;
+window.deleteInventoryItem = deleteInventoryItem;
+window.finishInventory = finishInventory;
+window.exportInventoryXLSX = exportInventoryXLSX;
+window.exportInventoryPDF = exportInventoryPDF;
+window.shareInventoryFiles = shareInventoryFiles;
