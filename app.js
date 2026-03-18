@@ -663,6 +663,15 @@ function showStep(stepId) {
 document.addEventListener('DOMContentLoaded', () => {
   initSupabase();
   checkShareSupport();
+
+  // Close unit search dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('unit-search-dropdown');
+    const group = document.querySelector('.unit-search-group');
+    if (dropdown && group && !group.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
 });
 
 // Re-initialize Supabase after deferred CDN scripts load
@@ -681,21 +690,108 @@ function selectMode(mode) {
     const dd = String(today.getDate()).padStart(2, '0');
     document.getElementById('inv-date').value = `${yyyy}-${mm}-${dd}`;
     showStep('step-inv-welcome');
+  } else if (mode === 'historico') {
+    showStep('step-historico');
+    loadAndRenderHistorico();
   } else {
-    showStep('step-insp-select');
-    loadAndRenderUnitList();
+    // Inspection mode — show redesigned welcome with unit search
+    window._loadedInventory = null;
+    window._selectedUnitId = null;
+    document.getElementById('location').value = '';
+    document.getElementById('location').readOnly = false;
+    document.getElementById('unit-search-clear').style.display = 'none';
+    document.getElementById('btn-start-inspection').disabled = true;
+    const today = new Date();
+    document.getElementById('date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    document.getElementById('auditor').value = '';
+    loadUnitSearchData();
+    showStep('step-welcome');
   }
+}
+
+// ── Unit search autocomplete for inspection ──
+
+let _unitSearchList = [];
+
+async function loadUnitSearchData() {
+  try {
+    if (!isSupabaseReady()) { _unitSearchList = []; return; }
+    _unitSearchList = await loadInventoryList();
+  } catch (err) {
+    console.error('Error loading unit list for search:', err);
+    _unitSearchList = [];
+  }
+}
+
+function onUnitSearchInput(query) {
+  const dropdown = document.getElementById('unit-search-dropdown');
+  const q = query.trim().toLowerCase();
+
+  if (!q || q.length < 1) {
+    dropdown.innerHTML = '';
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  const matches = _unitSearchList.filter(u => u.unitName.toLowerCase().includes(q));
+  if (matches.length === 0) {
+    dropdown.innerHTML = '<div class="unit-search-item empty">Sin resultados</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+
+  dropdown.innerHTML = matches.map(u =>
+    `<div class="unit-search-item" onclick="selectUnitFromSearch('${u.unitId.replace(/'/g, "\\'")}')">
+      <span class="material-symbols-rounded">apartment</span>
+      <div>
+        <div class="unit-search-name">${u.unitName}</div>
+        <div class="unit-search-meta">${u.itemCount} artículo${u.itemCount !== 1 ? 's' : ''}</div>
+      </div>
+    </div>`
+  ).join('');
+  dropdown.style.display = 'block';
+}
+
+async function selectUnitFromSearch(unitId) {
+  const dropdown = document.getElementById('unit-search-dropdown');
+  dropdown.style.display = 'none';
+
+  showToast('⏳ Cargando inventario...');
+  try {
+    const inventoryDoc = await loadInventoryByUnit(unitId);
+    if (!inventoryDoc) {
+      showToast('❌ Inventario no encontrado');
+      return;
+    }
+
+    window._loadedInventory = inventoryDoc;
+    window._selectedUnitId = unitId;
+
+    document.getElementById('location').value = inventoryDoc.unitName;
+    document.getElementById('location').readOnly = true;
+    document.getElementById('unit-search-clear').style.display = 'flex';
+    document.getElementById('btn-start-inspection').disabled = false;
+    showToast(`✅ ${inventoryDoc.unitName} seleccionada`);
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error al cargar unidad');
+  }
+}
+
+function clearUnitSelection() {
+  window._loadedInventory = null;
+  window._selectedUnitId = null;
+  document.getElementById('location').value = '';
+  document.getElementById('location').readOnly = false;
+  document.getElementById('unit-search-clear').style.display = 'none';
+  document.getElementById('btn-start-inspection').disabled = true;
+  document.getElementById('location').focus();
 }
 
 // ── Navegación de inspección ──
 
 function goBackFromInspection() {
-  // Si viene de un inventario, volver al selector de unidades; si es directo, ir al inicio
-  if (window._loadedInventory) {
-    showStep('step-insp-select');
-  } else {
-    showStep('step-home');
-  }
+  showStep('step-home');
 }
 
 function checkShareSupport() {
@@ -716,6 +812,15 @@ function startInspection() {
   const date = document.getElementById('date').value;
   const auditor = document.getElementById('auditor').value.trim();
 
+  // Must have a selected unit
+  if (!window._loadedInventory) {
+    showToast('⚠️ Selecciona una unidad primero');
+    const group = document.getElementById('location').closest('.form-group');
+    group.classList.add('error');
+    setTimeout(() => group.classList.remove('error'), 800);
+    return;
+  }
+
   let valid = true;
   ['date', 'auditor'].forEach(id => {
     const el = document.getElementById(id);
@@ -726,35 +831,19 @@ function startInspection() {
       valid = false;
     }
   });
-  // location is required only when not coming from a loaded inventory
-  if (!location) {
-    const group = document.getElementById('location').closest('.form-group');
-    group.classList.add('error');
-    setTimeout(() => group.classList.remove('error'), 800);
-    valid = false;
-  }
 
   if (!valid) {
     showToast('⚠️ Llena todos los campos');
     return;
   }
 
-  if (window._loadedInventory) {
-    // Inspección basada en un inventario guardado en Supabase
-    const inv = window._loadedInventory;
-    inv.rooms.forEach((room, i) => {
-      ROOM_CONFIG[room.roomId] = { icon: 'inventory_2', name: room.roomName, shortName: room.roomName };
-      ROOM_COLORS[room.roomId] = DYNAMIC_ROOM_COLORS[i % DYNAMIC_ROOM_COLORS.length];
-    });
-    SECTIONS = buildSectionsFromInventory(inv);
-    inspectionInfo = { location, date, auditor, numBedrooms: 0, numBathrooms: 0, fromInventory: true };
-  } else {
-    // Inspección con plantilla estándar (sin inventario previo)
-    const numBedrooms = parseInt(document.getElementById('num-bedrooms').textContent) || 2;
-    const numBathrooms = parseInt(document.getElementById('num-bathrooms').textContent) || 2;
-    inspectionInfo = { location, date, auditor, numBedrooms, numBathrooms };
-    SECTIONS = buildSections(numBedrooms, numBathrooms);
-  }
+  const inv = window._loadedInventory;
+  inv.rooms.forEach((room, i) => {
+    ROOM_CONFIG[room.roomId] = { icon: 'inventory_2', name: room.roomName, shortName: room.roomName };
+    ROOM_COLORS[room.roomId] = DYNAMIC_ROOM_COLORS[i % DYNAMIC_ROOM_COLORS.length];
+  });
+  SECTIONS = buildSectionsFromInventory(inv);
+  inspectionInfo = { location, date, auditor, fromInventory: true, sourceUnitId: window._selectedUnitId || inv.unitId };
 
   inspectionData = {};
   currentMode = 'inspection';
@@ -876,6 +965,222 @@ async function selectUnitForInspection(unitId) {
   } catch (err) {
     console.error(err);
     showToast('❌ Error al cargar unidad');
+  }
+}
+
+// ══════════════════════════════════════════
+// HISTÓRICO
+// ══════════════════════════════════════════
+
+let _allRecords = [];
+
+async function loadAndRenderHistorico() {
+  const listEl = document.getElementById('historico-list');
+  listEl.innerHTML = `
+    <div class="loading-state">
+      <span class="material-symbols-rounded loading-icon">sync</span>
+      <p>Cargando registros...</p>
+    </div>
+  `;
+
+  if (!isSupabaseReady()) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <span class="material-symbols-rounded">cloud_off</span>
+        <p>Supabase no configurado.</p>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    _allRecords = await loadAllRecords();
+    renderHistoricoList();
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <span class="material-symbols-rounded">error</span>
+        <p>Error al cargar registros.<br>${err.message}</p>
+      </div>
+    `;
+  }
+}
+
+function filterHistorico() {
+  renderHistoricoList();
+}
+
+function renderHistoricoList() {
+  const listEl = document.getElementById('historico-list');
+  const search = (document.getElementById('historico-search').value || '').trim().toLowerCase();
+  const dateFrom = document.getElementById('historico-date-from').value;
+  const dateTo = document.getElementById('historico-date-to').value;
+  const sort = document.getElementById('historico-sort').value;
+
+  // Filter
+  let records = _allRecords.filter(r => {
+    if (search && !r.unitName.toLowerCase().includes(search)) return false;
+    if (dateFrom && r.date < dateFrom) return false;
+    if (dateTo && r.date > dateTo) return false;
+    return true;
+  });
+
+  // Group by unitName
+  const groups = {};
+  records.forEach(r => {
+    const key = r.unitName;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  // Sort groups
+  let sortedKeys = Object.keys(groups);
+  if (sort === 'az') {
+    sortedKeys.sort((a, b) => a.localeCompare(b));
+  } else if (sort === 'za') {
+    sortedKeys.sort((a, b) => b.localeCompare(a));
+  } else if (sort === 'oldest') {
+    sortedKeys.sort((a, b) => {
+      const aDate = groups[a][groups[a].length - 1]?.updatedAt || '';
+      const bDate = groups[b][groups[b].length - 1]?.updatedAt || '';
+      return aDate.localeCompare(bDate);
+    });
+  } else {
+    // 'recent' — default: most recent first (groups already sorted by most recent record)
+    sortedKeys.sort((a, b) => {
+      const aDate = groups[a][0]?.updatedAt || '';
+      const bDate = groups[b][0]?.updatedAt || '';
+      return bDate.localeCompare(aDate);
+    });
+  }
+
+  if (sortedKeys.length === 0) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <span class="material-symbols-rounded">inventory_2</span>
+        <p>No hay registros${search ? ' que coincidan' : ''}.</p>
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = sortedKeys.map(unitName => {
+    const recs = groups[unitName];
+    const invCount = recs.filter(r => r.type === 'inventory').length;
+    const inspCount = recs.filter(r => r.type === 'inspection').length;
+    const meta = [];
+    if (invCount) meta.push(`${invCount} inventario${invCount > 1 ? 's' : ''}`);
+    if (inspCount) meta.push(`${inspCount} inspección${inspCount > 1 ? 'es' : ''}`);
+    return `
+      <div class="historico-unit-card" onclick="openHistoricoUnit('${unitName.replace(/'/g, "\\'")}')">
+        <span class="material-symbols-rounded historico-unit-icon">apartment</span>
+        <div class="historico-unit-info">
+          <div class="historico-unit-name">${unitName}</div>
+          <div class="historico-unit-meta">${meta.join(' · ')}</div>
+        </div>
+        <span class="material-symbols-rounded unit-card-arrow">chevron_right</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function openHistoricoUnit(unitName) {
+  document.getElementById('historico-unit-title').textContent = unitName;
+  const recs = _allRecords.filter(r => r.unitName === unitName);
+
+  // Sort by date descending
+  recs.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+  const invSub = recs.filter(r => r.type === 'inventory').length;
+  const inspSub = recs.filter(r => r.type === 'inspection').length;
+  document.getElementById('historico-unit-sub').textContent =
+    `${invSub} inventario${invSub !== 1 ? 's' : ''}, ${inspSub} inspección${inspSub !== 1 ? 'es' : ''}`;
+
+  const listEl = document.getElementById('historico-unit-records');
+  listEl.innerHTML = recs.map(r => {
+    const isInsp = r.type === 'inspection';
+    const icon = isInsp ? 'fact_check' : 'inventory_2';
+    const typeLabel = isInsp ? 'Inspección' : 'Inventario';
+    const dateStr = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const detail = isInsp
+      ? `${r.completedCount}/${r.itemCount} artículos`
+      : `${r.itemCount} artículo${r.itemCount !== 1 ? 's' : ''}`;
+
+    return `
+      <div class="historico-record-card" onclick="viewHistoricoRecord('${r.unitId.replace(/'/g, "\\'")}')">
+        <span class="material-symbols-rounded historico-record-icon ${r.type}">${icon}</span>
+        <div class="historico-record-info">
+          <div class="historico-record-type">${typeLabel}</div>
+          <div class="historico-record-meta">${dateStr} · ${detail} · ${r.auditor || 'Sin responsable'}</div>
+        </div>
+        <div class="unit-card-actions">
+          <button class="unit-action-btn" onclick="event.stopPropagation(); editInventory('${r.unitId.replace(/'/g, "\\'")}')" title="Editar">
+            <span class="material-symbols-rounded">edit</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  showStep('step-historico-unit');
+}
+
+async function viewHistoricoRecord(unitId) {
+  showToast('⏳ Cargando...');
+  try {
+    const doc = await loadInventoryByUnit(unitId);
+    if (!doc) {
+      showToast('❌ Registro no encontrado');
+      return;
+    }
+
+    if (doc.type === 'inspection') {
+      // Show inspection in export/review mode
+      doc.rooms.forEach((room, i) => {
+        ROOM_CONFIG[room.roomId] = { icon: 'inventory_2', name: room.roomName, shortName: room.roomName };
+        ROOM_COLORS[room.roomId] = DYNAMIC_ROOM_COLORS[i % DYNAMIC_ROOM_COLORS.length];
+      });
+      SECTIONS = buildSectionsFromInventory(doc);
+      // Populate inspectionData from saved statuses
+      inspectionData = {};
+      doc.rooms.forEach(room => {
+        const sectionIdx = SECTIONS.findIndex(s => s.id === room.roomId);
+        if (sectionIdx < 0) return;
+        room.items.forEach((item, idx) => {
+          const key = `${room.roomId}-${idx}`;
+          inspectionData[key] = {
+            status: item.status || null,
+            qty: item.qty || 1,
+            observations: item.notes || '',
+            photos: item.photos || [],
+            photoTimes: item.photoTimes || [],
+          };
+        });
+      });
+      inspectionInfo = { location: doc.unitName, date: doc.date, auditor: doc.auditor, duration: doc.duration };
+      currentMode = 'inspection';
+      showExport();
+    } else {
+      // Show inventory in export/review mode
+      inventoryInfo = {
+        unitId: doc.unitId,
+        unitName: doc.unitName,
+        date: doc.date,
+        auditor: doc.auditor,
+        duration: doc.duration,
+        durationMs: doc.durationMs,
+      };
+      inventoryRooms = (doc.rooms || []).map(r => ({
+        ...r,
+        items: (r.items || []).map(i => ({ ...i, photos: [...(i.photos || [])], photoTimes: [...(i.photoTimes || [])] }))
+      }));
+      currentMode = 'inventory';
+      showInventoryExport();
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error al cargar registro');
   }
 }
 
@@ -1335,6 +1640,56 @@ function showExport() {
   });
 
   checkShareSupport();
+
+  // Save inspection result to Supabase
+  if (currentMode === 'inspection' && isSupabaseReady()) {
+    saveInspectionToSupabase();
+  }
+}
+
+async function saveInspectionToSupabase() {
+  try {
+    const total = getTotalItems();
+    const completed = getTotalCompleted();
+    const elapsed = getElapsedTime();
+
+    const inspDoc = {
+      type: 'inspection',
+      unitId: 'insp-' + Date.now(),
+      sourceUnitId: inspectionInfo.sourceUnitId || null,
+      unitName: inspectionInfo.location,
+      date: inspectionInfo.date,
+      auditor: inspectionInfo.auditor,
+      duration: formatTime(elapsed),
+      durationMs: elapsed,
+      totalItems: total,
+      completedItems: completed,
+      rooms: SECTIONS.map(section => ({
+        roomId: section.id,
+        roomName: section.name,
+        items: section.items.map((item, idx) => {
+          const key = `${section.id}-${idx}`;
+          const d = inspectionData[key] || {};
+          return {
+            itemId: item.inventoryItemId || `${section.id}-${idx}`,
+            name: item.name,
+            sku: item.sub || '',
+            price: item.price || 0,
+            qty: d.qty !== undefined ? d.qty : item.qty,
+            status: d.status || null,
+            notes: d.observations || '',
+            photos: d.photos || [],
+            photoTimes: d.photoTimes || [],
+          };
+        })
+      })),
+    };
+
+    await saveInspectionResult(inspDoc);
+    showToast('☁️ Inspección guardada');
+  } catch (err) {
+    console.error('Error guardando inspección:', err);
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1827,7 +2182,9 @@ function handleBackEdit() {
   if (currentMode === 'inventory') {
     showStep('step-inv-rooms');
     renderInventoryRooms();
-  } else {
+  } else if (currentMode === 'inspection') {
     backToRooms();
+  } else {
+    showStep('step-home');
   }
 }
