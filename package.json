@@ -8,8 +8,7 @@
     "dev": "nodemon server.js",
     "db:init": "node scripts/initDatabase.js",
     "db:migrate": "node scripts/migrate.js",
-    "setup-db": "npm run db:init && npm run db:migrate",
-    "build": "echo 'Build complete. Database will initialize on release.'"
+    "setup-db": "npm run db:init && npm run db:migrate"
   },
   "dependencies": {
     "express": "^4.18.2",
