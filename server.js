@@ -181,10 +181,21 @@ app.get('/api/records', async (req, res) => {
   }
 });
 
-// ── Start Server ──
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Database: ${process.env.DATABASE_URL || 'Not configured'}`);
-});
+// ── Health check before starting ──
+async function startServer() {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    console.log('✅ Database connected');
+  } catch (err) {
+    console.warn('⚠️  Database not ready yet (will retry on first request):', err.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Database: ${process.env.DATABASE_URL || 'Not configured'}`);
+  });
+}
+
+startServer();
 
 module.exports = { app, pool };

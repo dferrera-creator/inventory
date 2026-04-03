@@ -24,24 +24,23 @@ This project uses PostgreSQL on Railway with automatic database initialization a
    PORT=3000
    ```
 
-3. **Initialize database:**
+3. **Initialize database and run migrations:**
    ```bash
-   npm run db:init
+   npm run setup-db
    ```
 
-4. **Run migrations:**
-   ```bash
-   npm run db:migrate
-   ```
-
-5. **Start server:**
+4. **Start server:**
    ```bash
    npm run dev
    ```
 
-### Complete build (db + migrations + start):
+### Or run both in one command:
 ```bash
-npm run build
+npm run setup-db && npm run dev
+```
+
+### Or run just the server (if database already initialized):
+```bash
 npm start
 ```
 
