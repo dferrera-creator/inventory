@@ -181,13 +181,71 @@ app.get('/api/records', async (req, res) => {
   }
 });
 
-// ── Health check before starting ──
+// ── Initialize database on startup ──
+async function initializeDatabaseOnStartup() {
+  const createTableSQL = `
+    CREATE TABLE IF NOT EXISTS inventories (
+      id BIGSERIAL PRIMARY KEY,
+      unit_id VARCHAR(255) UNIQUE NOT NULL,
+      unit_name VARCHAR(255),
+      auditor VARCHAR(255),
+      data JSONB DEFAULT '{}',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_unit_id ON inventories(unit_id);
+    CREATE INDEX IF NOT EXISTS idx_updated_at ON inventories(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_unit_name ON inventories(unit_name);
+
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS update_inventories_updated_at ON inventories;
+    CREATE TRIGGER update_inventories_updated_at
+    BEFORE UPDATE ON inventories
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+    CREATE TABLE IF NOT EXISTS migrations (
+      id VARCHAR(255) PRIMARY KEY,
+      executed_at TIMESTAMP DEFAULT NOW()
+    );
+  `;
+
+  const queries = createTableSQL.split(';').filter(q => q.trim());
+
+  for (const query of queries) {
+    if (query.trim()) {
+      try {
+        await pool.query(query);
+      } catch (err) {
+        // Ignore "already exists" errors - idempotent init
+        if (!err.message.includes('already exists') && !err.message.includes('duplicate')) {
+          console.warn('⚠️  Init warning:', err.message);
+        }
+      }
+    }
+  }
+
+  console.log('✅ Database initialized');
+}
+
+// ── Start server ──
 async function startServer() {
   try {
-    const result = await pool.query('SELECT NOW()');
-    console.log('✅ Database connected');
+    console.log('🔄 Initializing database...');
+    await initializeDatabaseOnStartup();
+    console.log('✅ Database ready');
   } catch (err) {
-    console.warn('⚠️  Database not ready yet (will retry on first request):', err.message);
+    console.error('❌ Database initialization failed:', err.message);
+    // Don't exit - let the app try to run anyway
+    console.warn('⚠️  Continuing without database...');
   }
 
   app.listen(PORT, () => {
