@@ -33,13 +33,13 @@ In your Railway project dashboard:
 ### 5. Deploy Process
 The `Procfile` automatically runs:
 ```
-release: npm run build    # Initializes and migrates database
-web: npm start            # Starts Express server
+release: npm run setup-db  # Initializes and migrates database (with env vars!)
+web: npm start             # Starts Express server
 ```
 
 Railway will:
 1. ✅ Install dependencies: `npm install`
-2. ✅ Run build: `npm run build` (creates tables, runs migrations)
+2. ✅ Run release phase: `npm run setup-db` (creates tables, runs migrations)
 3. ✅ Start server: `npm start`
 
 ---
@@ -47,7 +47,7 @@ Railway will:
 ## What Gets Auto-Built
 
 ### Database Schema (Automatic)
-The `npm run build` command (run by `Procfile` release phase):
+The `npm run setup-db` command (run by `Procfile` release phase when environment variables are available):
 
 1. **Creates `inventories` table:**
    - Auto-incrementing ID
@@ -98,10 +98,10 @@ npm run db:migrate
 npm run dev
 ```
 
-### Full Build Command
+### Full Setup & Run
 ```bash
-npm run build  # Runs init + migrate + everything ready
-npm start      # Runs Express server
+npm run setup-db  # Initialize database + run migrations
+npm start         # Run Express server
 ```
 
 ---
