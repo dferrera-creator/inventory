@@ -26,7 +26,12 @@ pool.on('error', (err) => {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static('.'));  // Serve static files from root directory
+
+// ── Root route (serve index.html) ──
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
 
 // ── Health Check ──
 app.get('/health', (req, res) => {
