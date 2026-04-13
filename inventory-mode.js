@@ -691,8 +691,8 @@ async function finishInventory() {
   // Mostrar pantalla de exportación primero (modo inventario)
   showInventoryExport();
 
-  // Intentar guardar en Supabase en paralelo
-  if (isSupabaseReady()) {
+  // Intentar guardar en base de datos en paralelo
+  if (isAPIReady()) {
     try {
       await saveInventory(inventoryInfo);
       showToast(isEditingInventory ? '✅ Cambios guardados en la nube' : '☁️ Inventario guardado en la nube');
