@@ -890,8 +890,17 @@ function initializeAnalyticsDates() {
 let _historico_kpiChart = null;
 
 function updateAnalytics() {
-  renderKPICards(_allRecords);
-  renderAnalyticsGraph(_allRecords);
+  try {
+    renderKPICards(_allRecords);
+  } catch (err) {
+    console.error('Error rendering KPI cards:', err);
+  }
+
+  try {
+    renderAnalyticsGraph(_allRecords);
+  } catch (err) {
+    console.error('Error rendering analytics graph:', err);
+  }
 }
 
 function renderKPICards(records) {
