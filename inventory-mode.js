@@ -671,7 +671,7 @@ function deleteInventoryItem(idx) {
   showToast('🗑️ Artículo eliminado');
 }
 
-// ── Finalizar inventario y guardar en Supabase ──
+// ── Finalizar inventario y guardar en base de datos ──
 
 async function finishInventory() {
   const totalItems = inventoryRooms.reduce((sum, r) => sum + r.items.length, 0);
@@ -697,11 +697,11 @@ async function finishInventory() {
       await saveInventory(inventoryInfo);
       showToast(isEditingInventory ? '✅ Cambios guardados en la nube' : '☁️ Inventario guardado en la nube');
     } catch (err) {
-      console.error('Error guardando en Supabase:', err);
+      console.error('Error guardando en base de datos:', err);
       showToast('⚠️ No se pudo guardar en la nube');
     }
   } else {
-    showToast('ℹ️ Configura Supabase para guardar en la nube');
+    showToast('ℹ️ No se pudo conectar con la base de datos');
   }
 }
 

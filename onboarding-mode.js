@@ -598,7 +598,7 @@ async function finishOnboarding() {
       showToast('⚠️ No se pudo guardar en la nube');
     }
   } else {
-    showToast('ℹ️ Configura Supabase para guardar en la nube');
+    showToast('ℹ️ No se pudo conectar con la base de datos');
   }
 }
 

@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Re-initialize Supabase after deferred CDN scripts load
+// Re-initialize API after deferred scripts load
 window.addEventListener('load', () => {
   if (!isAPIReady()) checkAPIHealth();
 });
@@ -1178,7 +1178,7 @@ function startInspection() {
   renderRooms();
 }
 
-// ── Construir secciones desde un inventario guardado en Supabase ──
+// ── Construir secciones desde un inventario guardado en la base de datos ──
 
 function buildSectionsFromInventory(inventoryDoc) {
   return inventoryDoc.rooms.map((room) => ({
@@ -2078,12 +2078,12 @@ function showExport() {
 
   // Save inspection to database (skip when viewing a historic record)
   if (!window._viewingRecord && isAPIReady()) {
-    saveInspectionToSupabase();
+    saveInspectionToDatabase();
   }
   window._viewingRecord = false;
 }
 
-async function saveInspectionToSupabase() {
+async function saveInspectionToDatabase() {
   try {
     const total = getTotalItems();
     const completed = getTotalCompleted();
