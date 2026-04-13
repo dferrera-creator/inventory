@@ -740,7 +740,7 @@ function showStep(stepId) {
 // ══════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  initSupabase();
+  checkAPIHealth();
   checkShareSupport();
 
   // Close unit search dropdown when clicking outside
@@ -755,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Re-initialize Supabase after deferred CDN scripts load
 window.addEventListener('load', () => {
-  if (!isSupabaseReady()) initSupabase();
+  if (!isAPIReady()) checkAPIHealth();
 });
 
 // ── Selección de modo desde la pantalla de inicio ──
@@ -1041,7 +1041,7 @@ let _unitSearchList = [];
 
 async function loadUnitSearchData() {
   try {
-    if (!isSupabaseReady()) { _unitSearchList = []; return; }
+    if (!isAPIReady()) { _unitSearchList = []; return; }
     _unitSearchList = await loadInventoryList();
   } catch (err) {
     console.error('Error loading unit list for search:', err);
@@ -1208,11 +1208,11 @@ async function loadAndRenderUnitList() {
     </div>
   `;
 
-  if (!isSupabaseReady()) {
+  if (!isAPIReady()) {
     listEl.innerHTML = `
       <div class="empty-state">
         <span class="material-symbols-rounded">cloud_off</span>
-        <p>Supabase no configurado.<br>Configura tu proyecto en <strong>supabase.js</strong>.</p>
+        <p>No hay conexión a la base de datos.<br>Por favor, verifica que el servidor esté ejecutándose.</p>
       </div>
     `;
     return;

@@ -588,7 +588,7 @@ async function finishOnboarding() {
 
   showOnboardingExport();
 
-  if (isSupabaseReady()) {
+  if (isAPIReady()) {
     try {
       await saveOnboardingRecord(onboardingInfo);
       showToast(isEditingOnboarding ? '✅ Cambios guardados en la nube' : '☁️ Onboarding guardado en la nube');
