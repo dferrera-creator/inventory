@@ -783,7 +783,7 @@ function selectMode(mode) {
     showStep('step-onboarding-welcome');
   } else if (mode === 'historico') {
     showStep('step-historico');
-    loadAndRenderHistorico();
+    showHistoricoLogin();
   } else {
     // Inspection mode — show redesigned welcome with unit search
     window._loadedInventory = null;
@@ -799,6 +799,231 @@ function selectMode(mode) {
     loadUnitSearchData();
     showStep('step-welcome');
   }
+}
+
+// ══════════════════════════════════════════
+// HISTÓRICO: AUTHENTICATION
+// ══════════════════════════════════════════
+
+function showHistoricoLogin() {
+  if (isHistoricoAuthenticated()) {
+    // Already logged in, show analytics
+    showHistoricoAnalytics();
+  } else {
+    // Show login form
+    document.getElementById('historico-login-form').style.display = 'flex';
+    document.getElementById('historico-analytics-section').style.display = 'none';
+    document.getElementById('historico-logout-btn').style.display = 'none';
+    document.getElementById('historico-controls').style.display = 'none';
+    document.getElementById('historico-list').style.display = 'none';
+    document.getElementById('historico-username').value = '';
+    document.getElementById('historico-password').value = '';
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('historico-username').focus();
+  }
+}
+
+function submitHistoricoLogin() {
+  const username = document.getElementById('historico-username').value;
+  const password = document.getElementById('historico-password').value;
+  const errorEl = document.getElementById('login-error');
+
+  if (!username || !password) {
+    errorEl.textContent = 'Por favor completa usuario y contraseña';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  if (loginHistorico(username, password)) {
+    // Login successful
+    errorEl.style.display = 'none';
+    showHistoricoAnalytics();
+  } else {
+    // Login failed
+    errorEl.textContent = 'Usuario o contraseña incorrectos';
+    errorEl.style.display = 'block';
+    document.getElementById('historico-password').value = '';
+    document.getElementById('historico-password').focus();
+  }
+}
+
+function showHistoricoAnalytics() {
+  document.getElementById('historico-login-form').style.display = 'none';
+  document.getElementById('historico-analytics-section').style.display = 'block';
+  document.getElementById('historico-controls').style.display = 'block';
+  document.getElementById('historico-list').style.display = 'block';
+  document.getElementById('historico-logout-btn').style.display = 'block';
+
+  // Initialize default dates
+  initializeAnalyticsDates();
+
+  // Load and render histórico with analytics
+  loadAndRenderHistorico();
+}
+
+function logoutAndShowHistoricoLogin() {
+  logoutHistorico();
+  showHistoricoLogin();
+}
+
+function initializeAnalyticsDates() {
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sixtyDaysAgo = new Date(today);
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+  const thirtySixtyDaysAgo = new Date(today);
+  thirtySixtyDaysAgo.setDate(thirtySixtyDaysAgo.getDate() - 30);
+
+  const formatDate = (date) => date.toISOString().split('T')[0];
+
+  document.getElementById('kpi-current-from').value = formatDate(thirtyDaysAgo);
+  document.getElementById('kpi-current-to').value = formatDate(today);
+  document.getElementById('kpi-prev-from').value = formatDate(sixtyDaysAgo);
+  document.getElementById('kpi-prev-to').value = formatDate(thirtySixtyDaysAgo);
+}
+
+// ══════════════════════════════════════════
+// HISTÓRICO: ANALYTICS
+// ══════════════════════════════════════════
+
+let _historico_kpiChart = null;
+
+function updateAnalytics() {
+  renderKPICards(_allRecords);
+  renderAnalyticsGraph(_allRecords);
+}
+
+function renderKPICards(records) {
+  // Get current period dates
+  const currentFrom = document.getElementById('kpi-current-from').value;
+  const currentTo = document.getElementById('kpi-current-to').value;
+  const prevFrom = document.getElementById('kpi-prev-from').value;
+  const prevTo = document.getElementById('kpi-prev-to').value;
+
+  // Calculate current period KPIs
+  const currentRecords = calculateAverageTimeBetweenRecords(records, currentFrom, currentTo);
+  const prevRecords = calculateAverageTimeBetweenRecords(records, prevFrom, prevTo);
+
+  const currentPhotos = calculateAveragePhotoTime(records, currentFrom, currentTo);
+  const prevPhotos = calculateAveragePhotoTime(records, prevFrom, prevTo);
+
+  // Calculate comparisons
+  const recordsComp = calculatePeriodComparison(currentRecords.average, prevRecords.average);
+  const photosComp = calculatePeriodComparison(currentPhotos.averageMinutes, prevPhotos.averageMinutes);
+
+  // Update KPI 1: Days between records
+  document.getElementById('kpi-days-value').textContent = currentRecords.average;
+  document.getElementById('kpi-days-arrow').textContent = recordsComp.arrow;
+  document.getElementById('kpi-days-arrow').style.color = recordsComp.isPositive ? '#ef4444' : recordsComp.isNew ? '#9ca3af' : '#10b981';
+  document.getElementById('kpi-days-percent').textContent = recordsComp.percentChange.toFixed(1) + '%';
+  document.getElementById('kpi-days-period').textContent = recordsComp.isNew ? 'primer período' : 'vs período anterior';
+
+  // Update KPI 2: Photo time
+  document.getElementById('kpi-photos-value').textContent = currentPhotos.averageHours;
+  document.getElementById('kpi-photos-arrow').textContent = photosComp.arrow;
+  document.getElementById('kpi-photos-arrow').style.color = photosComp.isPositive ? '#ef4444' : photosComp.isNew ? '#9ca3af' : '#10b981';
+  document.getElementById('kpi-photos-percent').textContent = photosComp.percentChange.toFixed(1) + '%';
+  document.getElementById('kpi-photos-period').textContent = photosComp.isNew ? 'primer período' : 'vs período anterior';
+}
+
+function renderAnalyticsGraph(records) {
+  const currentFrom = document.getElementById('kpi-current-from').value;
+  const currentTo = document.getElementById('kpi-current-to').value;
+  const prevFrom = document.getElementById('kpi-prev-from').value;
+  const prevTo = document.getElementById('kpi-prev-to').value;
+
+  // Generate time series data
+  const seriesData = generateTimeSeriesData(records, 'records', currentFrom, currentTo, prevFrom, prevTo);
+
+  const ctx = document.getElementById('kpi-trend-chart').getContext('2d');
+
+  // Destroy previous chart if exists
+  if (_historico_kpiChart) {
+    _historico_kpiChart.destroy();
+  }
+
+  _historico_kpiChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: seriesData.labels,
+      datasets: [
+        {
+          label: 'Período actual (' + currentFrom + ' a ' + currentTo + ')',
+          data: seriesData.currentData,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.05)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: '#8b5cf6',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Período anterior (' + prevFrom + ' a ' + prevTo + ')',
+          data: seriesData.previousData,
+          borderColor: '#d1d5db',
+          backgroundColor: 'rgba(209, 213, 219, 0.05)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          tension: 0.3,
+          fill: true,
+          pointRadius: 2,
+          pointBackgroundColor: '#d1d5db',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: { size: 12, weight: '500' },
+            color: '#6b7280',
+            padding: 12,
+            usePointStyle: true,
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a1a2e',
+          titleFont: { size: 12, weight: '600' },
+          bodyFont: { size: 11 },
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: true,
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#9ca3af', font: { size: 11 } },
+          grid: { color: '#e5e7eb' },
+          title: {
+            display: true,
+            text: 'Número de registros',
+            color: '#6b7280',
+            font: { size: 12, weight: '500' }
+          }
+        },
+        x: {
+          ticks: { color: '#9ca3af', font: { size: 11 } },
+          grid: { display: false },
+          title: {
+            display: true,
+            text: 'Fecha',
+            color: '#6b7280',
+            font: { size: 12, weight: '500' }
+          }
+        }
+      }
+    }
+  });
 }
 
 // ── Unit search autocomplete for inspection ──
@@ -1088,6 +1313,8 @@ async function loadAndRenderHistorico() {
   try {
     _allRecords = await loadAllRecords();
     renderHistoricoList();
+    // Update KPI analytics after loading records
+    updateAnalytics();
   } catch (err) {
     console.error('Error loading histórico:', err);
     listEl.innerHTML = `
