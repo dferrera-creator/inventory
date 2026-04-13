@@ -1075,11 +1075,11 @@ async function loadAndRenderHistorico() {
     </div>
   `;
 
-  if (!isSupabaseReady()) {
+  if (!isAPIReady()) {
     listEl.innerHTML = `
       <div class="empty-state">
         <span class="material-symbols-rounded">cloud_off</span>
-        <p>Supabase no configurado.</p>
+        <p>No hay conexión al servidor API.</p>
       </div>
     `;
     return;
@@ -1089,11 +1089,11 @@ async function loadAndRenderHistorico() {
     _allRecords = await loadAllRecords();
     renderHistoricoList();
   } catch (err) {
-    console.error(err);
+    console.error('Error loading histórico:', err);
     listEl.innerHTML = `
       <div class="empty-state">
-        <span class="material-symbols-rounded">error</span>
-        <p>Error al cargar registros.<br>${err.message}</p>
+        <span class="material-symbols-rounded">error_outline</span>
+        <p>Error al cargar registros: ${err.message}</p>
       </div>
     `;
   }
@@ -1114,8 +1114,8 @@ function renderHistoricoList() {
   let records = _allRecords.filter(r => {
     if (r.type === 'onboarding') return false;
     if (search && !r.unitName.toLowerCase().includes(search)) return false;
-    if (dateFrom && r.date < dateFrom) return false;
-    if (dateTo && r.date > dateTo) return false;
+    if (dateFrom && r.date && r.date < dateFrom) return false;
+    if (dateTo && r.date && r.date > dateTo) return false;
     return true;
   });
 
@@ -1840,10 +1840,8 @@ function showExport() {
 
   checkShareSupport();
 
-  // Save inspection result to Supabase (skip when just viewing a historic record)
-  if (currentMode === 'inspection' && !window._viewingRecord && isSupabaseReady()) {
-    saveInspectionToSupabase();
-  }
+  // Inspection result is auto-saved to PostgreSQL via api-client
+  // (skip when just viewing a historic record)
   window._viewingRecord = false;
 }
 
