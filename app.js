@@ -2076,8 +2076,10 @@ function showExport() {
 
   checkShareSupport();
 
-  // Inspection result is auto-saved to PostgreSQL via api-client
-  // (skip when just viewing a historic record)
+  // Save inspection to database (skip when viewing a historic record)
+  if (!window._viewingRecord && isAPIReady()) {
+    saveInspectionToSupabase();
+  }
   window._viewingRecord = false;
 }
 
