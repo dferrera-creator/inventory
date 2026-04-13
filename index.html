@@ -591,12 +591,104 @@
     <!-- ══════════ HISTÓRICO ══════════ -->
     <div id="step-historico" class="step">
       <div class="historico-header">
-        <button class="back-home-btn-inline" onclick="showStep('step-home')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <h2>Histórico</h2>
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+          <button class="back-home-btn-inline" onclick="showStep('step-home')">
+            <span class="material-symbols-rounded">arrow_back</span>
+          </button>
+          <h2>Histórico</h2>
+          <button id="historico-logout-btn" class="back-home-btn-inline" onclick="logoutAndShowHistoricoLogin()" style="display:none;">
+            <span class="material-symbols-rounded">logout</span>
+          </button>
+        </div>
         <p class="historico-sub">Inventarios e inspecciones completados</p>
       </div>
+
+      <!-- LOGIN FORM -->
+      <div id="historico-login-form" class="historico-login-form">
+        <div class="login-card">
+          <h3>Acceso a Histórico</h3>
+          <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
+            <input type="text" id="historico-username" placeholder="Usuario" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <div class="input-icon"><span class="material-symbols-rounded">lock</span></div>
+            <input type="password" id="historico-password" placeholder="Contraseña" autocomplete="off">
+          </div>
+          <div id="login-error" class="login-error" style="display:none;"></div>
+          <button class="btn-continue" onclick="submitHistoricoLogin()" style="margin-top:16px;">
+            Acceder <span class="material-symbols-rounded">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI CARDS SECTION (hidden until logged in) -->
+      <div id="historico-analytics-section" style="display:none;">
+        <!-- KPI Cards -->
+        <div class="kpi-cards-section">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Promedio entre registros</span>
+              <span class="material-symbols-rounded kpi-icon">trending_up</span>
+            </div>
+            <div class="kpi-value" id="kpi-days-value">0</div>
+            <div class="kpi-unit">días</div>
+            <div class="kpi-change">
+              <span id="kpi-days-arrow">→</span>
+              <span id="kpi-days-percent">0%</span>
+              <span id="kpi-days-period" class="kpi-period">vs período anterior</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Tiempo entre fotos</span>
+              <span class="material-symbols-rounded kpi-icon">image</span>
+            </div>
+            <div class="kpi-value" id="kpi-photos-value">0m</div>
+            <div class="kpi-unit">por foto</div>
+            <div class="kpi-change">
+              <span id="kpi-photos-arrow">→</span>
+              <span id="kpi-photos-percent">0%</span>
+              <span id="kpi-photos-period" class="kpi-period">vs período anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Filters -->
+        <div class="kpi-filters-section">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <label style="font-size:0.9rem;color:#6b7280;font-weight:500;">Período actual:</label>
+            <input type="date" id="kpi-current-from" onchange="updateAnalytics()">
+            <span style="color:#9ca3af;">a</span>
+            <input type="date" id="kpi-current-to" onchange="updateAnalytics()">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <label style="font-size:0.9rem;color:#6b7280;font-weight:500;">Comparar con:</label>
+            <input type="date" id="kpi-prev-from" onchange="updateAnalytics()">
+            <span style="color:#9ca3af;">a</span>
+            <input type="date" id="kpi-prev-to" onchange="updateAnalytics()">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <label style="font-size:0.9rem;color:#6b7280;font-weight:500;">Filtrar por:</label>
+            <select id="kpi-bedroom-filter" onchange="updateAnalytics()" style="flex:1;min-width:120px;">
+              <option value="">Todas las unidades</option>
+              <option value="studio">Studio</option>
+              <option value="1bed">1 Recámara</option>
+              <option value="2bed">2 Recámaras</option>
+              <option value="3bed">3 Recámaras</option>
+              <option value="4bed">4+ Recámaras</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Trend Chart -->
+        <div class="kpi-chart-container">
+          <canvas id="kpi-trend-chart"></canvas>
+        </div>
+      </div>
+
       <div class="historico-controls">
         <div class="historico-search">
           <span class="material-symbols-rounded">search</span>
@@ -724,6 +816,8 @@
 
   <!-- PostgreSQL API Client & Supabase Compatibility Layer -->
   <script src="api-client.js"></script>
+  <script src="auth.js"></script>
+  <script src="analytics.js"></script>
   <script src="app.js"></script>
   <script src="inventory-mode.js"></script>
   <script src="onboarding-mode.js"></script>
