@@ -453,8 +453,12 @@ function setOnbCurrentStatus(status) {
     if (sel) sel.classList.add('selected');
   }
 
-  const labels = { good: '✅ Bueno', damaged: '🔨 Dañado', missing: '❌ Faltante', new: '🆕 Nuevo' };
-  if (onboardingData[key].status) showToast(labels[onboardingData[key].status]);
+  const labels = { good: '✅ BIEN', damaged: '🔧 DAÑADO', missing: '❌ FALTA' };
+  if (onboardingData[key].status) {
+    showToast(labels[onboardingData[key].status] || '✅ Listo');
+    const navNext = document.getElementById('onb-nav-next');
+    if (navNext) navNext.classList.add('nav-ready');
+  }
 }
 
 function changeOnbCurrentQty(delta) {

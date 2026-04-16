@@ -729,19 +729,355 @@ function showToast(message) {
 
 // ── Navegación de pasos ──
 
+// ══════════════════════════════════════════
+// TOUR GUIADO
+// ══════════════════════════════════════════
+
+const TOUR_STEPS = {
+  inspection: [
+    {
+      screen: 'step-home',
+      emoji: '👆',
+      msg: 'Toca el botón azul <strong>Revisar Departamento</strong>',
+      tip: 'Es el primero de la lista, con el ícono de palomita ✔️',
+      target: '.inspection-mode',
+    },
+    {
+      screen: 'step-welcome',
+      emoji: '🏢',
+      msg: 'Toca el campo y escribe el nombre del departamento',
+      tip: 'Por ejemplo: "Depto 101" o "Casa Playa". Empieza a escribir y aparecerán sugerencias.',
+      target: '#location',
+    },
+    {
+      screen: 'step-welcome',
+      emoji: '▶️',
+      msg: 'Cuando hayas elegido el departamento, toca <strong>EMPEZAR →</strong>',
+      tip: 'El botón verde grande en la parte de abajo.',
+      target: '#btn-start-inspection',
+    },
+    {
+      screen: 'step-rooms',
+      emoji: '🏠',
+      msg: 'Aparece la lista de cuartos. Toca el que quieras revisar primero.',
+      tip: 'Puedes empezar por cualquier cuarto. Los que ya terminaste se muestran en verde ✅.',
+      target: '#room-grid',
+    },
+    {
+      screen: 'step-item',
+      emoji: '📋',
+      msg: 'Aquí ves el nombre del objeto que vas a revisar.',
+      tip: 'Lee el nombre arriba. Si hay una nota amarilla, te dice qué revisar exactamente.',
+      target: '#item-name',
+    },
+    {
+      screen: 'step-item',
+      emoji: '👆',
+      msg: 'Toca uno de los tres botones según el estado del objeto.',
+      tip: '<strong>BIEN</strong> = funciona bien · <strong>DAÑADO</strong> = está roto o sucio · <strong>FALTA</strong> = no está en el cuarto',
+      target: '#status-grid',
+    },
+    {
+      screen: 'step-item',
+      emoji: '📸',
+      msg: '¿Quieres agregar una foto o una nota? Toca <strong>Foto</strong> o <strong>Notas</strong>',
+      tip: 'Esto es opcional. Solo úsalo si hay algo importante que mostrar o explicar.',
+      target: '#step-item .extras-row',
+    },
+    {
+      screen: 'step-item',
+      emoji: '➡️',
+      msg: 'Cuando termines con ese objeto, toca <strong>Siguiente →</strong>',
+      tip: 'El botón se pone verde cuando ya elegiste el estado. Repite esto con cada objeto.',
+      target: '#nav-next',
+    },
+    {
+      screen: 'step-rooms',
+      emoji: '🔄',
+      msg: '¡Cuarto terminado! Ahora toca otro cuarto para continuar.',
+      tip: 'Sigue hasta que todos los cuartos estén en verde ✅.',
+      target: '#room-grid',
+    },
+    {
+      screen: 'step-export',
+      emoji: '🎉',
+      msg: '¡Terminaste la revisión! Descarga el reporte.',
+      tip: 'Toca <strong>Excel</strong> para abrir en computadora o <strong>PDF</strong> para ver en el teléfono.',
+      target: '.btn-export',
+    },
+  ],
+  inventory: [
+    {
+      screen: 'step-home',
+      emoji: '👆',
+      msg: 'Toca <strong>Inventario</strong> para empezar.',
+      tip: 'Es el segundo botón de la lista.',
+      target: '.inventory-mode',
+    },
+    {
+      screen: 'step-inv-welcome',
+      emoji: '✏️',
+      msg: 'Escribe el nombre del departamento.',
+      tip: 'Por ejemplo: "Depto 201". Toca el campo y escribe con el teclado.',
+      target: '#inv-unit-name',
+    },
+    {
+      screen: 'step-inv-welcome',
+      emoji: '▶️',
+      msg: 'Toca <strong>COMENZAR</strong> para continuar.',
+      tip: 'El botón azul grande.',
+      target: '.btn-start',
+    },
+    {
+      screen: 'step-inv-rooms',
+      emoji: '🏠',
+      msg: 'Toca un cuarto para agregarle objetos.',
+      tip: 'Empieza por cualquier cuarto.',
+      target: '#inv-room-grid',
+    },
+    {
+      screen: 'step-inv-item',
+      emoji: '➕',
+      msg: 'Toca <strong>Agregar Artículo</strong> para añadir un objeto al cuarto.',
+      tip: 'Por ejemplo: "Cama", "Silla", "Televisión".',
+      target: '#btn-show-add-item',
+    },
+    {
+      screen: 'step-inv-item',
+      emoji: '✏️',
+      msg: 'Escribe el nombre del objeto y una descripción opcional.',
+      tip: 'Sé específico: en vez de "silla", escribe "silla de madera negra".',
+      target: '.inv-add-panel',
+    },
+    {
+      screen: 'step-inv-item',
+      emoji: '✅',
+      msg: 'Toca <strong>Guardar</strong> para agregar el objeto a la lista.',
+      tip: 'Repite esto con cada objeto del cuarto.',
+      target: '.inv-add-panel',
+    },
+  ],
+  onboarding: [
+    {
+      screen: 'step-home',
+      emoji: '👆',
+      msg: 'Toca <strong>Departamento Nuevo</strong> para empezar.',
+      tip: 'Es el tercer botón de la lista.',
+      target: '.onboarding-mode',
+    },
+    {
+      screen: 'step-onboarding-welcome',
+      emoji: '✏️',
+      msg: 'Escribe el nombre del departamento.',
+      tip: 'Por ejemplo: "Depto 301" o "Casa Centro".',
+      target: '#onb-unit-name',
+    },
+    {
+      screen: 'step-onboarding-welcome',
+      emoji: '🛏️',
+      msg: 'Elige cuántas recámaras y baños tiene.',
+      tip: 'Toca los botones + y − para cambiar el número.',
+      target: '#onb-unit-name',
+    },
+    {
+      screen: 'step-onboarding-welcome',
+      emoji: '▶️',
+      msg: 'Toca <strong>COMENZAR</strong> para continuar.',
+      tip: 'El botón azul grande de abajo.',
+      target: '.btn-start',
+    },
+    {
+      screen: 'step-onboarding-sections',
+      emoji: '🏠',
+      msg: 'Aparece la lista de áreas. Toca la que quieras revisar primero.',
+      tip: 'La app ya tiene preparada la lista de objetos para cada área.',
+      target: '#onb-section-grid',
+    },
+    {
+      screen: 'step-onboarding-item',
+      emoji: '📋',
+      msg: 'Lee el nombre del objeto arriba de la pantalla.',
+      tip: 'La nota amarilla te dice qué revisar exactamente.',
+      target: '#onb-item-name',
+    },
+    {
+      screen: 'step-onboarding-item',
+      emoji: '👆',
+      msg: 'Toca uno de los tres botones según el estado.',
+      tip: '<strong>BIEN</strong> = funciona · <strong>DAÑADO</strong> = roto o sucio · <strong>FALTA</strong> = no está',
+      target: '#onb-status-grid',
+    },
+    {
+      screen: 'step-onboarding-item',
+      emoji: '📸',
+      msg: 'Si quieres, agrega una foto o nota tocando <strong>Foto</strong> o <strong>Notas</strong>.',
+      tip: 'Opcional. Solo si hay algo importante que registrar.',
+      target: '#step-onboarding-item .extras-row',
+    },
+    {
+      screen: 'step-onboarding-item',
+      emoji: '➡️',
+      msg: 'Toca <strong>Siguiente →</strong> para pasar al siguiente objeto.',
+      tip: 'Repite esto con cada objeto hasta terminar todas las áreas.',
+      target: '#onb-nav-next',
+    },
+  ],
+};
+
+let _tourMode = null;
+let _tourStep = 0;
+let _tourActive = false;
+let _tourCurrentScreen = 'step-home';
+
+function showTrainingModal() {
+  document.getElementById('what-today-modal').style.display = 'flex';
+}
+
+function closeWhatTodayModal() {
+  document.getElementById('what-today-modal').style.display = 'none';
+}
+
+function startTour(mode) {
+  closeWhatTodayModal();
+  _tourMode = mode;
+  _tourActive = true;
+  // Find first step matching the current visible screen
+  const steps = TOUR_STEPS[mode];
+  _tourStep = 0;
+  for (let i = 0; i < steps.length; i++) {
+    if (steps[i].screen === _tourCurrentScreen) { _tourStep = i; break; }
+  }
+  showTourBanner();
+}
+
+function showTourBanner() {
+  document.getElementById('tour-banner').style.display = 'block';
+  document.getElementById('tour-fab').style.display = 'none';
+  _renderTourStep();
+}
+
+function _renderTourStep() {
+  if (!_tourMode) return;
+  const steps = TOUR_STEPS[_tourMode];
+  if (_tourStep >= steps.length) { exitTour(); return; }
+  const step = steps[_tourStep];
+
+  // Text
+  const tipHtml = step.tip ? `<div class="tour-step-tip">${step.tip}</div>` : '';
+  document.getElementById('tour-step-text').innerHTML =
+    `<div class="tour-step-main">${step.emoji} ${step.msg}</div>${tipHtml}`;
+  document.getElementById('tour-step-count').textContent = `Paso ${_tourStep + 1} de ${steps.length}`;
+
+  // Next button label
+  const nextBtn = document.getElementById('tour-btn-next');
+  if (_tourStep === steps.length - 1) {
+    nextBtn.innerHTML = '¡Listo! <span class="material-symbols-rounded">check_circle</span>';
+    nextBtn.className = 'tour-btn-next finish';
+  } else {
+    nextBtn.innerHTML = 'Siguiente <span class="material-symbols-rounded">arrow_forward</span>';
+    nextBtn.className = 'tour-btn-next';
+  }
+
+  // Dots
+  const dotsEl = document.getElementById('tour-step-dots');
+  dotsEl.innerHTML = steps.map((_, i) =>
+    `<span class="tour-dot ${i < _tourStep ? 'done' : i === _tourStep ? 'active' : ''}"></span>`
+  ).join('');
+
+  // Highlight target
+  document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+  if (step.target) {
+    const target = document.querySelector(step.target);
+    if (target) {
+      target.classList.add('tour-highlight');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+    }
+  }
+}
+
+function advanceTour() {
+  const steps = TOUR_STEPS[_tourMode];
+  if (_tourStep >= steps.length - 1) { exitTour(); return; }
+  _tourStep++;
+  _renderTourStep();
+}
+
+function exitTour() {
+  _tourActive = false;
+  _tourMode = null;
+  document.getElementById('tour-banner').style.display = 'none';
+  document.getElementById('tour-fab').style.display = 'none';
+  document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+}
+
+function _hideTourBanner() {
+  document.getElementById('tour-banner').style.display = 'none';
+  if (_tourActive) {
+    document.getElementById('tour-fab').style.display = 'flex';
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+  }
+}
+
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
   window.scrollTo(0, 0);
+  _tourCurrentScreen = stepId;
+
+  // Auto-advance tour to next step matching this screen
+  if (_tourActive && _tourMode) {
+    const steps = TOUR_STEPS[_tourMode];
+    for (let i = _tourStep; i < steps.length; i++) {
+      if (steps[i].screen === stepId) {
+        _tourStep = i;
+        if (document.getElementById('tour-banner').style.display !== 'none') {
+          setTimeout(_renderTourStep, 350); // wait for screen transition
+        }
+        break;
+      }
+    }
+  }
 }
 
 // ══════════════════════════════════════════
 // PASO 1: BIENVENIDA / INICIAR
 // ══════════════════════════════════════════
 
+let _fvSlide = 0;
+
+function fvNext() {
+  const slides = document.querySelectorAll('.fv-slide');
+  const dots = document.querySelectorAll('.fv-dot');
+  const btn = document.getElementById('fv-next-btn');
+
+  if (_fvSlide < slides.length - 1) {
+    slides[_fvSlide].classList.remove('active');
+    dots[_fvSlide].classList.remove('active');
+    _fvSlide++;
+    slides[_fvSlide].classList.add('active');
+    dots[_fvSlide].classList.add('active');
+    if (_fvSlide === slides.length - 1) {
+      btn.innerHTML = '¡Entendido! <span class="material-symbols-rounded">check_circle</span>';
+    }
+  } else {
+    document.getElementById('first-visit-modal').style.display = 'none';
+    localStorage.setItem('delmar_onboarded', '1');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAPIHealth();
   checkShareSupport();
+
+  // Show first-visit intro if not seen before
+  if (!localStorage.getItem('delmar_onboarded')) {
+    _fvSlide = 0;
+    document.querySelectorAll('.fv-slide').forEach((s, i) => s.classList.toggle('active', i === 0));
+    document.querySelectorAll('.fv-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
+    const btn = document.getElementById('fv-next-btn');
+    if (btn) btn.innerHTML = 'Siguiente <span class="material-symbols-rounded">arrow_forward</span>';
+    document.getElementById('first-visit-modal').style.display = 'flex';
+  }
 
   // Close unit search dropdown when clicking outside
   document.addEventListener('click', (e) => {
@@ -757,6 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', () => {
   if (!isAPIReady()) checkAPIHealth();
 });
+
 
 // ── Selección de modo desde la pantalla de inicio ──
 
@@ -795,7 +1132,6 @@ function selectMode(mode) {
     document.getElementById('btn-start-inspection').disabled = true;
     const today = new Date();
     document.getElementById('date').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    document.getElementById('auditor').value = '';
     loadUnitSearchData();
     showStep('step-welcome');
   }
@@ -1313,7 +1649,7 @@ async function loadAndRenderHistorico() {
     listEl.innerHTML = `
       <div class="empty-state">
         <span class="material-symbols-rounded">cloud_off</span>
-        <p>No hay conexión al servidor API.</p>
+        <p>No hay conexión al servidor. Verifica tu internet e intenta de nuevo.</p>
       </div>
     `;
     return;
@@ -1349,7 +1685,7 @@ function renderHistoricoList() {
   // Filter (exclude onboarding — shown in its own folder)
   let records = _allRecords.filter(r => {
     if (r.type === 'onboarding') return false;
-    if (search && !r.unitName.toLowerCase().includes(search)) return false;
+    if (search && !(r.unitName || '').toLowerCase().includes(search)) return false;
     if (dateFrom && r.date && r.date < dateFrom) return false;
     if (dateTo && r.date && r.date > dateTo) return false;
     return true;
@@ -1400,7 +1736,7 @@ function renderHistoricoList() {
     listEl.innerHTML = `
       <div class="empty-state">
         <span class="material-symbols-rounded">inventory_2</span>
-        <p>No hay registros${search ? ' que coincidan' : ''}.</p>
+        <p>${search ? 'No encontramos resultados para "' + search + '".' : 'Aún no hay registros guardados. ¡Crea tu primer inventario o inspección!'}</p>
       </div>
     `;
     return;
@@ -1625,7 +1961,8 @@ function renderRooms() {
 
   const pct = totalItems > 0 ? (totalCompleted / totalItems) * 100 : 0;
   document.getElementById('overall-bar').style.width = pct + '%';
-  document.getElementById('overall-label').textContent = `${totalCompleted} / ${totalItems} artículos`;
+  const roomsCompleted = SECTIONS.filter((_, i) => isSectionCompleted(i)).length;
+  document.getElementById('overall-label').textContent = `Cuartos listos: ${roomsCompleted} de ${SECTIONS.length}`;
 
   grid.innerHTML = '';
 
@@ -1637,8 +1974,10 @@ function renderRooms() {
     const isDone = completed === total;
     const isStarted = completed > 0 && !isDone;
 
+    const firstIncomplete = SECTIONS.findIndex((_, i) => !isSectionCompleted(i));
+    const isPulseNext = !isDone && idx === firstIncomplete;
     const card = document.createElement('div');
-    card.className = 'room-card' + (isDone ? ' completed' : '') + (isStarted ? ' in-progress' : '');
+    card.className = 'room-card' + (isDone ? ' completed' : '') + (isStarted ? ' in-progress' : '') + (isPulseNext ? ' pulse-next' : '');
     card.onclick = () => openRoom(idx);
 
     card.innerHTML = `
@@ -1714,11 +2053,10 @@ function renderItem() {
   document.getElementById('item-name').textContent = names.es;
   document.getElementById('item-name-en').textContent = names.en;
 
-  // Hint / descripción
+  // Hint / descripción — always visible
   const hintEl = document.getElementById('item-hint');
   if (hintEl) {
     hintEl.textContent = item.hint || '';
-    hintEl.style.display = item.hint ? 'block' : 'none';
   }
 
   // Botones de estado
@@ -1726,8 +2064,8 @@ function renderItem() {
     btn.classList.remove('selected', 'just-selected');
   });
   if (data.status) {
-    const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing', 'new': '.new-item' };
-    const sel = document.querySelector(`.status-btn${statusMap[data.status]}`);
+    const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing' };
+    const sel = document.querySelector(`#status-grid .status-btn${statusMap[data.status]}`);
     if (sel) sel.classList.add('selected');
   }
 
@@ -1763,12 +2101,13 @@ function renderItem() {
     'nav-prev' + (currentItemIndex === 0 ? ' hidden' : '');
 
   const navNext = document.getElementById('nav-next');
+  const alreadyHasStatus = !!(data.status);
   if (currentItemIndex === section.items.length - 1) {
     navNext.innerHTML = '<span class="material-symbols-rounded">check</span> Listo';
-    navNext.className = 'nav-next finish';
+    navNext.className = 'nav-next finish' + (alreadyHasStatus ? ' nav-ready' : '');
   } else {
     navNext.innerHTML = 'Siguiente <span class="material-symbols-rounded">arrow_forward</span>';
-    navNext.className = 'nav-next';
+    navNext.className = 'nav-next' + (alreadyHasStatus ? ' nav-ready' : '');
   }
 }
 
@@ -1810,17 +2149,21 @@ function setStatus(status) {
   }
   inspectionData[key].status = status;
 
-  const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing', 'new': '.new-item' };
-  document.querySelectorAll('.status-btn').forEach(btn => {
+  const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing' };
+  document.querySelectorAll('#status-grid .status-btn').forEach(btn => {
     btn.classList.remove('selected', 'just-selected');
   });
-  const sel = document.querySelector(`.status-btn${statusMap[status]}`);
+  const sel = document.querySelector(`#status-grid .status-btn${statusMap[status]}`);
   if (sel) {
     sel.classList.add('selected', 'just-selected');
   }
 
-  const labels = { 'good': '✅ Bueno', 'damaged': '🔨 Dañado', 'missing': '❌ Faltante', 'new': '🆕 Nuevo' };
-  showToast(labels[status]);
+  const labels = { 'good': '✅ BIEN', 'damaged': '🔧 DAÑADO', 'missing': '❌ FALTA' };
+  showToast(labels[status] || '✅ Listo');
+
+  // Highlight the Siguiente button so user knows to press it
+  const navNext = document.getElementById('nav-next');
+  if (navNext) navNext.classList.add('nav-ready');
 }
 
 function changeQty(delta) {
@@ -1947,6 +2290,8 @@ function prevItem() {
 
 function nextItem() {
   cancelAutoAdvance();
+  const navNext = document.getElementById('nav-next');
+  if (navNext) navNext.classList.remove('nav-ready');
   saveCurrentNotes();
   const section = SECTIONS[currentSectionIndex];
 
@@ -2000,6 +2345,46 @@ function showRoomComplete() {
   statsEl.innerHTML = statsHtml;
 
   showStep('step-room-done');
+  launchConfetti();
+
+  // Auto-continue after 2.5s
+  const hint = document.getElementById('auto-continue-hint');
+  if (hint) hint.classList.add('visible');
+  const autoContinueTimer = setTimeout(() => {
+    if (document.getElementById('step-room-done').classList.contains('active')) {
+      if (hint) hint.classList.remove('visible');
+      backToRooms();
+    }
+  }, 2500);
+
+  // Cancel auto-continue if user taps button manually
+  const continueBtn = document.getElementById('room-done-continue');
+  if (continueBtn) {
+    const orig = continueBtn.onclick;
+    continueBtn.onclick = () => {
+      clearTimeout(autoContinueTimer);
+      if (hint) hint.classList.remove('visible');
+      backToRooms();
+    };
+  }
+}
+
+function launchConfetti() {
+  const container = document.getElementById('confetti-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const emojis = ['🎉', '🎊', '✨', '⭐', '🌟', '🎈'];
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('span');
+    el.className = 'confetti-emoji';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    el.style.animationDelay = Math.random() * 0.8 + 's';
+    el.style.fontSize = (1.5 + Math.random() * 1.5) + 'rem';
+    container.appendChild(el);
+  }
+  setTimeout(() => { if (container) container.innerHTML = ''; }, 4000);
 }
 
 // ══════════════════════════════════════════

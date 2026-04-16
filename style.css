@@ -2917,3 +2917,852 @@ body {
 }
 
 .onb-photo-thumb:active { opacity: 0.7; }
+
+/* ══════════════════════════════════════════
+   UX IMPROVEMENTS — Child-Friendly Design
+   ══════════════════════════════════════════ */
+
+/* ── Mode card icon wraps with colored backgrounds ── */
+.mode-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.inventory-wrap  { background: #fff8e1; }
+.inspection-wrap { background: #e8f0fe; }
+.onboarding-wrap { background: #e6faf3; }
+.historico-wrap  { background: #f3eeff; }
+
+.mode-card.inventory-mode  .mode-icon { color: #f59e0b; font-size: 2rem; }
+.mode-card.inspection-mode .mode-icon { color: #2563eb; font-size: 2rem; }
+.mode-card.onboarding-mode .mode-icon { color: #10b981; font-size: 2rem; }
+.mode-card.historico-mode  .mode-icon { color: #8b5cf6; font-size: 2rem; }
+
+/* Colored left accent on mode cards */
+.mode-card.inventory-mode  { border-left: 5px solid #f59e0b; }
+.mode-card.inspection-mode { border-left: 5px solid #2563eb; }
+.mode-card.onboarding-mode { border-left: 5px solid #10b981; }
+.mode-card.historico-mode  { border-left: 5px solid #8b5cf6; }
+
+/* Larger mode card padding for easier tapping */
+.mode-card { padding: 22px 18px; min-height: 90px; }
+.mode-card-inner { gap: 16px; }
+
+/* Larger, more readable mode titles and descriptions */
+.mode-title { font-size: 1.2rem; font-weight: 800; }
+.mode-desc  { font-size: 0.9rem; color: #6b7280; margin-top: 4px; line-height: 1.35; }
+
+/* Primary inspection card — most prominent */
+.mode-card.inspection-mode {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-left-color: #2563eb;
+}
+
+.mode-card.inspection-mode .mode-title {
+  color: #1d4ed8;
+}
+
+/* ── Form helper labels ── */
+.form-helper-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 4px;
+  margin-left: 4px;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* First helper label needs no extra top margin */
+.form-card .form-helper-label:first-child { margin-top: 0; }
+
+/* ── Larger form inputs ── */
+.form-group input { padding: 16px 4px; font-size: 1.05rem; }
+
+/* ── Status buttons — bigger touch targets ── */
+.status-btn { padding: 20px 12px; min-height: 90px; }
+.status-mat-icon { font-size: 2.2rem; }
+.status-label { font-size: 1.05rem; font-weight: 800; }
+
+/* ── Nav buttons — taller for easier tapping ── */
+.nav-prev, .nav-next {
+  min-height: 56px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* ── Bigger btn-start ── */
+.btn-start { padding: 22px; font-size: 1.3rem; border-radius: 20px; }
+
+/* ── Room cards — larger and easier to tap ── */
+.room-card { padding: 18px 10px; }
+.room-card-name { font-size: 0.88rem; font-weight: 800; }
+
+/* ── Home screen adjustments ── */
+.home-title { font-size: 2.2rem; }
+.home-sub { font-size: 1rem; font-weight: 500; color: #374151; margin-bottom: 32px; }
+.icon-hero-home { font-size: 5rem; }
+
+/* ── Login card improvements ── */
+.login-card h3 { font-size: 1.4rem; font-weight: 800; }
+.login-subtitle { font-size: 0.95rem; line-height: 1.5; color: #6b7280; margin-bottom: 16px; }
+
+/* ── Finish button more prominent ── */
+.btn-finish-all { font-size: 1.2rem; padding: 22px; }
+
+/* ── Progress bar thicker ── */
+.overall-progress { height: 14px; border-radius: 8px; }
+.topbar-progress  { height: 12px; border-radius: 6px; }
+
+/* ── Item name bigger in inspection ── */
+.item-name    { font-size: 1.6rem; font-weight: 900; }
+.item-name-en { font-size: 0.9rem; }
+
+/* ── Rooms header step indicator ── */
+.rooms-header h2 { font-size: 1.4rem; }
+
+/* ── Qty buttons bigger ── */
+.qty-btn { width: 56px; height: 56px; border-radius: 16px; }
+.qty-value { font-size: 2rem; }
+
+
+/* ── Training button on home screen ── */
+.training-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 22px;
+  background: #f0f4ff;
+  border: 2px solid #c7d7ff;
+  border-radius: 14px;
+  color: #2563eb;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.training-btn:active {
+  background: #dbeafe;
+  transform: scale(0.97);
+}
+
+.training-btn .material-symbols-rounded {
+  font-size: 1.3rem;
+}
+
+/* ── Training modal ── */
+.training-modal-card {
+  background: #fff;
+  border-radius: 24px;
+  width: calc(100% - 40px);
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.training-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 20px 12px;
+  border-bottom: 2px solid #f0f4ff;
+}
+
+.training-modal-header h3 {
+  flex: 1;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 10px;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:active { background: #e5e7eb; }
+
+.training-steps {
+  padding: 16px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.training-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.training-step-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.training-step-icon .material-symbols-rounded { font-size: 1.6rem; }
+
+.training-step-body { flex: 1; }
+
+.training-step-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin-bottom: 3px;
+}
+
+.training-step-desc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.training-tip {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #78350f;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+/* ── Form helper hint (small secondary text) ── */
+.form-helper-hint {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: none;
+  letter-spacing: 0;
+  display: block;
+  margin-top: 1px;
+}
+
+/* ══════════════════════════════════════════
+   MODAL OVERLAY (genérico)
+   ══════════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  padding: 24px;
+  animation: fadeInOverlay 0.2s ease;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ══════════════════════════════════════════
+   MODAL: ¿QUÉ HARÁS HOY?
+   ══════════════════════════════════════════ */
+
+.what-today-card {
+  background: #fff;
+  border-radius: 24px;
+  width: calc(100% - 40px);
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.what-today-sub {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  padding: 4px 20px 16px;
+  margin: 0;
+}
+
+.what-today-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 0 8px;
+}
+
+.what-today-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  border-top: 1px solid #f3f4f6;
+  transition: background 0.15s;
+  font-family: inherit;
+  width: 100%;
+}
+
+.what-today-btn:active {
+  background: #f9fafb;
+}
+
+.what-today-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.what-today-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.what-today-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+.what-today-desc {
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+/* ══════════════════════════════════════════
+   TOUR BANNER
+   ══════════════════════════════════════════ */
+
+.tour-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  padding: 0 16px 16px;
+  max-width: 500px;
+  margin: 0 auto;
+  animation: slideUpFast 0.25s ease;
+}
+
+@keyframes slideUpFast {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.tour-banner-inner {
+  background: #1a1a2e;
+  border-radius: 20px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.25);
+}
+
+.tour-banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tour-step-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tour-exit-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-family: inherit;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tour-exit-btn:active {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+.tour-exit-btn .material-symbols-rounded {
+  font-size: 1rem;
+}
+
+.tour-step-text {
+  margin-bottom: 14px;
+}
+
+.tour-step-main {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.tour-step-main strong {
+  color: #60a5fa;
+}
+
+.tour-step-tip {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.tour-step-tip strong {
+  color: #d1d5db;
+}
+
+.tour-step-text strong {
+  color: #60a5fa;
+}
+
+.tour-banner-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tour-step-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tour-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #374151;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.tour-dot.active {
+  background: #2563eb;
+  transform: scale(1.4);
+}
+
+.tour-dot.done {
+  background: #10b981;
+}
+
+.tour-btn-next {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: transform 0.15s;
+  white-space: nowrap;
+}
+
+.tour-btn-next:active {
+  transform: scale(0.97);
+}
+
+.tour-btn-next .material-symbols-rounded {
+  font-size: 1.1rem;
+}
+
+.tour-btn-next.finish {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* ══════════════════════════════════════════
+   TOUR HIGHLIGHT — glowing ring on target
+   ══════════════════════════════════════════ */
+
+.tour-highlight {
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 0 0 3px #2563eb, 0 0 0 6px rgba(37, 99, 235, 0.3) !important;
+  border-radius: inherit;
+  animation: tourGlow 1.5s ease-in-out infinite !important;
+}
+
+@keyframes tourGlow {
+  0%, 100% { box-shadow: 0 0 0 3px #2563eb, 0 0 0 8px rgba(37, 99, 235, 0.25); }
+  50%       { box-shadow: 0 0 0 3px #2563eb, 0 0 0 14px rgba(37, 99, 235, 0.5); }
+}
+
+/* ══════════════════════════════════════════
+   TOUR FAB — floating button to re-open tour
+   ══════════════════════════════════════════ */
+
+.tour-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  animation: fabBounce 0.4s ease;
+}
+
+@keyframes fabBounce {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.tour-fab .material-symbols-rounded {
+  font-size: 1.6rem;
+}
+
+.tour-fab:active {
+  transform: scale(0.93);
+}
+
+/* ══════════════════════════════════════════
+   HISTORIAL LINK (home screen, replaces card)
+   ══════════════════════════════════════════ */
+
+.historico-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+
+.historico-link:active {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.historico-link .material-symbols-rounded {
+  font-size: 1.1rem;
+}
+
+/* ══════════════════════════════════════════
+   STATUS BUTTONS — 3-button layout
+   BIEN = full width, DAÑADO + FALTA = half
+   ══════════════════════════════════════════ */
+
+.status-btn.status-full {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  gap: 12px;
+  padding: 22px 20px;
+  min-height: 72px;
+  font-size: 1.2rem;
+}
+
+.status-btn.status-full .status-mat-icon {
+  font-size: 2rem;
+}
+
+.status-btn.status-full .status-label {
+  font-size: 1.3rem;
+}
+
+/* ══════════════════════════════════════════
+   NAV-NEXT — HIGHLIGHTED when status chosen
+   ══════════════════════════════════════════ */
+
+.nav-next.nav-ready {
+  background: linear-gradient(135deg, #059669, #10b981);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+  transform: scale(1.02);
+  animation: navPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes navPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); }
+  50% { box-shadow: 0 8px 28px rgba(16, 185, 129, 0.7); }
+}
+
+/* ══════════════════════════════════════════
+   ROOM CARD — enhanced completion states
+   ══════════════════════════════════════════ */
+
+.room-card.completed {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+}
+
+.room-card.completed .room-card-name {
+  text-decoration: line-through;
+  color: #065f46;
+}
+
+.room-card.completed .room-card-count {
+  color: #10b981;
+  font-weight: 800;
+}
+
+.room-card.pulse-next {
+  border-color: #2563eb;
+  animation: roomPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes roomPulse {
+  0%, 100% { box-shadow: 0 2px 12px rgba(37, 99, 235, 0.2); }
+  50% { box-shadow: 0 4px 24px rgba(37, 99, 235, 0.5); }
+}
+
+/* ══════════════════════════════════════════
+   ITEM HINT — always visible, more prominent
+   ══════════════════════════════════════════ */
+
+.item-hint {
+  font-size: 0.9rem !important;
+  color: #92400e !important;
+  background: #fffbeb !important;
+  border: 1.5px solid #fde68a !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  margin-top: 8px !important;
+  display: block !important;
+  font-weight: 600 !important;
+}
+
+.item-hint:empty {
+  display: none !important;
+}
+
+/* ══════════════════════════════════════════
+   CONFETTI / EMOJI RAIN
+   ══════════════════════════════════════════ */
+
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.confetti-emoji {
+  position: absolute;
+  top: -60px;
+  font-size: 2rem;
+  animation: confettiFall linear forwards;
+  user-select: none;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════
+   AUTO-CONTINUE HINT
+   ══════════════════════════════════════════ */
+
+.auto-continue-hint {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin-top: 12px;
+  display: none;
+}
+
+.auto-continue-hint.visible {
+  display: block;
+}
+
+/* ══════════════════════════════════════════
+   FIRST-VISIT INTRO MODAL
+   ══════════════════════════════════════════ */
+
+.first-visit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.first-visit-card {
+  background: #fff;
+  border-radius: 28px;
+  width: 100%;
+  max-width: 380px;
+  padding: 36px 28px 28px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+  animation: modalIn 0.3s ease;
+}
+
+.fv-slide {
+  display: none;
+}
+
+.fv-slide.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.fv-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.fv-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #1a1a2e;
+  margin-bottom: 10px;
+}
+
+.fv-desc {
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.fv-status-demo {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.fv-demo-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.fv-demo-btn.good    { background: #d1fae5; color: #065f46; }
+.fv-demo-btn.damaged { background: #fee2e2; color: #991b1b; }
+.fv-demo-btn.missing { background: #fef3c7; color: #92400e; }
+
+.fv-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 24px 0 20px;
+}
+
+.fv-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.fv-dot.active {
+  background: #2563eb;
+  transform: scale(1.3);
+}
+
+.fv-next-btn {
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  transition: transform 0.15s;
+  font-family: inherit;
+}
+
+.fv-next-btn:active {
+  transform: scale(0.97);
+}
+
+.fv-next-btn .material-symbols-rounded {
+  font-size: 1.3rem;
+}
+

@@ -20,26 +20,30 @@
           <span class="material-symbols-rounded icon-hero-home">apartment</span>
         </div>
         <h1 class="home-title">Del Mar</h1>
-        <p class="home-sub">Gestión de Propiedades</p>
+        <p class="home-sub">Selecciona qué quieres hacer</p>
 
         <div class="mode-cards">
-          <button class="mode-card inventory-mode" onclick="selectMode('inventory')">
+          <button class="mode-card inspection-mode" onclick="selectMode('inspection')">
             <div class="mode-card-inner">
-              <span class="material-symbols-rounded mode-icon">add_box</span>
+              <div class="mode-icon-wrap inspection-wrap">
+                <span class="material-symbols-rounded mode-icon">fact_check</span>
+              </div>
               <div class="mode-card-text">
-                <span class="mode-title">Inventario</span>
-                <span class="mode-desc">Crear inventario de una unidad</span>
+                <span class="mode-title">Revisar Departamento</span>
+                <span class="mode-desc">Revisa el estado actual de un departamento</span>
               </div>
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
           </button>
 
-          <button class="mode-card inspection-mode" onclick="selectMode('inspection')">
+          <button class="mode-card inventory-mode" onclick="selectMode('inventory')">
             <div class="mode-card-inner">
-              <span class="material-symbols-rounded mode-icon">fact_check</span>
+              <div class="mode-icon-wrap inventory-wrap">
+                <span class="material-symbols-rounded mode-icon">add_box</span>
+              </div>
               <div class="mode-card-text">
-                <span class="mode-title">Inspección</span>
-                <span class="mode-desc">Inspeccionar una unidad existente</span>
+                <span class="mode-title">Inventario</span>
+                <span class="mode-desc">Registrar todos los objetos de un departamento</span>
               </div>
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
@@ -47,28 +51,101 @@
 
           <button class="mode-card onboarding-mode" onclick="selectMode('onboarding')">
             <div class="mode-card-inner">
-              <span class="material-symbols-rounded mode-icon">home_work</span>
-              <div class="mode-card-text">
-                <span class="mode-title">Onboarding</span>
-                <span class="mode-desc">Inspección de ingreso de unidad</span>
+              <div class="mode-icon-wrap onboarding-wrap">
+                <span class="material-symbols-rounded mode-icon">home_work</span>
               </div>
-              <span class="material-symbols-rounded mode-arrow">chevron_right</span>
-            </div>
-          </button>
-
-          <button class="mode-card historico-mode" onclick="selectMode('historico')">
-            <div class="mode-card-inner">
-              <span class="material-symbols-rounded mode-icon">history</span>
               <div class="mode-card-text">
-                <span class="mode-title">Histórico</span>
-                <span class="mode-desc">Ver registros anteriores</span>
+                <span class="mode-title">Departamento Nuevo</span>
+                <span class="mode-desc">Primera revisión de un departamento nuevo</span>
               </div>
               <span class="material-symbols-rounded mode-arrow">chevron_right</span>
             </div>
           </button>
         </div>
+
+        <!-- Botón de capacitación -->
+        <button class="training-btn" onclick="showTrainingModal()">
+          <span class="material-symbols-rounded">school</span>
+          ¿Cómo usar la app?
+        </button>
+
+        <!-- Link discreto para ver registros (managers) -->
+        <button class="historico-link" onclick="selectMode('historico')">
+          <span class="material-symbols-rounded">history</span>
+          Ver registros anteriores
+        </button>
       </div>
     </div>
+
+    <!-- ══════════ MODAL: ¿QUÉ HARÁS HOY? ══════════ -->
+    <div id="what-today-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeWhatTodayModal()">
+      <div class="what-today-card">
+        <div class="training-modal-header">
+          <span class="material-symbols-rounded" style="font-size:2rem;color:#2563eb">help_center</span>
+          <h3>¿Qué vas a hacer hoy?</h3>
+          <button class="modal-close-btn" onclick="closeWhatTodayModal()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <p class="what-today-sub">Elige una opción y te guiamos paso a paso</p>
+        <div class="what-today-options">
+          <button class="what-today-btn inspection-btn" onclick="startTour('inspection')">
+            <div class="what-today-icon" style="background:#e8f0fe">
+              <span class="material-symbols-rounded" style="color:#2563eb;font-size:1.8rem">fact_check</span>
+            </div>
+            <div class="what-today-text">
+              <span class="what-today-title">Revisar Departamento</span>
+              <span class="what-today-desc">Ver el estado de cada cosa</span>
+            </div>
+            <span class="material-symbols-rounded" style="color:#d1d5db">chevron_right</span>
+          </button>
+          <button class="what-today-btn inventory-btn" onclick="startTour('inventory')">
+            <div class="what-today-icon" style="background:#fff8e1">
+              <span class="material-symbols-rounded" style="color:#f59e0b;font-size:1.8rem">add_box</span>
+            </div>
+            <div class="what-today-text">
+              <span class="what-today-title">Inventario</span>
+              <span class="what-today-desc">Registrar todos los objetos</span>
+            </div>
+            <span class="material-symbols-rounded" style="color:#d1d5db">chevron_right</span>
+          </button>
+          <button class="what-today-btn onboarding-btn" onclick="startTour('onboarding')">
+            <div class="what-today-icon" style="background:#e6faf3">
+              <span class="material-symbols-rounded" style="color:#10b981;font-size:1.8rem">home_work</span>
+            </div>
+            <div class="what-today-text">
+              <span class="what-today-title">Departamento Nuevo</span>
+              <span class="what-today-desc">Primera revisión completa</span>
+            </div>
+            <span class="material-symbols-rounded" style="color:#d1d5db">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ TOUR BANNER (fijo en la parte baja) ══════════ -->
+    <div id="tour-banner" class="tour-banner" style="display:none">
+      <div class="tour-banner-inner">
+        <div class="tour-banner-top">
+          <span class="tour-step-count" id="tour-step-count">Paso 1 de 5</span>
+          <button class="tour-exit-btn" onclick="exitTour()" title="Salir del tour">
+            <span class="material-symbols-rounded">close</span> Salir del tour
+          </button>
+        </div>
+        <div class="tour-step-text" id="tour-step-text">Toca Revisar Departamento</div>
+        <div class="tour-banner-footer">
+          <div class="tour-step-dots" id="tour-step-dots"></div>
+          <button class="tour-btn-next" id="tour-btn-next" onclick="advanceTour()">
+            Siguiente <span class="material-symbols-rounded">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ TOUR FAB (reabre el banner) ══════════ -->
+    <button id="tour-fab" class="tour-fab" onclick="showTourBanner()" style="display:none" title="Ver guía">
+      <span class="material-symbols-rounded">help</span>
+    </button>
 
     <!-- ══════════ ONBOARDING PASO 1: DATOS ══════════ -->
     <div id="step-onboarding-welcome" class="step">
@@ -77,21 +154,24 @@
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
         <div class="welcome-icon"><span class="material-symbols-rounded icon-hero" style="color:#10b981">home_work</span></div>
-        <h1>Inspección de Onboarding</h1>
-        <p class="welcome-sub">Completa los datos y toca Comenzar</p>
+        <h1>Nueva Propiedad</h1>
+        <p class="welcome-sub">Paso 1 de 2 — Llena los datos del departamento</p>
 
         <div class="form-card">
+          <div class="form-helper-label">Nombre de Departamento / Casa <span class="form-helper-hint">(Condominio + Número de Departamento)</span></div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">apartment</span></div>
-            <input type="text" id="onb-unit-name" placeholder="Nombre de la unidad..." autocomplete="off">
+            <input type="text" id="onb-unit-name" placeholder="Ej: Depto 101, Casa Playa..." autocomplete="off">
           </div>
+          <div class="form-helper-label">Fecha de hoy</div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
             <input type="date" id="onb-date">
           </div>
+          <div class="form-helper-label">¿Quién hace este Onboarding?</div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
-            <input type="text" id="onb-auditor" placeholder="Nombre del inspector..." autocomplete="off">
+            <input type="text" id="onb-auditor" placeholder="Tu nombre completo..." autocomplete="off">
           </div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">bed</span></div>
@@ -166,33 +246,22 @@
           <span class="material-symbols-rounded item-icon" id="onb-item-icon">inventory_2</span>
         </div>
         <div class="item-name" id="onb-item-name">Artículo</div>
-        <div class="item-name-en" id="onb-item-group">Grupo</div>
         <div class="item-hint" id="onb-item-hint"></div>
-        <button class="help-btn" onclick="showOnbHelpModal()" title="Qué revisar">
-          <span class="material-symbols-rounded">help</span>
-        </button>
+        <div class="item-name-en" id="onb-item-group" style="display:none"></div>
       </div>
 
       <div class="status-grid" id="onb-status-grid">
-        <button class="status-btn good" onclick="setOnbCurrentStatus('good')">
+        <button class="status-btn good status-full" onclick="setOnbCurrentStatus('good')">
           <span class="material-symbols-rounded status-mat-icon good-icon">check_circle</span>
-          <span class="status-label">Bueno</span>
-          <span class="status-label-en">Good</span>
+          <span class="status-label">BIEN</span>
         </button>
         <button class="status-btn damaged" onclick="setOnbCurrentStatus('damaged')">
           <span class="material-symbols-rounded status-mat-icon damaged-icon">build</span>
-          <span class="status-label">Dañado</span>
-          <span class="status-label-en">Damaged</span>
+          <span class="status-label">DAÑADO</span>
         </button>
         <button class="status-btn missing" onclick="setOnbCurrentStatus('missing')">
           <span class="material-symbols-rounded status-mat-icon missing-icon">cancel</span>
-          <span class="status-label">Faltante</span>
-          <span class="status-label-en">Missing</span>
-        </button>
-        <button class="status-btn new-item" onclick="setOnbCurrentStatus('new')">
-          <span class="material-symbols-rounded status-mat-icon new-icon">new_releases</span>
-          <span class="status-label">Nuevo</span>
-          <span class="status-label-en">New</span>
+          <span class="status-label">FALTA</span>
         </button>
       </div>
 
@@ -224,7 +293,7 @@
 
       <div class="item-nav">
         <button class="nav-prev" id="onb-nav-prev" onclick="prevOnbItem()">
-          <span class="material-symbols-rounded">arrow_back</span> Atrás
+          <span class="material-symbols-rounded">arrow_back</span> Anterior
         </button>
         <button class="nav-next" id="onb-nav-next" onclick="nextOnbItem()">
           Siguiente <span class="material-symbols-rounded">arrow_forward</span>
@@ -252,20 +321,23 @@
         </button>
         <div class="welcome-icon"><span class="material-symbols-rounded icon-hero" style="color:#f59e0b">add_box</span></div>
         <h1>Nuevo Inventario</h1>
-        <p class="welcome-sub">Completa los datos y toca Comenzar</p>
+        <p class="welcome-sub">Paso 1 — Llena los datos del departamento</p>
 
         <div class="form-card">
+          <div class="form-helper-label">Nombre de Departamento / Casa <span class="form-helper-hint">(Condominio + Número de Departamento)</span></div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">apartment</span></div>
-            <input type="text" id="inv-unit-name" placeholder="Nombre de la unidad..." autocomplete="off">
+            <input type="text" id="inv-unit-name" placeholder="Ej: Depto 101, Casa Playa..." autocomplete="off">
           </div>
+          <div class="form-helper-label">Fecha de hoy</div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
             <input type="date" id="inv-date">
           </div>
+          <div class="form-helper-label">¿Quién hace este Inventario?</div>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
-            <input type="text" id="inv-auditor" placeholder="Tu nombre..." autocomplete="off">
+            <input type="text" id="inv-auditor" placeholder="Tu nombre completo..." autocomplete="off">
           </div>
         </div>
 
@@ -369,21 +441,17 @@
           <div class="inv-field-group">
             <label>Estado</label>
             <div class="status-grid compact" id="new-item-status-grid">
-              <button class="status-btn good" onclick="setNewItemStatus('good')">
+              <button class="status-btn good status-full" onclick="setNewItemStatus('good')">
                 <span class="material-symbols-rounded status-mat-icon good-icon">check_circle</span>
-                <span class="status-label">Bueno</span>
+                <span class="status-label">BIEN</span>
               </button>
               <button class="status-btn damaged" onclick="setNewItemStatus('damaged')">
                 <span class="material-symbols-rounded status-mat-icon damaged-icon">build</span>
-                <span class="status-label">Dañado</span>
+                <span class="status-label">DAÑADO</span>
               </button>
               <button class="status-btn missing" onclick="setNewItemStatus('missing')">
                 <span class="material-symbols-rounded status-mat-icon missing-icon">cancel</span>
-                <span class="status-label">Faltante</span>
-              </button>
-              <button class="status-btn new-item" onclick="setNewItemStatus('new')">
-                <span class="material-symbols-rounded status-mat-icon new-icon">new_releases</span>
-                <span class="status-label">Nuevo</span>
+                <span class="status-label">FALTA</span>
               </button>
             </div>
           </div>
@@ -438,31 +506,26 @@
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
         <div class="welcome-icon"><span class="material-symbols-rounded icon-hero">fact_check</span></div>
-        <h1 id="insp-welcome-title">Inspección</h1>
-        <p class="welcome-sub" id="insp-welcome-sub">¿Qué unidad vas a inspeccionar?</p>
+        <h1 id="insp-welcome-title">Revisar Departamento</h1>
+        <p class="welcome-sub" id="insp-welcome-sub">¿Qué departamento vas a revisar hoy?</p>
 
         <div class="form-card">
+          <div class="form-helper-label">Selecciona el departamento</div>
           <div class="form-group unit-search-group">
             <div class="input-icon"><span class="material-symbols-rounded">apartment</span></div>
-            <input type="text" id="location" placeholder="Buscar unidad..." autocomplete="off" oninput="onUnitSearchInput(this.value)">
+            <input type="text" id="location" placeholder="Escribe el nombre del depto..." autocomplete="off" oninput="onUnitSearchInput(this.value)">
             <button class="unit-search-clear" id="unit-search-clear" onclick="clearUnitSelection()" style="display:none">
               <span class="material-symbols-rounded">close</span>
             </button>
             <div class="unit-search-dropdown" id="unit-search-dropdown"></div>
           </div>
-          <div class="form-group">
-            <div class="input-icon"><span class="material-symbols-rounded">calendar_today</span></div>
-            <input type="date" id="date">
-          </div>
-          <div class="form-group">
-            <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
-            <input type="text" id="auditor" placeholder="Tu nombre..." autocomplete="off">
-          </div>
+          <input type="hidden" id="date">
+          <input type="hidden" id="auditor" value="Inspector">
         </div>
 
         <button class="btn-start" id="btn-start-inspection" onclick="startInspection()" disabled>
           <span class="material-symbols-rounded">play_arrow</span>
-          COMENZAR
+          EMPEZAR →
         </button>
       </div>
     </div>
@@ -474,7 +537,8 @@
           <span class="material-symbols-rounded timer-icon">timer</span>
           <span id="timer-display">00:00</span>
         </div>
-        <h2>Elige un Cuarto</h2>
+        <h2>¿Qué cuarto revisas ahora?</h2>
+        <p style="font-size:0.85rem;color:#6b7280;margin-bottom:10px;">Toca un cuarto para empezar</p>
         <div class="overall-progress">
           <div class="overall-progress-bar" id="overall-bar"></div>
         </div>
@@ -506,34 +570,23 @@
           <span class="material-symbols-rounded item-icon" id="item-icon">local_fire_department</span>
         </div>
         <div class="item-name" id="item-name">Estufa</div>
-        <div class="item-name-en" id="item-name-en">Stove</div>
         <div class="item-hint" id="item-hint">Quemadores, perillas, limpieza</div>
-        <button class="help-btn" onclick="showHelpModal()" title="Más información">
-          <span class="material-symbols-rounded">help</span>
-        </button>
+        <div class="item-name-en" id="item-name-en" style="display:none"></div>
       </div>
 
       <!-- Botones de estado (LA ACCIÓN PRINCIPAL) -->
       <div class="status-grid" id="status-grid">
-        <button class="status-btn good" onclick="setStatus('good')">
+        <button class="status-btn good status-full" onclick="setStatus('good')">
           <span class="material-symbols-rounded status-mat-icon good-icon">check_circle</span>
-          <span class="status-label">Bueno</span>
-          <span class="status-label-en">Good</span>
+          <span class="status-label">BIEN</span>
         </button>
         <button class="status-btn damaged" onclick="setStatus('damaged')">
           <span class="material-symbols-rounded status-mat-icon damaged-icon">build</span>
-          <span class="status-label">Dañado</span>
-          <span class="status-label-en">Damaged</span>
+          <span class="status-label">DAÑADO</span>
         </button>
         <button class="status-btn missing" onclick="setStatus('missing')">
           <span class="material-symbols-rounded status-mat-icon missing-icon">cancel</span>
-          <span class="status-label">Faltante</span>
-          <span class="status-label-en">Missing</span>
-        </button>
-        <button class="status-btn new-item" onclick="setStatus('new')">
-          <span class="material-symbols-rounded status-mat-icon new-icon">new_releases</span>
-          <span class="status-label">Nuevo</span>
-          <span class="status-label-en">New</span>
+          <span class="status-label">FALTA</span>
         </button>
       </div>
 
@@ -567,7 +620,7 @@
       <!-- Navegación -->
       <div class="item-nav">
         <button class="nav-prev" id="nav-prev" onclick="prevItem()">
-          <span class="material-symbols-rounded">arrow_back</span> Atrás
+          <span class="material-symbols-rounded">arrow_back</span> Anterior
         </button>
         <button class="nav-next" id="nav-next" onclick="nextItem()">
           Siguiente <span class="material-symbols-rounded">arrow_forward</span>
@@ -577,13 +630,57 @@
 
     <!-- ══════════ INSPECCIÓN PASO 4: CUARTO COMPLETADO ══════════ -->
     <div id="step-room-done" class="step">
+      <div id="confetti-container" class="confetti-container"></div>
       <div class="celebration">
         <div class="celebration-icon"><span class="material-symbols-rounded icon-celebrate">celebration</span></div>
         <h2 class="celebration-title" id="room-done-title">¡Cuarto Listo!</h2>
         <p class="celebration-sub" id="room-done-sub">Cocina completada</p>
         <div class="celebration-stats" id="room-done-stats"></div>
-        <button class="btn-continue" onclick="backToRooms()">
+        <button class="btn-continue" id="room-done-continue" onclick="backToRooms()">
           Continuar <span class="material-symbols-rounded">arrow_forward</span>
+        </button>
+        <p class="auto-continue-hint" id="auto-continue-hint">Continuando automáticamente...</p>
+      </div>
+    </div>
+
+    <!-- ══════════ MODAL: PRIMERA VISITA ══════════ -->
+    <div id="first-visit-modal" class="first-visit-overlay" style="display:none">
+      <div class="first-visit-card">
+        <div class="first-visit-slides">
+          <div class="fv-slide active" id="fv-slide-0">
+            <div class="fv-icon" style="background:#e8f0fe">
+              <span class="material-symbols-rounded" style="font-size:3.5rem;color:#2563eb">home</span>
+            </div>
+            <h2 class="fv-title">Bienvenido</h2>
+            <p class="fv-desc">Vas a revisar cada cuarto del departamento, uno por uno.</p>
+          </div>
+          <div class="fv-slide" id="fv-slide-1">
+            <div class="fv-icon" style="background:#e6faf3">
+              <span class="material-symbols-rounded" style="font-size:3.5rem;color:#10b981">touch_app</span>
+            </div>
+            <h2 class="fv-title">Es muy fácil</h2>
+            <p class="fv-desc">Para cada cosa que veas, toca uno de estos tres botones:</p>
+            <div class="fv-status-demo">
+              <span class="fv-demo-btn good">✅ BIEN</span>
+              <span class="fv-demo-btn damaged">🔧 DAÑADO</span>
+              <span class="fv-demo-btn missing">❌ FALTA</span>
+            </div>
+          </div>
+          <div class="fv-slide" id="fv-slide-2">
+            <div class="fv-icon" style="background:#fff8e1">
+              <span class="material-symbols-rounded" style="font-size:3.5rem;color:#f59e0b">emoji_events</span>
+            </div>
+            <h2 class="fv-title">¡Al terminar listo!</h2>
+            <p class="fv-desc">Se guarda todo automáticamente. Puedes descargar el reporte en Excel o PDF.</p>
+          </div>
+        </div>
+        <div class="fv-dots">
+          <span class="fv-dot active" id="fv-dot-0"></span>
+          <span class="fv-dot" id="fv-dot-1"></span>
+          <span class="fv-dot" id="fv-dot-2"></span>
+        </div>
+        <button class="fv-next-btn" id="fv-next-btn" onclick="fvNext()">
+          Siguiente <span class="material-symbols-rounded">arrow_forward</span>
         </button>
       </div>
     </div>
@@ -595,19 +692,20 @@
           <button class="back-home-btn-inline" onclick="showStep('step-home')">
             <span class="material-symbols-rounded">arrow_back</span>
           </button>
-          <h2>Histórico</h2>
-          <button id="historico-logout-btn" class="back-home-btn-inline" onclick="logoutAndShowHistoricoLogin()" style="display:none;">
+          <h2>Registros Guardados</h2>
+          <button id="historico-logout-btn" class="back-home-btn-inline" onclick="logoutAndShowHistoricoLogin()" style="display:none;" title="Cerrar sesión">
             <span class="material-symbols-rounded">logout</span>
           </button>
         </div>
-        <p class="historico-sub">Inventarios e inspecciones completados</p>
+        <p class="historico-sub">Todos los inventarios e inspecciones</p>
       </div>
 
       <!-- LOGIN FORM -->
       <div id="historico-login-form" class="historico-login-form">
         <div class="login-card">
-          <h3>Acceso a Histórico</h3>
-          <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+          <div style="font-size:3rem;text-align:center;margin-bottom:8px;">🔒</div>
+          <h3>Acceso Restringido</h3>
+          <p class="login-subtitle"></p>
           <div class="form-group">
             <div class="input-icon"><span class="material-symbols-rounded">person</span></div>
             <input type="text" id="historico-username" placeholder="Usuario" autocomplete="off">
@@ -689,7 +787,7 @@
         </div>
       </div>
 
-      <div class="historico-controls" style="display:none;">
+      <div id="historico-controls" class="historico-controls" style="display:none;">
         <div class="historico-search">
           <span class="material-symbols-rounded">search</span>
           <input type="text" id="historico-search" placeholder="Buscar unidad..." oninput="filterHistorico()">
