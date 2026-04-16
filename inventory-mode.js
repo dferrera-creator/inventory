@@ -17,6 +17,15 @@ let newItemStatus = null;
 let editingItemIdx = null;      // null = nuevo, número = editando existente
 let isEditingInventory = false; // true when loading an existing saved inventory
 
+// Image import state
+let importedImages = [];         // [{ file, name, dataUrl }]
+let imageToItemMap = {};         // { imageIdx: { roomIdx, itemIdx } }
+
+// Autosave state
+let hasUnsavedChanges = false;
+let autosaveTimeout = null;
+const AUTOSAVE_DELAY = 500; // milliseconds
+
 // ── Sugerencias de cuartos ──
 const ROOM_SUGGESTIONS = [
   'Cocina', 'Sala', 'Comedor', 'Sala-Comedor',
@@ -195,6 +204,8 @@ function importInventoryFromXLSX(input) {
       };
       inventoryRooms = rooms;
       isEditingInventory = false;
+      importedImages = [];
+      imageToItemMap = {};
 
       // Pre-fill form fields
       document.getElementById('inv-unit-name').value = unitName;
@@ -202,11 +213,12 @@ function importInventoryFromXLSX(input) {
 
       startTimer();
       document.getElementById('inv-unit-label').textContent = unitName;
-      showStep('step-inv-rooms');
-      renderInventoryRooms();
 
       const totalItems = rooms.reduce((s, r) => s + r.items.length, 0);
       showToast(`✅ Importado: ${rooms.length} cuartos, ${totalItems} artículos`);
+
+      // Show image import step
+      showImageImportStep();
     } catch (err) {
       console.error('Error importando XLSX:', err);
       showToast('❌ Error al leer el archivo Excel');
@@ -310,8 +322,14 @@ function renderInventoryRooms() {
     const color = DYNAMIC_ROOM_COLORS[idx % DYNAMIC_ROOM_COLORS.length];
     const count = room.items.length;
 
+    // Calculate completion: items with both photos and status
+    const completed = room.items.filter(item =>
+      item.photos && item.photos.length > 0 && item.status
+    ).length;
+    const completionPct = count > 0 ? Math.round((completed / count) * 100) : 0;
+
     const card = document.createElement('div');
-    card.className = 'room-card';
+    card.className = 'room-card' + (completed === count && count > 0 ? ' completed' : '');
     card.onclick = () => openInventoryRoom(idx);
 
     card.innerHTML = `
@@ -320,8 +338,11 @@ function renderInventoryRooms() {
       </div>
       <div class="room-card-name">${room.roomName}</div>
       <div class="room-card-count">${count} artículo${count !== 1 ? 's' : ''}</div>
+      <div class="room-card-completion" style="font-size: 0.75rem; color: #6b7280; margin-top: 4px">
+        ${completed}/${count} completado${count !== 1 ? 's' : ''} (${completionPct}%)
+      </div>
       <div class="room-card-progress">
-        <div class="room-card-progress-bar" style="width: ${count > 0 ? 100 : 0}%; background: ${color}"></div>
+        <div class="room-card-progress-bar" style="width: ${completionPct}%; background: ${color}"></div>
       </div>
     `;
 
@@ -622,6 +643,7 @@ function saveInventoryItem() {
 
   hideAddItemPanel();
   renderInventoryItemList();
+  markUnsavedChanges();
 }
 
 function editInventoryItem(idx) {
@@ -669,6 +691,7 @@ function deleteInventoryItem(idx) {
   inventoryRooms[currentInvRoomIdx].items.splice(idx, 1);
   renderInventoryItemList();
   showToast('🗑️ Artículo eliminado');
+  markUnsavedChanges();
 }
 
 // ── Finalizar inventario y guardar en base de datos ──
@@ -686,6 +709,7 @@ async function finishInventory() {
   inventoryInfo.duration = formatTime(elapsed);
   inventoryInfo.durationMs = elapsed;
   inventoryInfo.type = 'inventory';
+  inventoryInfo.status = 'completed'; // Mark as completed instead of draft
   inventoryInfo.rooms = inventoryRooms;
 
   // Mostrar pantalla de exportación primero (modo inventario)
@@ -695,6 +719,8 @@ async function finishInventory() {
   if (isAPIReady()) {
     try {
       await saveInventory(inventoryInfo);
+      hasUnsavedChanges = false;
+      updateUnsavedIndicator();
       showToast(isEditingInventory ? '✅ Cambios guardados en la nube' : '☁️ Inventario guardado en la nube');
     } catch (err) {
       console.error('Error guardando en base de datos:', err);
@@ -1081,6 +1107,318 @@ async function shareInventoryFiles() {
   }
 }
 
+// ── Autosave ──
+
+function markUnsavedChanges() {
+  hasUnsavedChanges = true;
+  updateUnsavedIndicator();
+  triggerAutosave();
+}
+
+function triggerAutosave() {
+  if (autosaveTimeout) clearTimeout(autosaveTimeout);
+  autosaveTimeout = setTimeout(() => {
+    performAutosave();
+  }, AUTOSAVE_DELAY);
+}
+
+async function performAutosave() {
+  if (!inventoryInfo.unitId || !isEditingInventory) {
+    return; // Only autosave if we're editing an existing inventory or it's properly initialized
+  }
+
+  try {
+    const elapsed = getElapsedTime();
+    const inventoryDoc = {
+      type: 'inventory',
+      status: 'draft', // Save as draft
+      unitId: inventoryInfo.unitId,
+      unitName: inventoryInfo.unitName,
+      date: inventoryInfo.date,
+      auditor: inventoryInfo.auditor,
+      duration: formatTime(elapsed),
+      durationMs: elapsed,
+      rooms: inventoryRooms,
+    };
+
+    if (isAPIReady()) {
+      await saveInventory(inventoryDoc);
+      hasUnsavedChanges = false;
+      updateUnsavedIndicator();
+      console.log('✅ Autosave completado');
+    }
+  } catch (err) {
+    console.error('Error en autosave:', err);
+  }
+}
+
+function updateUnsavedIndicator() {
+  const label = document.getElementById('inv-unit-label');
+  if (label) {
+    if (hasUnsavedChanges) {
+      label.classList.add('unsaved');
+      if (!label.textContent.includes('●')) {
+        label.textContent += ' ●';
+      }
+    } else {
+      label.classList.remove('unsaved');
+      label.textContent = label.textContent.replace(' ●', '');
+    }
+  }
+}
+
+// ── Importar imágenes ──
+
+function showImageImportStep() {
+  showStep('step-inv-image-import');
+  renderImageImportItems();
+  setupImageImportHandlers();
+}
+
+function renderImageImportItems() {
+  const container = document.getElementById('import-items-container');
+  let html = '';
+  inventoryRooms.forEach((room, roomIdx) => {
+    room.items.forEach((item, itemIdx) => {
+      html += `
+        <div class="import-item-card" data-room-idx="${roomIdx}" data-item-idx="${itemIdx}"
+             style="padding: 8px; margin: 5px 0; background: white; border-radius: 6px; cursor: grab; border: 1px solid #e5e7eb">
+          <div style="font-weight: 500; font-size: 13px">${item.name}</div>
+          <div style="font-size: 12px; color: #9ca3af">${room.roomName}</div>
+          <div id="assigned-images-${roomIdx}-${itemIdx}" style="margin-top: 5px; font-size: 11px; color: #10b981"></div>
+        </div>
+      `;
+    });
+  });
+  if (html === '') {
+    html = '<div style="color: #9ca3af; padding: 10px; font-size: 12px">No hay artículos importados</div>';
+  }
+  container.innerHTML = html;
+}
+
+function setupImageImportHandlers() {
+  const btnSelectImages = document.getElementById('btn-select-images');
+  const imageInput = document.getElementById('image-import-input');
+  const dropZone = document.getElementById('import-images-drop');
+
+  btnSelectImages.onclick = () => imageInput.click();
+
+  imageInput.onchange = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          compressImageForImport(event.target.result, file.name, (dataUrl) => {
+            importedImages.push({ file, name: file.name, dataUrl });
+            renderImagePreview();
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    imageInput.value = '';
+  };
+
+  dropZone.ondragover = (e) => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = '#e0f2fe';
+  };
+  dropZone.ondragleave = () => {
+    dropZone.style.backgroundColor = '#f9fafb';
+  };
+  dropZone.ondrop = (e) => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = '#f9fafb';
+    const files = Array.from(e.dataTransfer.files);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          compressImageForImport(event.target.result, file.name, (dataUrl) => {
+            importedImages.push({ file, name: file.name, dataUrl });
+            renderImagePreview();
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  // Item drag handlers
+  document.querySelectorAll('.import-item-card').forEach((card) => {
+    card.ondragstart = (e) => {
+      const roomIdx = card.dataset.roomIdx;
+      const itemIdx = card.dataset.itemIdx;
+      e.dataTransfer.effectAllowed = 'link';
+      e.dataTransfer.setData('application/json', JSON.stringify({ roomIdx: parseInt(roomIdx), itemIdx: parseInt(itemIdx) }));
+    };
+  });
+
+  // Image drop targets
+  const imagePreview = document.getElementById('import-images-preview');
+  imagePreview.ondragover = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'link';
+    imagePreview.style.opacity = '0.5';
+  };
+  imagePreview.ondragleave = () => {
+    imagePreview.style.opacity = '1';
+  };
+  imagePreview.ondrop = (e) => {
+    e.preventDefault();
+    imagePreview.style.opacity = '1';
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      // Not used - images are dropped onto items instead
+    } catch (err) {}
+  };
+
+  // Attach drop handlers to each image thumbnail
+  document.querySelectorAll('.import-image-thumb').forEach((thumb, imgIdx) => {
+    thumb.ondragover = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'link';
+      thumb.style.opacity = '0.5';
+    };
+    thumb.ondragleave = () => {
+      thumb.style.opacity = '1';
+    };
+    thumb.ondrop = (e) => {
+      e.preventDefault();
+      thumb.style.opacity = '1';
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        associateImageToItem(imgIdx, data.roomIdx, data.itemIdx);
+      } catch (err) {
+        console.error('Error associating image:', err);
+      }
+    };
+  });
+
+  // Attach drop handlers to each item card for accepting images
+  document.querySelectorAll('.import-item-card').forEach((card) => {
+    card.ondragover = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'link';
+      card.style.backgroundColor = '#d0f0ff';
+    };
+    card.ondragleave = () => {
+      card.style.backgroundColor = 'white';
+    };
+    card.ondrop = (e) => {
+      e.preventDefault();
+      card.style.backgroundColor = 'white';
+      const roomIdx = parseInt(card.dataset.roomIdx);
+      const itemIdx = parseInt(card.dataset.itemIdx);
+      try {
+        const imgIdx = parseInt(e.dataTransfer.getData('text/plain'));
+        if (!isNaN(imgIdx) && importedImages[imgIdx]) {
+          associateImageToItem(imgIdx, roomIdx, itemIdx);
+        }
+      } catch (err) {}
+    };
+  });
+}
+
+function renderImagePreview() {
+  const preview = document.getElementById('import-images-preview');
+  if (importedImages.length === 0) {
+    preview.innerHTML = '<div style="color: #9ca3af; padding: 20px 10px"><p style="margin: 0; font-size: 12px">Arrastra imágenes aquí</p></div>';
+    return;
+  }
+
+  preview.innerHTML = importedImages.map((img, idx) => `
+    <div class="import-image-thumb" draggable="true" style="display: inline-block; position: relative; margin: 5px; cursor: move">
+      <img src="${img.dataUrl}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb">
+      <button onclick="removeImportedImage(${idx})" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; padding: 0; cursor: pointer; font-size: 12px">×</button>
+      <div style="font-size: 10px; color: #6b7280; max-width: 60px; overflow: hidden; text-overflow: ellipsis; margin-top: 3px">${img.name}</div>
+    </div>
+  `).join('');
+
+  // Re-attach drag handlers
+  document.querySelectorAll('.import-image-thumb').forEach((thumb, imgIdx) => {
+    thumb.ondragstart = (e) => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', imgIdx.toString());
+    };
+    thumb.ondragover = (e) => {
+      e.preventDefault();
+      thumb.style.opacity = '0.5';
+    };
+    thumb.ondragleave = () => {
+      thumb.style.opacity = '1';
+    };
+  });
+}
+
+function removeImportedImage(idx) {
+  importedImages.splice(idx, 1);
+  Object.keys(imageToItemMap).forEach(key => {
+    if (parseInt(key) === idx) {
+      delete imageToItemMap[key];
+    }
+  });
+  renderImagePreview();
+  updateItemAssignments();
+}
+
+function associateImageToItem(imgIdx, roomIdx, itemIdx) {
+  imageToItemMap[imgIdx] = { roomIdx, itemIdx };
+  updateItemAssignments();
+  showToast(`✅ Imagen asociada a "${inventoryRooms[roomIdx].items[itemIdx].name}"`);
+}
+
+function updateItemAssignments() {
+  Object.keys(imageToItemMap).forEach(imgIdx => {
+    const { roomIdx, itemIdx } = imageToItemMap[imgIdx];
+    const assignedDiv = document.getElementById(`assigned-images-${roomIdx}-${itemIdx}`);
+    if (assignedDiv) {
+      const count = Object.values(imageToItemMap).filter(m => m.roomIdx === roomIdx && m.itemIdx === itemIdx).length;
+      assignedDiv.textContent = `📸 ${count} imagen${count !== 1 ? 's' : ''}`;
+    }
+  });
+}
+
+function compressImageForImport(dataUrl, filename, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const maxWidth = 800;
+    const scale = maxWidth / img.width;
+    canvas.width = maxWidth;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    callback(canvas.toDataURL('image/jpeg', 0.7));
+  };
+  img.src = dataUrl;
+}
+
+function proceedWithImages() {
+  // Associate images with items
+  Object.entries(imageToItemMap).forEach(([imgIdx, { roomIdx, itemIdx }]) => {
+    const item = inventoryRooms[roomIdx].items[itemIdx];
+    if (!item.photos) item.photos = [];
+    if (!item.photoTimes) item.photoTimes = [];
+    const img = importedImages[parseInt(imgIdx)];
+    if (img) {
+      item.photos.push(img.dataUrl);
+      item.photoTimes.push(new Date().toISOString());
+    }
+  });
+
+  // Proceed to rooms
+  showStep('step-inv-rooms');
+  renderInventoryRooms();
+  showToast(`✅ ${Object.keys(imageToItemMap).length} imágenes asociadas`);
+}
+
+function skipImageImport() {
+  showStep('step-inv-rooms');
+  renderInventoryRooms();
+}
+
 window.startInventoryMode = startInventoryMode;
 window.showAddRoomModal = showAddRoomModal;
 window.closeAddRoomModal = closeAddRoomModal;
@@ -1101,3 +1439,7 @@ window.finishInventory = finishInventory;
 window.exportInventoryXLSX = exportInventoryXLSX;
 window.exportInventoryPDF = exportInventoryPDF;
 window.shareInventoryFiles = shareInventoryFiles;
+window.showImageImportStep = showImageImportStep;
+window.proceedWithImages = proceedWithImages;
+window.skipImageImport = skipImageImport;
+window.removeImportedImage = removeImportedImage;
