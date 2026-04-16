@@ -1761,6 +1761,7 @@ function renderHistoricoList() {
   const dateFrom = document.getElementById('historico-date-from').value;
   const dateTo = document.getElementById('historico-date-to').value;
   const sort = document.getElementById('historico-sort').value;
+  const statusFilter = document.getElementById('historico-status-filter').value;
 
   // Filter (exclude onboarding — shown in its own folder)
   let records = _allRecords.filter(r => {
@@ -1768,6 +1769,7 @@ function renderHistoricoList() {
     if (search && !(r.unitName || '').toLowerCase().includes(search)) return false;
     if (dateFrom && r.date && r.date < dateFrom) return false;
     if (dateTo && r.date && r.date > dateTo) return false;
+    if (statusFilter !== 'all' && r.status !== statusFilter) return false;
     return true;
   });
 
@@ -1866,7 +1868,7 @@ function openOnboardingHistorico() {
       <div class="historico-record-card" onclick="viewOnboardingRecord('${safeId}')">
         <span class="material-symbols-rounded historico-record-icon onboarding">home_work</span>
         <div class="historico-record-info">
-          <div class="historico-record-type">Onboarding${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}</div>
+          <div class="historico-record-type">Onboarding${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}${r.status === 'draft' ? '<span class="draft-badge">Borrador</span>' : ''}</div>
           <div class="historico-record-meta">${r.unitName} · ${dateStr} · ${r.auditor || 'Sin responsable'}</div>
         </div>
         <div class="unit-card-actions">
@@ -1920,7 +1922,7 @@ function openHistoricoUnit(unitName) {
       <div class="historico-record-card" onclick="${clickFn}">
         <span class="material-symbols-rounded historico-record-icon ${r.type}">${icon}</span>
         <div class="historico-record-info">
-          <div class="historico-record-type">${typeLabel}${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}</div>
+          <div class="historico-record-type">${typeLabel}${r.versionCount > 0 ? `<span class="version-badge">v${r.versionCount + 1}</span>` : ''}${r.status === 'draft' ? '<span class="draft-badge">Borrador</span>' : ''}</div>
           <div class="historico-record-meta">${dateStr} · ${detail} · ${r.auditor || 'Sin responsable'}</div>
         </div>
         <div class="unit-card-actions">

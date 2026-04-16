@@ -850,6 +850,11 @@
             <option value="az">A → Z</option>
             <option value="za">Z → A</option>
           </select>
+          <select id="historico-status-filter" onchange="filterHistorico()">
+            <option value="all">Todos</option>
+            <option value="draft">Borradores</option>
+            <option value="completed">Completados</option>
+          </select>
         </div>
       </div>
       <div id="historico-list" class="historico-list" style="display:none;"></div>

@@ -176,6 +176,7 @@ app.get('/api/records', async (req, res) => {
         completedCount,
         sourceUnitId: d.sourceUnitId || null,
         versionCount: (d.versions || []).length,
+        status: d.status || 'completed',
       };
     });
 
