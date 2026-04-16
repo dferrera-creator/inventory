@@ -539,6 +539,11 @@ let currentItemIndex = 0;
 let SECTIONS = []; // se construye dinámicamente
 let _autoAdvanceTimer = null;
 
+// Autosave state
+let _inspectionHasUnsavedChanges = false;
+let _inspectionAutosaveTimeout = null;
+const INSPECTION_AUTOSAVE_DELAY = 500; // milliseconds
+
 function cancelAutoAdvance() {
   if (_autoAdvanceTimer) {
     clearTimeout(_autoAdvanceTimer);
@@ -598,6 +603,42 @@ function formatTime(ms) {
     return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// ── Inspection Autosave ──
+
+function markInspectionUnsavedChanges() {
+  _inspectionHasUnsavedChanges = true;
+  triggerInspectionAutosave();
+}
+
+function triggerInspectionAutosave() {
+  if (_inspectionAutosaveTimeout) clearTimeout(_inspectionAutosaveTimeout);
+  _inspectionAutosaveTimeout = setTimeout(() => {
+    performInspectionAutosave();
+  }, INSPECTION_AUTOSAVE_DELAY);
+}
+
+async function performInspectionAutosave() {
+  if (!_sourceUnitId || !window._editingInspectionId) {
+    return; // Only autosave if we're editing or have a source
+  }
+
+  try {
+    const elapsed = timerElapsed + (timerStartTime ? (Date.now() - timerStartTime) : 0);
+    const inspDoc = buildInspectionDocument();
+    inspDoc.durationMs = elapsed;
+    inspDoc.duration = formatTime(elapsed);
+    inspDoc.status = 'draft'; // Save as draft
+
+    if (isAPIReady()) {
+      await updateInspectionResult(window._editingInspectionId, inspDoc);
+      _inspectionHasUnsavedChanges = false;
+      console.log('✅ Inspection autosave completed');
+    }
+  } catch (err) {
+    console.error('Error in inspection autosave:', err);
+  }
 }
 
 function getElapsedTime() {
@@ -2148,6 +2189,7 @@ function setStatus(status) {
     inspectionData[key] = { qty: item.qty };
   }
   inspectionData[key].status = status;
+  markInspectionUnsavedChanges();
 
   const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing' };
   document.querySelectorAll('#status-grid .status-btn').forEach(btn => {
@@ -2203,6 +2245,7 @@ function handlePhoto(input) {
       renderPhotos(key);
       document.querySelector('.camera-btn').classList.add('has-content');
       showToast('📷 Foto agregada');
+      markInspectionUnsavedChanges();
     });
   };
   reader.readAsDataURL(file);

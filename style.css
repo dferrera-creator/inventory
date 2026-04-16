@@ -3766,3 +3766,16 @@ body {
   font-size: 1.3rem;
 }
 
+
+/* ── Unsaved changes indicator ── */
+#inv-unit-label.unsaved {
+  color: #ef4444;
+}
+
+.import-item-card {
+  transition: background-color 0.2s;
+}
+
+.import-image-thumb {
+  transition: opacity 0.2s;
+}
