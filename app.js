@@ -619,6 +619,45 @@ function triggerInspectionAutosave() {
   }, INSPECTION_AUTOSAVE_DELAY);
 }
 
+function buildInspectionDocument() {
+  const total = getTotalItems();
+  const completed = getTotalCompleted();
+  const elapsed = getElapsedTime();
+  const editingId = window._editingInspectionId || null;
+
+  return {
+    type: 'inspection',
+    unitId: editingId || ('insp-' + Date.now()),
+    sourceUnitId: inspectionInfo.sourceUnitId || null,
+    unitName: inspectionInfo.location,
+    date: inspectionInfo.date,
+    auditor: inspectionInfo.auditor,
+    duration: formatTime(elapsed),
+    durationMs: elapsed,
+    totalItems: total,
+    completedItems: completed,
+    rooms: SECTIONS.map(section => ({
+      roomId: section.id,
+      roomName: section.name,
+      items: section.items.map((item, idx) => {
+        const key = `${section.id}-${idx}`;
+        const d = inspectionData[key] || {};
+        return {
+          itemId: item.inventoryItemId || `${section.id}-${idx}`,
+          name: item.name,
+          sku: item.sub || '',
+          price: item.price || 0,
+          qty: d.qty !== undefined ? d.qty : item.qty,
+          status: d.status || null,
+          notes: d.observations || '',
+          photos: d.photos || [],
+          photoTimes: d.photoTimes || [],
+        };
+      }),
+    })),
+  };
+}
+
 async function performInspectionAutosave() {
   if (!_sourceUnitId || !window._editingInspectionId) {
     return; // Only autosave if we're editing or have a source
