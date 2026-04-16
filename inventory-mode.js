@@ -25,6 +25,10 @@ let imageToItemMap = {};         // { imageIdx: { roomIdx, itemIdx } }
 let hasUnsavedChanges = false;
 let autosaveTimeout = null;
 const AUTOSAVE_DELAY = 500; // milliseconds
+let autosaveState = 'idle'; // 'idle', 'saving', 'success', 'error'
+let lastAutosaveTime = null;
+let autosaveErrorMessage = null;
+let autosaveHideTimeout = null;
 
 // ── Sugerencias de cuartos ──
 const ROOM_SUGGESTIONS = [
@@ -1127,6 +1131,8 @@ async function performAutosave() {
     return; // Only autosave if we're editing an existing inventory or it's properly initialized
   }
 
+  updateAutosaveIndicator('saving');
+
   try {
     const elapsed = getElapsedTime();
     const inventoryDoc = {
@@ -1145,10 +1151,14 @@ async function performAutosave() {
       await saveInventory(inventoryDoc);
       hasUnsavedChanges = false;
       updateUnsavedIndicator();
+      lastAutosaveTime = new Date();
+      updateAutosaveIndicator('success');
       console.log('✅ Autosave completado');
     }
   } catch (err) {
     console.error('Error en autosave:', err);
+    autosaveErrorMessage = err.message || 'Error al guardar';
+    updateAutosaveIndicator('error');
   }
 }
 
@@ -1164,6 +1174,37 @@ function updateUnsavedIndicator() {
       label.classList.remove('unsaved');
       label.textContent = label.textContent.replace(' ●', '');
     }
+  }
+}
+
+function updateAutosaveIndicator(state) {
+  const indicator = document.getElementById('autosave-indicator');
+  const statusText = document.getElementById('autosave-status-text');
+  if (!indicator || !statusText) return;
+
+  if (autosaveHideTimeout) clearTimeout(autosaveHideTimeout);
+
+  autosaveState = state;
+  indicator.className = 'autosave-indicator active ' + state;
+
+  switch (state) {
+    case 'saving':
+      statusText.textContent = 'Guardando...';
+      break;
+    case 'success':
+      statusText.textContent = 'Guardado';
+      autosaveHideTimeout = setTimeout(() => {
+        indicator.classList.remove('active');
+      }, 2000);
+      break;
+    case 'error':
+      statusText.textContent = 'Error al guardar';
+      indicator.title = autosaveErrorMessage || 'Haz clic para reintentar';
+      indicator.onclick = () => performAutosave();
+      break;
+    case 'idle':
+      indicator.classList.remove('active');
+      break;
   }
 }
 

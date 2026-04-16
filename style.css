@@ -3772,6 +3772,89 @@ body {
   color: #ef4444;
 }
 
+/* ── Auto-save indicator ── */
+.inv-header-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.autosave-indicator {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.autosave-indicator.active {
+  opacity: 1;
+}
+
+.autosave-indicator.saving {
+  color: #3b82f6;
+}
+
+.autosave-indicator.success {
+  color: #10b981;
+}
+
+.autosave-indicator.error {
+  color: #ef4444;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.autosave-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+}
+
+.autosave-indicator.saving .autosave-spinner {
+  border: 2px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.autosave-indicator.success .autosave-spinner {
+  color: #10b981;
+  font-family: 'Material Symbols Rounded';
+  font-size: 0;
+}
+
+.autosave-indicator.success .autosave-spinner::before {
+  content: '✓';
+  font-size: 12px;
+  display: inline-block;
+}
+
+.autosave-indicator.error .autosave-spinner {
+  color: #ef4444;
+  font-size: 0;
+}
+
+.autosave-indicator.error .autosave-spinner::before {
+  content: '✕';
+  font-size: 12px;
+  display: inline-block;
+}
+
+.autosave-indicator.idle .autosave-spinner {
+  display: none;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .import-item-card {
   transition: background-color 0.2s;
 }
