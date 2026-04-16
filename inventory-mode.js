@@ -1126,6 +1126,11 @@ function triggerAutosave() {
   }, AUTOSAVE_DELAY);
 }
 
+function manualSaveInventory() {
+  if (autosaveTimeout) clearTimeout(autosaveTimeout);
+  performAutosave();
+}
+
 async function performAutosave() {
   if (!inventoryInfo.unitId || !isEditingInventory) {
     return; // Only autosave if we're editing an existing inventory or it's properly initialized
@@ -1476,6 +1481,7 @@ window.removeInvPhoto = removeInvPhoto;
 window.saveInventoryItem = saveInventoryItem;
 window.editInventoryItem = editInventoryItem;
 window.deleteInventoryItem = deleteInventoryItem;
+window.manualSaveInventory = manualSaveInventory;
 window.finishInventory = finishInventory;
 window.exportInventoryXLSX = exportInventoryXLSX;
 window.exportInventoryPDF = exportInventoryPDF;

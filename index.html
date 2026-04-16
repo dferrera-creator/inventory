@@ -420,9 +420,14 @@
         <h2>Cuartos</h2>
         <div class="inv-header-bottom">
           <p class="inv-unit-label" id="inv-unit-label"></p>
-          <div id="autosave-indicator" class="autosave-indicator">
-            <span class="autosave-spinner"></span>
-            <span id="autosave-status-text">Guardando...</span>
+          <div class="inv-header-actions">
+            <button class="btn-save-now" onclick="manualSaveInventory()" title="Guardar ahora">
+              <span class="material-symbols-rounded">save</span>
+            </button>
+            <div id="autosave-indicator" class="autosave-indicator">
+              <span class="autosave-spinner"></span>
+              <span id="autosave-status-text">Guardando...</span>
+            </div>
           </div>
         </div>
       </div>
