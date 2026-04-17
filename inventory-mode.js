@@ -12,23 +12,11 @@ let inventoryRooms = [];        // [{ roomId, roomName, items: [...] }]
 let currentInvRoomIdx = 0;
 let currentAddItemPhotos = [];
 let currentAddItemPhotoTimes = [];
+let importPhotoMap = {};        // { lowercaseFilename: base64DataUrl }
 let newItemQty = 1;
 let newItemStatus = null;
 let editingItemIdx = null;      // null = nuevo, número = editando existente
 let isEditingInventory = false; // true when loading an existing saved inventory
-
-// Image import state
-let importedImages = [];         // [{ file, name, dataUrl }]
-let imageToItemMap = {};         // { imageIdx: { roomIdx, itemIdx } }
-
-// Autosave state
-let hasUnsavedChanges = false;
-let autosaveTimeout = null;
-const AUTOSAVE_DELAY = 500; // milliseconds
-let autosaveState = 'idle'; // 'idle', 'saving', 'success', 'error'
-let lastAutosaveTime = null;
-let autosaveErrorMessage = null;
-let autosaveHideTimeout = null;
 
 // ── Sugerencias de cuartos ──
 const ROOM_SUGGESTIONS = [
@@ -78,164 +66,430 @@ function getRoomItemSuggestions(roomName) {
 
 // ── Descargar plantilla XLSX ──
 
-function downloadXLSXTemplate() {
-  if (typeof XLSX === 'undefined') {
-    showToast('⏳ Cargando Excel, intenta de nuevo...');
+function _makePlaceholderPhotoBase64() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 160;
+  canvas.height = 120;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#e5e7eb';
+  ctx.fillRect(0, 0, 160, 120);
+
+  // Camera body
+  ctx.fillStyle = '#9ca3af';
+  ctx.beginPath();
+  ctx.roundRect(30, 40, 100, 65, 8);
+  ctx.fill();
+
+  // Viewfinder bump
+  ctx.fillStyle = '#9ca3af';
+  ctx.fillRect(55, 30, 50, 18);
+  ctx.beginPath();
+  ctx.roundRect(55, 28, 50, 18, 4);
+  ctx.fill();
+
+  // Lens ring
+  ctx.beginPath();
+  ctx.arc(80, 72, 22, 0, Math.PI * 2);
+  ctx.fillStyle = '#6b7280';
+  ctx.fill();
+
+  // Lens inner
+  ctx.beginPath();
+  ctx.arc(80, 72, 15, 0, Math.PI * 2);
+  ctx.fillStyle = '#374151';
+  ctx.fill();
+
+  // Lens highlight
+  ctx.beginPath();
+  ctx.arc(74, 66, 5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fill();
+
+  // Flash
+  ctx.fillStyle = '#d1d5db';
+  ctx.beginPath();
+  ctx.roundRect(108, 47, 12, 8, 3);
+  ctx.fill();
+
+  // Label
+  ctx.fillStyle = '#6b7280';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('FOTO EJEMPLO', 80, 115);
+
+  return canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+}
+
+async function downloadXLSXTemplate() {
+  if (typeof ExcelJS === 'undefined') {
+    showToast('⏳ Cargando librería, intenta de nuevo...');
     return;
   }
 
-  const wb = XLSX.utils.book_new();
+  showToast('⏳ Generando plantilla...');
+  const placeholderB64 = _makePlaceholderPhotoBase64();
 
-  // === Sheet 1: Format A (single flat sheet with Cuarto column) ===
-  const flatData = [
-    ['Cuarto', 'Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
-    ['Cocina', 'Refrigerador', 'SKU-001', 8500, 1, 'Bueno', 'Samsung 15 pies'],
-    ['Cocina', 'Estufa', 'SKU-002', 5200, 1, 'Bueno', '4 quemadores'],
-    ['Cocina', 'Microondas', 'SKU-003', 1800, 1, 'Bueno', ''],
-    ['Sala', 'Sofá 3 plazas', 'SKU-010', 12000, 1, 'Bueno', 'Color gris'],
-    ['Sala', 'Mesa de centro', 'SKU-011', 3500, 1, 'Dañado', 'Rayada esquina derecha'],
-    ['Dormitorio 1', 'Cama matrimonial', 'SKU-020', 9000, 1, 'Bueno', 'Con colchón incluido'],
-    ['Dormitorio 1', 'Buró', 'SKU-021', 1500, 2, 'Bueno', ''],
-    ['Baño', 'Toallero', 'SKU-030', 450, 1, 'Bueno', ''],
-    ['Baño', 'Tapete de baño', 'SKU-031', 280, 1, 'Nuevo', 'Recién colocado'],
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Del Mar';
+
+  const PHOTO_COL = 8; // column H = Fotos (1-based)
+  const PHOTO_COL_IDX = PHOTO_COL - 1; // 0-based for addImage
+
+  function styleHeader(row) {
+    row.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FF1E3A5F' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FE' } };
+      cell.border = { bottom: { style: 'thin', color: { argb: 'FF2563EB' } } };
+    });
+  }
+
+  function addPhotoExample(ws, dataRowNumber) {
+    const imgId = workbook.addImage({ base64: placeholderB64, extension: 'jpeg' });
+    ws.addImage(imgId, {
+      tl: { col: PHOTO_COL_IDX, row: dataRowNumber - 1 },
+      br: { col: PHOTO_COL_IDX + 1, row: dataRowNumber },
+      editAs: 'oneCell',
+    });
+    ws.getRow(dataRowNumber).height = 70;
+  }
+
+  // === Sheet 1: Formato Plano (Recomendado) ===
+  const ws1 = workbook.addWorksheet('Formato Plano (Recomendado)');
+  ws1.columns = [
+    { header: 'Cuarto',    key: 'cuarto',    width: 18 },
+    { header: 'Nombre',    key: 'nombre',    width: 26 },
+    { header: 'SKU',       key: 'sku',       width: 14 },
+    { header: 'Precio',    key: 'precio',    width: 12 },
+    { header: 'Cantidad',  key: 'cantidad',  width: 12 },
+    { header: 'Estado',    key: 'estado',    width: 14 },
+    { header: 'Notas',     key: 'notas',     width: 32 },
+    { header: 'Fotos',     key: 'fotos',     width: 42 },
   ];
-  const ws1 = XLSX.utils.aoa_to_sheet(flatData);
-  ws1['!cols'] = [16, 22, 12, 10, 10, 12, 28].map(w => ({ wch: w }));
-  XLSX.utils.book_append_sheet(wb, ws1, 'Formato Plano (Recomendado)');
+  styleHeader(ws1.getRow(1));
 
-  // === Sheet 2: Format B (multi-sheet — one sheet per room) ===
-  const roomSheets = [
+  const flatRows = [
+    ['Cocina', 'Refrigerador Samsung', 'SKU-001', 8500, 1, 'Bueno', 'Samsung 15 pies con hielo', null],
+    ['Cocina', 'Estufa Whirlpool',     'SKU-002', 5200, 1, 'Bueno', '4 quemadores, horno eléctrico', null],
+    ['Cocina', 'Microondas LG',        'SKU-003', 1800, 1, 'Bueno', '1.2 kW, 20 litros', null],
+    ['Cocina', 'Mesa de cocina',       'SKU-004', 2500, 1, 'Dañado', 'Arañazo en superficie', null],
+    ['Sala',   'Sofá 3 plazas',        'SKU-010', 12000, 1, 'Bueno', 'Color gris, tela resistente', null],
+    ['Sala',   'Mesa de centro',       'SKU-011', 3500, 1, 'Dañado', 'Rayada en esquina derecha', null],
+    ['Sala',   'Televisión 55"',       'SKU-012', 8000, 1, 'Bueno', 'Samsung Smart TV 4K', null],
+    ['Dormitorio 1', 'Cama matrimonial', 'SKU-020', 9000, 1, 'Bueno', 'Con colchón orthopédico', null],
+    ['Dormitorio 1', 'Buró',           'SKU-021', 1500, 2, 'Bueno', 'Color caoba, 2 gavetas', null],
+    ['Dormitorio 1', 'Ropero',         'SKU-022', 6500, 1, 'Nuevo', 'Recién instalado', null],
+    ['Baño', 'Lavamanos',              'SKU-030', 1200, 1, 'Bueno', 'Porcelana blanca', null],
+    ['Baño', 'Espejo',                 'SKU-031', 800,  1, 'Nuevo', 'Marco cromado, 60x80 cm', null],
+    ['Baño', 'Toallero',               'SKU-032', 450,  1, 'Bueno', 'Acero inoxidable', null],
+    ['Baño', 'Tapete de baño',         'SKU-033', 280,  1, 'Nuevo', 'Color azul, recién colocado', null],
+  ];
+  flatRows.forEach(r => ws1.addRow(r));
+
+  // Embed placeholder photo in row 2 (first data row = Refrigerador) and row 6 (Sofá)
+  addPhotoExample(ws1, 2);
+  addPhotoExample(ws1, 6);
+
+  // === Sheets 2–5: Multi-sheet format ===
+  const roomData = [
     { name: 'Cocina', rows: [
-      ['Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
-      ['Refrigerador', 'SKU-001', 8500, 1, 'Bueno', 'Samsung 15 pies'],
-      ['Estufa', 'SKU-002', 5200, 1, 'Bueno', '4 quemadores'],
-      ['Microondas', 'SKU-003', 1800, 1, 'Bueno', ''],
+      ['Refrigerador Samsung', 'SKU-001', 8500, 1, 'Bueno', 'Samsung 15 pies con hielo'],
+      ['Estufa Whirlpool',     'SKU-002', 5200, 1, 'Bueno', '4 quemadores, horno eléctrico'],
+      ['Microondas LG',        'SKU-003', 1800, 1, 'Bueno', '1.2 kW, 20 litros'],
+      ['Mesa de cocina',       'SKU-004', 2500, 1, 'Dañado', 'Arañazo en superficie'],
     ]},
     { name: 'Sala', rows: [
-      ['Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
-      ['Sofá 3 plazas', 'SKU-010', 12000, 1, 'Bueno', 'Color gris'],
-      ['Mesa de centro', 'SKU-011', 3500, 1, 'Dañado', 'Rayada esquina derecha'],
+      ['Sofá 3 plazas',  'SKU-010', 12000, 1, 'Bueno', 'Color gris, tela resistente'],
+      ['Mesa de centro', 'SKU-011', 3500,  1, 'Dañado', 'Rayada en esquina derecha'],
+      ['Televisión 55"', 'SKU-012', 8000,  1, 'Bueno', 'Samsung Smart TV 4K'],
     ]},
     { name: 'Dormitorio 1', rows: [
-      ['Nombre', 'SKU', 'Precio', 'Cantidad', 'Estado', 'Notas'],
-      ['Cama matrimonial', 'SKU-020', 9000, 1, 'Bueno', 'Con colchón incluido'],
-      ['Buró', 'SKU-021', 1500, 2, 'Bueno', ''],
+      ['Cama matrimonial', 'SKU-020', 9000, 1, 'Bueno', 'Con colchón orthopédico'],
+      ['Buró',             'SKU-021', 1500, 2, 'Bueno', 'Color caoba, 2 gavetas'],
+      ['Ropero',           'SKU-022', 6500, 1, 'Nuevo', 'Recién instalado'],
+    ]},
+    { name: 'Baño', rows: [
+      ['Lavamanos',      'SKU-030', 1200, 1, 'Bueno', 'Porcelana blanca'],
+      ['Espejo',         'SKU-031', 800,  1, 'Nuevo', 'Marco cromado, 60x80 cm'],
+      ['Toallero',       'SKU-032', 450,  1, 'Bueno', 'Acero inoxidable'],
+      ['Tapete de baño', 'SKU-033', 280,  1, 'Nuevo', 'Color azul, recién colocado'],
     ]},
   ];
-  roomSheets.forEach(({ name, rows }) => {
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [22, 12, 10, 10, 12, 28].map(w => ({ wch: w }));
-    XLSX.utils.book_append_sheet(wb, ws, name);
+
+  roomData.forEach(({ name, rows }) => {
+    const ws = workbook.addWorksheet(name);
+    ws.columns = [
+      { header: 'Nombre',   key: 'nombre',   width: 26 },
+      { header: 'SKU',      key: 'sku',       width: 14 },
+      { header: 'Precio',   key: 'precio',    width: 12 },
+      { header: 'Cantidad', key: 'cantidad',  width: 12 },
+      { header: 'Estado',   key: 'estado',    width: 14 },
+      { header: 'Notas',    key: 'notas',     width: 32 },
+      { header: 'Fotos',    key: 'fotos',     width: 42 },
+    ];
+    styleHeader(ws.getRow(1));
+    rows.forEach(r => ws.addRow([...r, null]));
+    // Embed placeholder in first data row of each room sheet
+    addPhotoExample(ws, 2);
   });
 
-  // === Sheet 3: Estado values reference ===
-  const estadoData = [
-    ['Estado (valor en Excel)', 'Significado'],
-    ['Bueno', 'El artículo está en buenas condiciones'],
-    ['Dañado', 'El artículo tiene daños visibles'],
-    ['Faltante', 'El artículo no está presente'],
-    ['Nuevo', 'Artículo nuevo o recién adquirido'],
-    ['(dejar vacío)', 'Sin estado registrado'],
+  // === Guide sheet ===
+  const wsGuide = workbook.addWorksheet('Cómo Agregar Fotos');
+  const guideLines = [
+    ['GUÍA: Cómo AGREGAR FOTOS a tu Inventario'],
+    [''],
+    ['OPCIÓN A — Insertar imagen directamente en la celda (más fácil):'],
+    ['  1. En Excel: selecciona la celda en la columna "Fotos"'],
+    ['  2. Menú Insertar → Imagen → Insertar imagen en celda'],
+    ['  3. Elige la foto del artículo'],
+    ['  4. Guarda el archivo e impórtalo en la app'],
+    ['  → La app extrae las fotos automáticamente'],
+    [''],
+    ['OPCIÓN B — Referenciar fotos por nombre de archivo:'],
+    ['  1. Toma fotos y guárdalas con nombres descriptivos'],
+    ['     Ejemplo: "refrigerador.jpg", "sofa-frente.jpg"'],
+    ['  2. En la columna "Fotos" escribe el nombre del archivo'],
+    ['     Para varias fotos: "foto1.jpg, foto2.jpg"'],
+    ['  3. En la app toca "Agregar Fotos" y selecciona los archivos'],
+    ['  4. Luego importa el Excel → las fotos se asignan automáticamente'],
+    [''],
+    ['NOTA: Ambas opciones se pueden combinar en el mismo archivo.'],
   ];
-  const ws3 = XLSX.utils.aoa_to_sheet(estadoData);
-  ws3['!cols'] = [26, 40].map(w => ({ wch: w }));
-  XLSX.utils.book_append_sheet(wb, ws3, 'Valores de Estado');
+  guideLines.forEach(([text]) => {
+    const row = wsGuide.addRow([text || '']);
+    if (text && text.startsWith('GUÍA')) {
+      row.getCell(1).font = { bold: true, size: 13, color: { argb: 'FF1E3A5F' } };
+    } else if (text && (text.startsWith('OPCIÓN') || text.startsWith('NOTA'))) {
+      row.getCell(1).font = { bold: true };
+    }
+  });
+  wsGuide.getColumn(1).width = 65;
 
-  XLSX.writeFile(wb, 'Plantilla_Inventario_DelMar.xlsx');
+  // === Estado reference sheet ===
+  const wsEstado = workbook.addWorksheet('Valores de Estado');
+  wsEstado.columns = [
+    { header: 'Estado (valor en Excel)', width: 28 },
+    { header: 'Significado',             width: 44 },
+  ];
+  styleHeader(wsEstado.getRow(1));
+  [
+    ['Bueno',         'El artículo está en buenas condiciones'],
+    ['Dañado',        'El artículo tiene daños visibles'],
+    ['Faltante',      'El artículo no está presente'],
+    ['Nuevo',         'Artículo nuevo o recién adquirido'],
+    ['(dejar vacío)', 'Sin estado registrado'],
+  ].forEach(r => wsEstado.addRow(r));
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Plantilla_Inventario_DelMar.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
   showToast('📥 Plantilla descargada');
 }
 
 // ── Importar inventario desde XLSX ──
-// Formato esperado: Hoja única o múltiples hojas (una por cuarto)
-// Columnas: Cuarto | Nombre | SKU | Precio | Cantidad | Estado | Notas
-// Si hay múltiples hojas, el nombre de la hoja = nombre del cuarto
+// Soporta imágenes insertadas directamente en celdas (ExcelJS extrae automáticamente)
+// Formato: Hoja única con columna "Cuarto", o múltiples hojas (una por cuarto)
+// Columnas: Cuarto | Nombre | SKU | Precio | Cantidad | Estado | Notas | Fotos(opcional)
 
-function importInventoryFromXLSX(input) {
+async function importInventoryFromXLSX(input) {
   const file = input.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'array' });
-      const rooms = [];
-
-      if (wb.SheetNames.length === 1) {
-        // Single-sheet format: needs "Cuarto" column
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        const roomMap = {};
-        rows.forEach(row => {
-          const roomName = (row['Cuarto'] || row['Room'] || row['cuarto'] || row['room'] || '').toString().trim();
-          const itemName = (row['Nombre'] || row['Name'] || row['nombre'] || row['name'] || row['Artículo'] || row['articulo'] || '').toString().trim();
-          if (!roomName || !itemName) return;
-          if (!roomMap[roomName]) roomMap[roomName] = [];
-          roomMap[roomName].push(parseRowToItem(row));
-        });
-        Object.entries(roomMap).forEach(([roomName, items]) => {
-          rooms.push(makeImportRoom(roomName, items));
-        });
-      } else {
-        // Multi-sheet format: each sheet = a room
-        wb.SheetNames.forEach(sheetName => {
-          const sheet = wb.Sheets[sheetName];
-          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-          const items = rows
-            .map(row => parseRowToItem(row))
-            .filter(i => i.name);
-          if (items.length > 0) {
-            rooms.push(makeImportRoom(sheetName, items));
-          }
-        });
-      }
-
-      if (rooms.length === 0) {
-        showToast('⚠️ No se encontraron datos en el archivo');
-        input.value = '';
-        return;
-      }
-
-      // Derive unit name from filename
-      const unitName = file.name.replace(/\.(xlsx|xls)$/i, '').replace(/[_-]/g, ' ');
-      const today = new Date();
-      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-      inventoryInfo = {
-        unitId: unitName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now(),
-        unitName,
-        date: dateStr,
-        auditor: document.getElementById('inv-auditor').value.trim() || '',
-      };
-      inventoryRooms = rooms;
-      isEditingInventory = false;
-      importedImages = [];
-      imageToItemMap = {};
-
-      // Pre-fill form fields
-      document.getElementById('inv-unit-name').value = unitName;
-      document.getElementById('inv-date').value = dateStr;
-
-      startTimer();
-      document.getElementById('inv-unit-label').textContent = unitName;
-
-      const totalItems = rooms.reduce((s, r) => s + r.items.length, 0);
-      showToast(`✅ Importado: ${rooms.length} cuartos, ${totalItems} artículos`);
-
-      // Show image import step
-      showImageImportStep();
-    } catch (err) {
-      console.error('Error importando XLSX:', err);
-      showToast('❌ Error al leer el archivo Excel');
-    }
+  if (typeof ExcelJS === 'undefined') {
+    showToast('⏳ Cargando librería, intenta de nuevo...');
     input.value = '';
-  };
-  reader.readAsArrayBuffer(file);
+    return;
+  }
+
+  showToast('⏳ Leyendo archivo...');
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(arrayBuffer);
+
+    const rooms = [];
+    const sheetNames = workbook.worksheets.map(ws => ws.name);
+
+    // Filter out guide/reference sheets (non-data sheets)
+    const dataSheets = workbook.worksheets.filter(ws => {
+      const n = ws.name.toLowerCase();
+      return !n.includes('estado') && !n.includes('guía') && !n.includes('guia') &&
+             !n.includes('fotos') && !n.includes('valores') && !n.includes('referencia');
+    });
+
+    // Build a per-sheet map of rowNumber -> [base64 images] from embedded images
+    function buildImageMapForSheet(ws) {
+      const map = {}; // rowNumber (1-based) -> [base64DataUrl, ...]
+      const images = ws.getImages ? ws.getImages() : [];
+      images.forEach(img => {
+        const imageData = workbook.getImage(img.imageId);
+        if (!imageData || !imageData.buffer) return;
+        const ext = (imageData.extension || 'jpeg').replace('jpg', 'jpeg');
+        const b64 = _arrayBufferToBase64(imageData.buffer);
+        const dataUrl = `data:image/${ext};base64,${b64}`;
+        // nativeRowFrom is 0-based; +1 to match ExcelJS row numbers (1-based)
+        const row = (img.range.tl.nativeRowFrom || img.range.tl.row || 0) + 1;
+        if (!map[row]) map[row] = [];
+        map[row].push(dataUrl);
+      });
+      return map;
+    }
+
+    if (dataSheets.length === 1 && _sheetHasCuartoColumn(dataSheets[0])) {
+      // Single-sheet flat format
+      const ws = dataSheets[0];
+      const imgMap = buildImageMapForSheet(ws);
+      const headerRow = ws.getRow(1);
+      const headers = _extractHeaders(headerRow);
+      const roomMap = {};
+      ws.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // skip header
+        const rowData = _rowToObject(row, headers);
+        const roomName = (rowData['Cuarto'] || rowData['Room'] || '').toString().trim();
+        const itemName = (rowData['Nombre'] || rowData['Name'] || rowData['Artículo'] || '').toString().trim();
+        if (!roomName || !itemName) return;
+        if (!roomMap[roomName]) roomMap[roomName] = [];
+        const item = parseRowToItem(rowData);
+        // Merge embedded images (prepend before any filename-matched photos)
+        const embeddedPhotos = (imgMap[rowNumber] || []);
+        item.photos = [...embeddedPhotos, ...item.photos];
+        item.photoTimes = [
+          ...embeddedPhotos.map(() => new Date().toISOString()),
+          ...item.photoTimes,
+        ];
+        roomMap[roomName].push(item);
+      });
+      Object.entries(roomMap).forEach(([roomName, items]) => {
+        rooms.push(makeImportRoom(roomName, items));
+      });
+    } else {
+      // Multi-sheet format: each sheet = a room
+      dataSheets.forEach(ws => {
+        const imgMap = buildImageMapForSheet(ws);
+        const headerRow = ws.getRow(1);
+        const headers = _extractHeaders(headerRow);
+        const items = [];
+        ws.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+          const rowData = _rowToObject(row, headers);
+          const itemName = (rowData['Nombre'] || rowData['Name'] || rowData['Artículo'] || '').toString().trim();
+          if (!itemName) return;
+          const item = parseRowToItem(rowData);
+          const embeddedPhotos = (imgMap[rowNumber] || []);
+          item.photos = [...embeddedPhotos, ...item.photos];
+          item.photoTimes = [
+            ...embeddedPhotos.map(() => new Date().toISOString()),
+            ...item.photoTimes,
+          ];
+          items.push(item);
+        });
+        if (items.length > 0) rooms.push(makeImportRoom(ws.name, items));
+      });
+    }
+
+    if (rooms.length === 0) {
+      showToast('⚠️ No se encontraron datos en el archivo');
+      input.value = '';
+      return;
+    }
+
+    const unitName = file.name.replace(/\.(xlsx|xls)$/i, '').replace(/[_-]/g, ' ');
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    inventoryInfo = {
+      unitId: unitName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') + '-' + Date.now(),
+      unitName,
+      date: dateStr,
+      auditor: document.getElementById('inv-auditor').value.trim() || '',
+    };
+    inventoryRooms = rooms;
+    isEditingInventory = false;
+
+    document.getElementById('inv-unit-name').value = unitName;
+    document.getElementById('inv-date').value = dateStr;
+    startTimer();
+    document.getElementById('inv-unit-label').textContent = unitName;
+    showStep('step-inv-rooms');
+    renderInventoryRooms();
+
+    const totalItems = rooms.reduce((s, r) => s + r.items.length, 0);
+    const totalPhotos = rooms.reduce((s, r) => s + r.items.reduce((ss, i) => ss + i.photos.length, 0), 0);
+    const photoMsg = totalPhotos > 0 ? `, ${totalPhotos} fotos` : '';
+    showToast(`✅ Importado: ${rooms.length} cuartos, ${totalItems} artículos${photoMsg}`);
+
+    importPhotoMap = {};
+    document.getElementById('import-photos-label').textContent = 'Agregar Fotos';
+  } catch (err) {
+    console.error('Error importando XLSX:', err);
+    showToast('❌ Error al leer el archivo Excel');
+  }
+  input.value = '';
+}
+
+// ── Helpers for ExcelJS import ──
+
+function _arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function _extractHeaders(headerRow) {
+  const headers = {};
+  headerRow.eachCell((cell, colNumber) => {
+    if (cell.value) headers[colNumber] = cell.value.toString().trim();
+  });
+  return headers;
+}
+
+function _rowToObject(row, headers) {
+  const obj = {};
+  Object.entries(headers).forEach(([colNumber, headerName]) => {
+    const cell = row.getCell(parseInt(colNumber));
+    obj[headerName] = cell.value !== null && cell.value !== undefined ? cell.value : '';
+  });
+  return obj;
+}
+
+function _sheetHasCuartoColumn(ws) {
+  const headerRow = ws.getRow(1);
+  let found = false;
+  headerRow.eachCell(cell => {
+    const v = (cell.value || '').toString().toLowerCase();
+    if (v === 'cuarto' || v === 'room') found = true;
+  });
+  return found;
 }
 
 function parseRowToItem(row) {
   const name = (row['Nombre'] || row['Name'] || row['nombre'] || row['name'] || row['Artículo'] || row['articulo'] || '').toString().trim();
   const statusRaw = (row['Estado'] || row['Status'] || row['estado'] || row['status'] || '').toString().trim().toLowerCase();
   const statusMap = { bueno: 'good', good: 'good', dañado: 'damaged', damaged: 'damaged', faltante: 'missing', missing: 'missing', nuevo: 'new', 'new': 'new' };
+
+  const photos = [];
+  const photoTimes = [];
+  const photosRaw = (row['Fotos'] || row['Photos'] || row['fotos'] || row['photos'] || '').toString().trim();
+  if (photosRaw) {
+    photosRaw.split(',').forEach(filename => {
+      const fn = filename.trim().toLowerCase();
+      if (fn && importPhotoMap[fn]) {
+        photos.push(importPhotoMap[fn]);
+        photoTimes.push(new Date().toISOString());
+      }
+    });
+  }
+
   return {
     itemId: 'imp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
     name,
@@ -244,8 +498,8 @@ function parseRowToItem(row) {
     qty: parseInt(row['Cantidad'] || row['Qty'] || row['cantidad'] || row['qty'] || 1) || 1,
     status: statusMap[statusRaw] || null,
     notes: (row['Notas'] || row['Notes'] || row['notas'] || row['notes'] || '').toString().trim(),
-    photos: [],
-    photoTimes: [],
+    photos,
+    photoTimes,
   };
 }
 
@@ -255,6 +509,35 @@ function makeImportRoom(name, items) {
     roomName: name,
     items,
   };
+}
+
+function loadImportPhotos(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) {
+    showToast('⚠️ No se seleccionaron fotos');
+    input.value = '';
+    return;
+  }
+
+  let loadedCount = 0;
+  let remainingFiles = files.length;
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      compressImage(e.target.result, 800, 0.7, (compressed) => {
+        importPhotoMap[file.name.toLowerCase()] = compressed;
+        loadedCount++;
+        if (loadedCount === remainingFiles) {
+          document.getElementById('import-photos-label').textContent = `Fotos (${loadedCount})`;
+          showToast(`📷 ${loadedCount} foto${loadedCount === 1 ? '' : 's'} cargada${loadedCount === 1 ? '' : 's'}`);
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  input.value = '';
 }
 
 // ── Inicio del modo inventario ──
@@ -326,14 +609,8 @@ function renderInventoryRooms() {
     const color = DYNAMIC_ROOM_COLORS[idx % DYNAMIC_ROOM_COLORS.length];
     const count = room.items.length;
 
-    // Calculate completion: items with both photos and status
-    const completed = room.items.filter(item =>
-      item.photos && item.photos.length > 0 && item.status
-    ).length;
-    const completionPct = count > 0 ? Math.round((completed / count) * 100) : 0;
-
     const card = document.createElement('div');
-    card.className = 'room-card' + (completed === count && count > 0 ? ' completed' : '');
+    card.className = 'room-card';
     card.onclick = () => openInventoryRoom(idx);
 
     card.innerHTML = `
@@ -342,11 +619,8 @@ function renderInventoryRooms() {
       </div>
       <div class="room-card-name">${room.roomName}</div>
       <div class="room-card-count">${count} artículo${count !== 1 ? 's' : ''}</div>
-      <div class="room-card-completion" style="font-size: 0.75rem; color: #6b7280; margin-top: 4px">
-        ${completed}/${count} completado${count !== 1 ? 's' : ''} (${completionPct}%)
-      </div>
       <div class="room-card-progress">
-        <div class="room-card-progress-bar" style="width: ${completionPct}%; background: ${color}"></div>
+        <div class="room-card-progress-bar" style="width: ${count > 0 ? 100 : 0}%; background: ${color}"></div>
       </div>
     `;
 
@@ -626,7 +900,7 @@ function saveInventoryItem() {
   const item = {
     itemId: editingItemIdx !== null
       ? inventoryRooms[currentInvRoomIdx].items[editingItemIdx].itemId
-      : 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      : 'item-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
     name,
     sku: document.getElementById('new-item-sku').value.trim(),
     price: parseFloat(document.getElementById('new-item-price').value) || 0,
@@ -647,7 +921,7 @@ function saveInventoryItem() {
 
   hideAddItemPanel();
   renderInventoryItemList();
-  markUnsavedChanges();
+  _autosaveInvDraft();
 }
 
 function editInventoryItem(idx) {
@@ -695,7 +969,6 @@ function deleteInventoryItem(idx) {
   inventoryRooms[currentInvRoomIdx].items.splice(idx, 1);
   renderInventoryItemList();
   showToast('🗑️ Artículo eliminado');
-  markUnsavedChanges();
 }
 
 // ── Finalizar inventario y guardar en base de datos ──
@@ -713,7 +986,6 @@ async function finishInventory() {
   inventoryInfo.duration = formatTime(elapsed);
   inventoryInfo.durationMs = elapsed;
   inventoryInfo.type = 'inventory';
-  inventoryInfo.status = 'completed'; // Mark as completed instead of draft
   inventoryInfo.rooms = inventoryRooms;
 
   // Mostrar pantalla de exportación primero (modo inventario)
@@ -723,8 +995,6 @@ async function finishInventory() {
   if (isAPIReady()) {
     try {
       await saveInventory(inventoryInfo);
-      hasUnsavedChanges = false;
-      updateUnsavedIndicator();
       showToast(isEditingInventory ? '✅ Cambios guardados en la nube' : '☁️ Inventario guardado en la nube');
     } catch (err) {
       console.error('Error guardando en base de datos:', err);
@@ -733,7 +1003,34 @@ async function finishInventory() {
   } else {
     showToast('ℹ️ No se pudo conectar con la base de datos');
   }
+  localStorage.removeItem('delmar_draft_inventory');
 }
+
+// ── Auto-save borrador inventario ──
+
+function _autosaveInvDraft() {
+  try {
+    const draft = {
+      type: 'inventory',
+      unitName: inventoryInfo.unitName || '',
+      inventoryInfo: { ...inventoryInfo },
+      inventoryRooms: JSON.parse(JSON.stringify(inventoryRooms)),
+      savedAt: Date.now(),
+    };
+    localStorage.setItem('delmar_draft_inventory', JSON.stringify(draft));
+  } catch (e) {}
+}
+
+function resumeInventoryDraft(draft) {
+  inventoryInfo = draft.inventoryInfo || {};
+  inventoryRooms = draft.inventoryRooms || [];
+  currentMode = 'inventory';
+  showToast('📋 Retomando inventario...');
+  showStep('step-inv-rooms');
+  renderInventoryRooms();
+}
+
+window.resumeInventoryDraft = resumeInventoryDraft;
 
 // ── Editar inventario existente ──
 
@@ -841,28 +1138,44 @@ function showInventoryExport() {
 
 // ── Exportar XLSX (modo inventario) ──
 
-function exportInventoryXLSX() {
-  const wb = XLSX.utils.book_new();
+async function exportInventoryXLSX() {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Del Mar';
 
-  inventoryRooms.forEach(room => {
-    const rows = [];
-    const merges = [];
+  for (const room of inventoryRooms) {
+    const ws = workbook.addWorksheet(room.roomName.substring(0, 31));
+    ws.columns = [
+      { width: 30 }, // Artículo
+      { width: 14 }, // SKU
+      { width: 12 }, // Estado
+      { width: 10 }, // Tipo
+      { width: 10 }, // Cantidad
+      { width: 12 }, // Precio
+      { width: 40 }, // Notas
+      { width: 14 }, // Foto
+    ];
 
-    // Título
-    rows.push(['DEL MAR — Inventario de Unidad', '', '', '', '', '', '']);
-    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
+    // Title
+    ws.addRow(['DEL MAR — Inventario de Unidad', '', '', '', '', '', '', '']);
+    ws.mergeCells(1, 1, 1, 8);
+    ws.getRow(1).getCell(1).font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+    ws.getRow(1).getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
 
-    // Metadata
-    rows.push([`Unidad: ${inventoryInfo.unitName}`, '', `Fecha: ${inventoryInfo.date}`, '', `Responsable: ${inventoryInfo.auditor}`, '', '']);
-    rows.push([inventoryInfo.duration ? `Duración: ${inventoryInfo.duration}` : '', '', '', '', '', '', '']);
-    rows.push(['', '', '', '', '', '', '']);
+    ws.addRow([`Unidad: ${inventoryInfo.unitName}`, '', `Fecha: ${inventoryInfo.date}`, '', `Responsable: ${inventoryInfo.auditor}`, '', '', '']);
+    ws.addRow([inventoryInfo.duration ? `Duración: ${inventoryInfo.duration}` : '', '', '', '', '', '', '', '']);
+    ws.addRow([]);
 
-    // Encabezados
-    rows.push(['Artículo', 'SKU', 'Estado', 'Tipo', 'Cantidad', 'Precio ($)', 'Notas']);
+    const hdrRow = ws.addRow(['Artículo', 'SKU', 'Estado', 'Tipo', 'Cantidad', 'Precio ($)', 'Notas', 'Foto']);
+    hdrRow.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FF1E3A5F' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FE' } };
+    });
 
-    room.items.forEach(item => {
-      const statusLabel = STATUS_OPTIONS.find(o => o.value === item.status);
-      rows.push([
+    let rowNum = 6;
+    for (const item of room.items) {
+      const statusLabel = (typeof STATUS_OPTIONS !== 'undefined' ? STATUS_OPTIONS : []).find(o => o.value === item.status);
+      const hasPhoto = item.photos && item.photos.length > 0;
+      ws.addRow([
         item.name,
         item.sku || '',
         statusLabel ? statusLabel.label : '',
@@ -870,32 +1183,35 @@ function exportInventoryXLSX() {
         item.qty,
         item.price ? Number(item.price) : 0,
         item.notes || '',
+        '',
       ]);
-    });
+      if (hasPhoto) {
+        ws.getRow(rowNum).height = 65;
+        try {
+          const b64 = item.photos[0].split(',')[1];
+          const imgId = workbook.addImage({ base64: b64, extension: 'jpeg' });
+          ws.addImage(imgId, { tl: { col: 7, row: rowNum - 1 }, br: { col: 8, row: rowNum }, editAs: 'oneCell' });
+        } catch (_) {}
+      }
+      rowNum++;
+    }
 
-    // Pie
-    rows.push(['', '', '', '', '', '', '']);
-    rows.push(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA', '', '', '', '', '', '']);
-    merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 6 } });
+    ws.addRow([]);
+    ws.addRow(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA']);
+    ws.mergeCells(ws.rowCount, 1, ws.rowCount, 8);
+  }
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!merges'] = merges;
-    ws['!cols'] = [
-      { wch: 30 }, // Artículo
-      { wch: 14 }, // SKU
-      { wch: 12 }, // Estado
-      { wch: 10 }, // Tipo
-      { wch: 10 }, // Cantidad
-      { wch: 12 }, // Precio
-      { wch: 40 }, // Notas
-    ];
-
-    const sheetName = room.roomName.substring(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  });
-
-  XLSX.writeFile(wb, `Inventario_${inventoryInfo.unitName}_${inventoryInfo.date}.xlsx`);
-  showToast('📊 Excel descargado');
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Inventario_${inventoryInfo.unitName}_${inventoryInfo.date}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📊 Excel con fotos descargado');
 }
 
 // ── Exportar PDF (modo inventario) ──
@@ -1111,360 +1427,6 @@ async function shareInventoryFiles() {
   }
 }
 
-// ── Autosave ──
-
-function markUnsavedChanges() {
-  hasUnsavedChanges = true;
-  updateUnsavedIndicator();
-  triggerAutosave();
-}
-
-function triggerAutosave() {
-  if (autosaveTimeout) clearTimeout(autosaveTimeout);
-  autosaveTimeout = setTimeout(() => {
-    performAutosave();
-  }, AUTOSAVE_DELAY);
-}
-
-function manualSaveInventory() {
-  if (autosaveTimeout) clearTimeout(autosaveTimeout);
-  performAutosave();
-}
-
-async function performAutosave() {
-  if (!inventoryInfo.unitId || !isEditingInventory) {
-    return; // Only autosave if we're editing an existing inventory or it's properly initialized
-  }
-
-  updateAutosaveIndicator('saving');
-
-  try {
-    const elapsed = getElapsedTime();
-    const inventoryDoc = {
-      type: 'inventory',
-      status: 'draft', // Save as draft
-      unitId: inventoryInfo.unitId,
-      unitName: inventoryInfo.unitName,
-      date: inventoryInfo.date,
-      auditor: inventoryInfo.auditor,
-      duration: formatTime(elapsed),
-      durationMs: elapsed,
-      rooms: inventoryRooms,
-    };
-
-    if (isAPIReady()) {
-      await saveInventory(inventoryDoc);
-      hasUnsavedChanges = false;
-      updateUnsavedIndicator();
-      lastAutosaveTime = new Date();
-      updateAutosaveIndicator('success');
-      console.log('✅ Autosave completado');
-    }
-  } catch (err) {
-    console.error('Error en autosave:', err);
-    autosaveErrorMessage = err.message || 'Error al guardar';
-    updateAutosaveIndicator('error');
-  }
-}
-
-function updateUnsavedIndicator() {
-  const label = document.getElementById('inv-unit-label');
-  if (label) {
-    if (hasUnsavedChanges) {
-      label.classList.add('unsaved');
-      if (!label.textContent.includes('●')) {
-        label.textContent += ' ●';
-      }
-    } else {
-      label.classList.remove('unsaved');
-      label.textContent = label.textContent.replace(' ●', '');
-    }
-  }
-}
-
-function updateAutosaveIndicator(state) {
-  const indicator = document.getElementById('autosave-indicator');
-  const statusText = document.getElementById('autosave-status-text');
-  if (!indicator || !statusText) return;
-
-  if (autosaveHideTimeout) clearTimeout(autosaveHideTimeout);
-
-  autosaveState = state;
-  indicator.className = 'autosave-indicator active ' + state;
-
-  switch (state) {
-    case 'saving':
-      statusText.textContent = 'Guardando...';
-      break;
-    case 'success':
-      statusText.textContent = 'Guardado';
-      autosaveHideTimeout = setTimeout(() => {
-        indicator.classList.remove('active');
-      }, 2000);
-      break;
-    case 'error':
-      statusText.textContent = 'Error al guardar';
-      indicator.title = autosaveErrorMessage || 'Haz clic para reintentar';
-      indicator.onclick = () => performAutosave();
-      break;
-    case 'idle':
-      indicator.classList.remove('active');
-      break;
-  }
-}
-
-// ── Importar imágenes ──
-
-function showImageImportStep() {
-  showStep('step-inv-image-import');
-  renderImageImportItems();
-  setupImageImportHandlers();
-}
-
-function renderImageImportItems() {
-  const container = document.getElementById('import-items-container');
-  let html = '';
-  inventoryRooms.forEach((room, roomIdx) => {
-    room.items.forEach((item, itemIdx) => {
-      html += `
-        <div class="import-item-card" data-room-idx="${roomIdx}" data-item-idx="${itemIdx}"
-             style="padding: 8px; margin: 5px 0; background: white; border-radius: 6px; cursor: grab; border: 1px solid #e5e7eb">
-          <div style="font-weight: 500; font-size: 13px">${item.name}</div>
-          <div style="font-size: 12px; color: #9ca3af">${room.roomName}</div>
-          <div id="assigned-images-${roomIdx}-${itemIdx}" style="margin-top: 5px; font-size: 11px; color: #10b981"></div>
-        </div>
-      `;
-    });
-  });
-  if (html === '') {
-    html = '<div style="color: #9ca3af; padding: 10px; font-size: 12px">No hay artículos importados</div>';
-  }
-  container.innerHTML = html;
-}
-
-function setupImageImportHandlers() {
-  const btnSelectImages = document.getElementById('btn-select-images');
-  const imageInput = document.getElementById('image-import-input');
-  const dropZone = document.getElementById('import-images-drop');
-
-  btnSelectImages.onclick = () => imageInput.click();
-
-  imageInput.onchange = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          compressImageForImport(event.target.result, file.name, (dataUrl) => {
-            importedImages.push({ file, name: file.name, dataUrl });
-            renderImagePreview();
-          });
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    imageInput.value = '';
-  };
-
-  dropZone.ondragover = (e) => {
-    e.preventDefault();
-    dropZone.style.backgroundColor = '#e0f2fe';
-  };
-  dropZone.ondragleave = () => {
-    dropZone.style.backgroundColor = '#f9fafb';
-  };
-  dropZone.ondrop = (e) => {
-    e.preventDefault();
-    dropZone.style.backgroundColor = '#f9fafb';
-    const files = Array.from(e.dataTransfer.files);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          compressImageForImport(event.target.result, file.name, (dataUrl) => {
-            importedImages.push({ file, name: file.name, dataUrl });
-            renderImagePreview();
-          });
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  };
-
-  // Item drag handlers
-  document.querySelectorAll('.import-item-card').forEach((card) => {
-    card.ondragstart = (e) => {
-      const roomIdx = card.dataset.roomIdx;
-      const itemIdx = card.dataset.itemIdx;
-      e.dataTransfer.effectAllowed = 'link';
-      e.dataTransfer.setData('application/json', JSON.stringify({ roomIdx: parseInt(roomIdx), itemIdx: parseInt(itemIdx) }));
-    };
-  });
-
-  // Image drop targets
-  const imagePreview = document.getElementById('import-images-preview');
-  imagePreview.ondragover = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'link';
-    imagePreview.style.opacity = '0.5';
-  };
-  imagePreview.ondragleave = () => {
-    imagePreview.style.opacity = '1';
-  };
-  imagePreview.ondrop = (e) => {
-    e.preventDefault();
-    imagePreview.style.opacity = '1';
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      // Not used - images are dropped onto items instead
-    } catch (err) {}
-  };
-
-  // Attach drop handlers to each image thumbnail
-  document.querySelectorAll('.import-image-thumb').forEach((thumb, imgIdx) => {
-    thumb.ondragover = (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'link';
-      thumb.style.opacity = '0.5';
-    };
-    thumb.ondragleave = () => {
-      thumb.style.opacity = '1';
-    };
-    thumb.ondrop = (e) => {
-      e.preventDefault();
-      thumb.style.opacity = '1';
-      try {
-        const data = JSON.parse(e.dataTransfer.getData('application/json'));
-        associateImageToItem(imgIdx, data.roomIdx, data.itemIdx);
-      } catch (err) {
-        console.error('Error associating image:', err);
-      }
-    };
-  });
-
-  // Attach drop handlers to each item card for accepting images
-  document.querySelectorAll('.import-item-card').forEach((card) => {
-    card.ondragover = (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'link';
-      card.style.backgroundColor = '#d0f0ff';
-    };
-    card.ondragleave = () => {
-      card.style.backgroundColor = 'white';
-    };
-    card.ondrop = (e) => {
-      e.preventDefault();
-      card.style.backgroundColor = 'white';
-      const roomIdx = parseInt(card.dataset.roomIdx);
-      const itemIdx = parseInt(card.dataset.itemIdx);
-      try {
-        const imgIdx = parseInt(e.dataTransfer.getData('text/plain'));
-        if (!isNaN(imgIdx) && importedImages[imgIdx]) {
-          associateImageToItem(imgIdx, roomIdx, itemIdx);
-        }
-      } catch (err) {}
-    };
-  });
-}
-
-function renderImagePreview() {
-  const preview = document.getElementById('import-images-preview');
-  if (importedImages.length === 0) {
-    preview.innerHTML = '<div style="color: #9ca3af; padding: 20px 10px"><p style="margin: 0; font-size: 12px">Arrastra imágenes aquí</p></div>';
-    return;
-  }
-
-  preview.innerHTML = importedImages.map((img, idx) => `
-    <div class="import-image-thumb" draggable="true" style="display: inline-block; position: relative; margin: 5px; cursor: move">
-      <img src="${img.dataUrl}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb">
-      <button onclick="removeImportedImage(${idx})" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; padding: 0; cursor: pointer; font-size: 12px">×</button>
-      <div style="font-size: 10px; color: #6b7280; max-width: 60px; overflow: hidden; text-overflow: ellipsis; margin-top: 3px">${img.name}</div>
-    </div>
-  `).join('');
-
-  // Re-attach drag handlers
-  document.querySelectorAll('.import-image-thumb').forEach((thumb, imgIdx) => {
-    thumb.ondragstart = (e) => {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', imgIdx.toString());
-    };
-    thumb.ondragover = (e) => {
-      e.preventDefault();
-      thumb.style.opacity = '0.5';
-    };
-    thumb.ondragleave = () => {
-      thumb.style.opacity = '1';
-    };
-  });
-}
-
-function removeImportedImage(idx) {
-  importedImages.splice(idx, 1);
-  Object.keys(imageToItemMap).forEach(key => {
-    if (parseInt(key) === idx) {
-      delete imageToItemMap[key];
-    }
-  });
-  renderImagePreview();
-  updateItemAssignments();
-}
-
-function associateImageToItem(imgIdx, roomIdx, itemIdx) {
-  imageToItemMap[imgIdx] = { roomIdx, itemIdx };
-  updateItemAssignments();
-  showToast(`✅ Imagen asociada a "${inventoryRooms[roomIdx].items[itemIdx].name}"`);
-}
-
-function updateItemAssignments() {
-  Object.keys(imageToItemMap).forEach(imgIdx => {
-    const { roomIdx, itemIdx } = imageToItemMap[imgIdx];
-    const assignedDiv = document.getElementById(`assigned-images-${roomIdx}-${itemIdx}`);
-    if (assignedDiv) {
-      const count = Object.values(imageToItemMap).filter(m => m.roomIdx === roomIdx && m.itemIdx === itemIdx).length;
-      assignedDiv.textContent = `📸 ${count} imagen${count !== 1 ? 's' : ''}`;
-    }
-  });
-}
-
-function compressImageForImport(dataUrl, filename, callback) {
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    const maxWidth = 800;
-    const scale = maxWidth / img.width;
-    canvas.width = maxWidth;
-    canvas.height = img.height * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    callback(canvas.toDataURL('image/jpeg', 0.7));
-  };
-  img.src = dataUrl;
-}
-
-function proceedWithImages() {
-  // Associate images with items
-  Object.entries(imageToItemMap).forEach(([imgIdx, { roomIdx, itemIdx }]) => {
-    const item = inventoryRooms[roomIdx].items[itemIdx];
-    if (!item.photos) item.photos = [];
-    if (!item.photoTimes) item.photoTimes = [];
-    const img = importedImages[parseInt(imgIdx)];
-    if (img) {
-      item.photos.push(img.dataUrl);
-      item.photoTimes.push(new Date().toISOString());
-    }
-  });
-
-  // Proceed to rooms
-  showStep('step-inv-rooms');
-  renderInventoryRooms();
-  showToast(`✅ ${Object.keys(imageToItemMap).length} imágenes asociadas`);
-}
-
-function skipImageImport() {
-  showStep('step-inv-rooms');
-  renderInventoryRooms();
-}
-
 window.startInventoryMode = startInventoryMode;
 window.showAddRoomModal = showAddRoomModal;
 window.closeAddRoomModal = closeAddRoomModal;
@@ -1481,12 +1443,7 @@ window.removeInvPhoto = removeInvPhoto;
 window.saveInventoryItem = saveInventoryItem;
 window.editInventoryItem = editInventoryItem;
 window.deleteInventoryItem = deleteInventoryItem;
-window.manualSaveInventory = manualSaveInventory;
 window.finishInventory = finishInventory;
 window.exportInventoryXLSX = exportInventoryXLSX;
 window.exportInventoryPDF = exportInventoryPDF;
 window.shareInventoryFiles = shareInventoryFiles;
-window.showImageImportStep = showImageImportStep;
-window.proceedWithImages = proceedWithImages;
-window.skipImageImport = skipImageImport;
-window.removeImportedImage = removeImportedImage;

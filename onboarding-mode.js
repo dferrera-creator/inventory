@@ -226,11 +226,6 @@ let _onboardingTimerInterval = null;
 let _onboardingTimerStart = null;
 let _onboardingTimerElapsed = 0;
 
-// Autosave state
-let _onboardingHasUnsavedChanges = false;
-let _onboardingAutosaveTimeout = null;
-const ONBOARDING_AUTOSAVE_DELAY = 500; // milliseconds
-
 // One-at-a-time navigation state
 let _onbCurrentSectionId = null;
 let _onbFlatItems = [];          // [{ gIdx, iIdx, item, groupLabel }, ...]
@@ -277,50 +272,6 @@ function formatOnbTime(ms) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   return (h > 0 ? `${h}:` : '') + String(m).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
-}
-
-// ── Onboarding Autosave ──
-
-function markOnboardingUnsavedChanges() {
-  _onboardingHasUnsavedChanges = true;
-  triggerOnboardingAutosave();
-}
-
-function triggerOnboardingAutosave() {
-  if (_onboardingAutosaveTimeout) clearTimeout(_onboardingAutosaveTimeout);
-  _onboardingAutosaveTimeout = setTimeout(() => {
-    performOnboardingAutosave();
-  }, ONBOARDING_AUTOSAVE_DELAY);
-}
-
-async function performOnboardingAutosave() {
-  if (!onboardingInfo.unitId || !isEditingOnboarding) {
-    return;
-  }
-
-  try {
-    const elapsed = getOnbElapsed();
-    const onbDoc = {
-      type: 'onboarding',
-      status: 'draft',
-      unitId: onboardingInfo.unitId,
-      unitName: onboardingInfo.unitName,
-      date: onboardingInfo.date,
-      auditor: onboardingInfo.auditor,
-      duration: formatOnbTime(elapsed),
-      durationMs: elapsed,
-      sections: onboardingSections,
-      data: onboardingData,
-    };
-
-    if (isAPIReady()) {
-      await saveOnboardingRecord(onbDoc);
-      _onboardingHasUnsavedChanges = false;
-      console.log('✅ Onboarding autosave completed');
-    }
-  } catch (err) {
-    console.error('Error in onboarding autosave:', err);
-  }
 }
 
 // ── Paso 1: Inicio ──
@@ -494,7 +445,6 @@ function setOnbCurrentStatus(status) {
   if (!onboardingData[key]) onboardingData[key] = {};
 
   onboardingData[key].status = onboardingData[key].status === status ? null : status;
-  markOnboardingUnsavedChanges();
 
   document.querySelectorAll('#onb-status-grid .status-btn').forEach(btn => btn.classList.remove('selected'));
   if (onboardingData[key].status) {
@@ -509,6 +459,7 @@ function setOnbCurrentStatus(status) {
     const navNext = document.getElementById('onb-nav-next');
     if (navNext) navNext.classList.add('nav-ready');
   }
+  _autosaveOnbDraft();
 }
 
 function changeOnbCurrentQty(delta) {
@@ -578,7 +529,7 @@ function handleOnbCurrentPhoto(input) {
     onboardingData[key].photoTimes.push(new Date().toISOString());
     _renderOnbPhotoStrip(onboardingData[key].photos);
     document.getElementById('onb-item-camera-btn').classList.add('has-content');
-    markOnboardingUnsavedChanges();
+    _autosaveOnbDraft();
   };
   reader.readAsDataURL(input.files[0]);
 }
@@ -655,7 +606,38 @@ async function finishOnboarding() {
   } else {
     showToast('ℹ️ No se pudo conectar con la base de datos');
   }
+  localStorage.removeItem('delmar_draft_onboarding');
 }
+
+// ── Auto-save / resume borrador onboarding ──
+
+function _autosaveOnbDraft() {
+  try {
+    const draft = {
+      type: 'onboarding',
+      unitName: onboardingInfo.unitName || '',
+      onboardingInfo: { ...onboardingInfo },
+      onboardingData,
+      onboardingSections,
+      currentSectionId: _onbCurrentSectionId,
+      currentItemIdx: _onbCurrentItemIdx,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem('delmar_draft_onboarding', JSON.stringify(draft));
+  } catch (e) {}
+}
+
+function resumeOnboardingDraft(draft) {
+  onboardingInfo = draft.onboardingInfo || {};
+  onboardingData = draft.onboardingData || {};
+  onboardingSections = draft.onboardingSections || [];
+  currentMode = 'onboarding';
+  showToast('📋 Retomando onboarding...');
+  showStep('step-onboarding-sections');
+  renderOnboardingSections();
+}
+
+window.resumeOnboardingDraft = resumeOnboardingDraft;
 
 function showOnboardingExport() {
   showStep('step-export');

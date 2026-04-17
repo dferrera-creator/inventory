@@ -123,6 +123,19 @@
       </div>
     </div>
 
+    <!-- ══════════ BANNER: CONTINUAR BORRADOR ══════════ -->
+    <div id="resume-banner" class="resume-banner" style="display:none">
+      <div class="resume-banner-inner">
+        <span class="resume-banner-icon">📋</span>
+        <div class="resume-banner-text">
+          <div class="resume-banner-title">Tienes una revisión sin terminar</div>
+          <div class="resume-banner-unit" id="resume-banner-unit"></div>
+        </div>
+        <button class="resume-btn-continue" onclick="resumeDraft()">Continuar →</button>
+        <button class="resume-btn-discard" onclick="discardDraft()" title="Descartar">✕</button>
+      </div>
+    </div>
+
     <!-- ══════════ TOUR BANNER (fijo en la parte baja) ══════════ -->
     <div id="tour-banner" class="tour-banner" style="display:none">
       <div class="tour-banner-inner">
@@ -284,7 +297,7 @@
             <span class="material-symbols-rounded">edit_note</span> Notas
           </button>
         </div>
-        <input type="file" id="onb-item-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handleOnbCurrentPhoto(this)">
+        <input type="file" id="onb-item-photo-input" accept="image/*" style="display:none" onchange="handleOnbCurrentPhoto(this)">
         <div class="photo-strip" id="onb-item-photo-strip"></div>
         <div class="notes-area" id="onb-item-notes-area" style="display:none">
           <textarea id="onb-item-notes-input" placeholder="Notas..." rows="2"></textarea>
@@ -352,12 +365,17 @@
             <span class="material-symbols-rounded">upload_file</span>
             Importar Excel
           </button>
+          <button class="btn-import" onclick="document.getElementById('inv-photo-import-input').click()" title="Selecciona las fotos antes de importar el Excel">
+            <span class="material-symbols-rounded">photo_library</span>
+            <span id="import-photos-label">Agregar Fotos</span>
+          </button>
           <button class="btn-import btn-template" onclick="downloadXLSXTemplate()">
             <span class="material-symbols-rounded">download</span>
             Plantilla
           </button>
         </div>
         <input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none" onchange="importInventoryFromXLSX(this)">
+        <input type="file" id="inv-photo-import-input" accept="image/*" multiple style="display:none" onchange="loadImportPhotos(this)">
       </div>
     </div>
 
@@ -523,7 +541,7 @@
                 <span class="material-symbols-rounded">photo_camera</span> Foto
               </button>
             </div>
-            <input type="file" id="inv-photo-input" accept="image/*" capture="environment" style="display:none" onchange="handleInvPhoto(this)">
+            <input type="file" id="inv-photo-input" accept="image/*" style="display:none" onchange="handleInvPhoto(this)">
             <div class="photo-strip" id="inv-photo-strip"></div>
           </div>
 
@@ -670,7 +688,7 @@
             <span class="material-symbols-rounded">edit_note</span> Notas
           </button>
         </div>
-        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(this)">
         <div class="photo-strip" id="photo-strip"></div>
         <div class="notes-area" id="notes-area" style="display:none">
           <textarea id="notes-input" placeholder="Notas..." rows="2"></textarea>
@@ -980,6 +998,7 @@
   <script src="inventory-mode.js"></script>
   <script src="onboarding-mode.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </body>
 </html>

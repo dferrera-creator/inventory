@@ -539,11 +539,6 @@ let currentItemIndex = 0;
 let SECTIONS = []; // se construye dinámicamente
 let _autoAdvanceTimer = null;
 
-// Autosave state
-let _inspectionHasUnsavedChanges = false;
-let _inspectionAutosaveTimeout = null;
-const INSPECTION_AUTOSAVE_DELAY = 500; // milliseconds
-
 function cancelAutoAdvance() {
   if (_autoAdvanceTimer) {
     clearTimeout(_autoAdvanceTimer);
@@ -603,81 +598,6 @@ function formatTime(ms) {
     return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-// ── Inspection Autosave ──
-
-function markInspectionUnsavedChanges() {
-  _inspectionHasUnsavedChanges = true;
-  triggerInspectionAutosave();
-}
-
-function triggerInspectionAutosave() {
-  if (_inspectionAutosaveTimeout) clearTimeout(_inspectionAutosaveTimeout);
-  _inspectionAutosaveTimeout = setTimeout(() => {
-    performInspectionAutosave();
-  }, INSPECTION_AUTOSAVE_DELAY);
-}
-
-function buildInspectionDocument() {
-  const total = getTotalItems();
-  const completed = getTotalCompleted();
-  const elapsed = getElapsedTime();
-  const editingId = window._editingInspectionId || null;
-
-  return {
-    type: 'inspection',
-    unitId: editingId || ('insp-' + Date.now()),
-    sourceUnitId: inspectionInfo.sourceUnitId || null,
-    unitName: inspectionInfo.location,
-    date: inspectionInfo.date,
-    auditor: inspectionInfo.auditor,
-    duration: formatTime(elapsed),
-    durationMs: elapsed,
-    totalItems: total,
-    completedItems: completed,
-    rooms: SECTIONS.map(section => ({
-      roomId: section.id,
-      roomName: section.name,
-      items: section.items.map((item, idx) => {
-        const key = `${section.id}-${idx}`;
-        const d = inspectionData[key] || {};
-        return {
-          itemId: item.inventoryItemId || `${section.id}-${idx}`,
-          name: item.name,
-          sku: item.sub || '',
-          price: item.price || 0,
-          qty: d.qty !== undefined ? d.qty : item.qty,
-          status: d.status || null,
-          notes: d.observations || '',
-          photos: d.photos || [],
-          photoTimes: d.photoTimes || [],
-        };
-      }),
-    })),
-  };
-}
-
-async function performInspectionAutosave() {
-  if (!_sourceUnitId || !window._editingInspectionId) {
-    return; // Only autosave if we're editing or have a source
-  }
-
-  try {
-    const elapsed = timerElapsed + (timerStartTime ? (Date.now() - timerStartTime) : 0);
-    const inspDoc = buildInspectionDocument();
-    inspDoc.durationMs = elapsed;
-    inspDoc.duration = formatTime(elapsed);
-    inspDoc.status = 'draft'; // Save as draft
-
-    if (isAPIReady()) {
-      await updateInspectionResult(window._editingInspectionId, inspDoc);
-      _inspectionHasUnsavedChanges = false;
-      console.log('✅ Inspection autosave completed');
-    }
-  } catch (err) {
-    console.error('Error in inspection autosave:', err);
-  }
 }
 
 function getElapsedTime() {
@@ -1098,6 +1018,108 @@ function _hideTourBanner() {
   }
 }
 
+// ══════════════════════════════════════════
+// AUTO-SAVE / BORRADOR (draft)
+// ══════════════════════════════════════════
+
+const DRAFT_KEY_INSPECTION  = 'delmar_draft_inspection';
+const DRAFT_KEY_ONBOARDING  = 'delmar_draft_onboarding';
+const DRAFT_KEY_INVENTORY   = 'delmar_draft_inventory';
+
+let _autosaveTimer = null;
+
+function _scheduleSave() {
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(_autosaveDraft, 800);
+}
+
+function _autosaveDraft() {
+  if (currentMode === 'inspection') {
+    try {
+      const draft = {
+        type: 'inspection',
+        unitName: inspectionInfo.location,
+        inspectionInfo,
+        inspectionData,
+        currentSectionIndex,
+        currentItemIndex,
+        loadedInventory: window._loadedInventory,
+        selectedUnitId: window._selectedUnitId,
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(DRAFT_KEY_INSPECTION, JSON.stringify(draft));
+    } catch (e) { /* QuotaExceeded — skip silently */ }
+  }
+}
+
+function _clearInspectionDraft() {
+  localStorage.removeItem(DRAFT_KEY_INSPECTION);
+}
+
+function _checkForDraft() {
+  const raw = localStorage.getItem(DRAFT_KEY_INSPECTION)
+    || localStorage.getItem(DRAFT_KEY_ONBOARDING)
+    || localStorage.getItem(DRAFT_KEY_INVENTORY);
+  if (!raw) return;
+  try {
+    const draft = JSON.parse(raw);
+    const ageMin = (Date.now() - (draft.savedAt || 0)) / 60000;
+    if (ageMin > 60 * 24 * 7) { // discard drafts older than 7 days
+      _discardAllDrafts();
+      return;
+    }
+    const banner = document.getElementById('resume-banner');
+    document.getElementById('resume-banner-unit').textContent = draft.unitName || '(sin nombre)';
+    banner.style.display = 'block';
+    banner._draft = draft;
+  } catch (e) { _discardAllDrafts(); }
+}
+
+function resumeDraft() {
+  const banner = document.getElementById('resume-banner');
+  const draft = banner._draft;
+  if (!draft) return;
+  banner.style.display = 'none';
+
+  if (draft.type === 'inspection') {
+    currentMode = 'inspection';
+    inspectionInfo = draft.inspectionInfo || {};
+    inspectionData = draft.inspectionData || {};
+    currentSectionIndex = draft.currentSectionIndex || 0;
+    currentItemIndex = draft.currentItemIndex || 0;
+    window._loadedInventory = draft.loadedInventory;
+    window._selectedUnitId = draft.selectedUnitId;
+    if (window._loadedInventory) {
+      const inv = window._loadedInventory;
+      inv.rooms.forEach((room, i) => {
+        ROOM_CONFIG[room.roomId] = { icon: 'inventory_2', name: room.roomName, shortName: room.roomName };
+        ROOM_COLORS[room.roomId] = DYNAMIC_ROOM_COLORS[i % DYNAMIC_ROOM_COLORS.length];
+      });
+      SECTIONS = buildSectionsFromInventory(inv);
+    }
+    showToast('📋 Retomando inspección...');
+    showStep('step-rooms');
+    renderRooms();
+  } else if (draft.type === 'onboarding') {
+    // handled by onboarding-mode.js
+    if (typeof resumeOnboardingDraft === 'function') resumeOnboardingDraft(draft);
+  } else if (draft.type === 'inventory') {
+    // handled by inventory-mode.js
+    if (typeof resumeInventoryDraft === 'function') resumeInventoryDraft(draft);
+  }
+}
+
+function discardDraft() {
+  document.getElementById('resume-banner').style.display = 'none';
+  _discardAllDrafts();
+}
+
+function _discardAllDrafts() {
+  localStorage.removeItem(DRAFT_KEY_INSPECTION);
+  localStorage.removeItem(DRAFT_KEY_ONBOARDING);
+  localStorage.removeItem(DRAFT_KEY_INVENTORY);
+}
+
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
@@ -1158,6 +1180,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.innerHTML = 'Siguiente <span class="material-symbols-rounded">arrow_forward</span>';
     document.getElementById('first-visit-modal').style.display = 'flex';
   }
+
+  // Check for a saved draft and show resume banner
+  _checkForDraft();
 
   // Close unit search dropdown when clicking outside
   document.addEventListener('click', (e) => {
@@ -2228,7 +2253,6 @@ function setStatus(status) {
     inspectionData[key] = { qty: item.qty };
   }
   inspectionData[key].status = status;
-  markInspectionUnsavedChanges();
 
   const statusMap = { 'good': '.good', 'damaged': '.damaged', 'missing': '.missing' };
   document.querySelectorAll('#status-grid .status-btn').forEach(btn => {
@@ -2245,6 +2269,8 @@ function setStatus(status) {
   // Highlight the Siguiente button so user knows to press it
   const navNext = document.getElementById('nav-next');
   if (navNext) navNext.classList.add('nav-ready');
+
+  _scheduleSave();
 }
 
 function changeQty(delta) {
@@ -2284,7 +2310,7 @@ function handlePhoto(input) {
       renderPhotos(key);
       document.querySelector('.camera-btn').classList.add('has-content');
       showToast('📷 Foto agregada');
-      markInspectionUnsavedChanges();
+      _scheduleSave();
     });
   };
   reader.readAsDataURL(file);
@@ -2548,6 +2574,7 @@ function showExport() {
     saveInspectionToDatabase();
   }
   window._viewingRecord = false;
+  _clearInspectionDraft();
 }
 
 async function saveInspectionToDatabase() {
@@ -2938,119 +2965,125 @@ function buildPDF(jsPDF) {
 }
 
 // ══════════════════════════════════════════
-// EXPORTAR XLSX (mejorado con agrupación)
+// EXPORTAR XLSX con imágenes (ExcelJS)
 // ══════════════════════════════════════════
 
-function exportXLSX() {
-  const wb = XLSX.utils.book_new();
+async function exportXLSX() {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Del Mar';
 
-  SECTIONS.forEach(section => {
-    const rows = [];
-    const merges = [];
+  for (const section of SECTIONS) {
+    const ws = workbook.addWorksheet(section.name.substring(0, 31));
 
-    // Fila 0: Título
-    rows.push(['DEL MAR — Reporte de Inspección e Inventario', '', '', '', '', '']);
-    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+    ws.columns = [
+      { width: 18 }, // Área
+      { width: 18 }, // Sub
+      { width: 8  }, // Marcar
+      { width: 32 }, // Descripción
+      { width: 10 }, // Cantidad
+      { width: 40 }, // Observaciones
+      { width: 14 }, // Foto
+    ];
 
-    // Fila 1: Info
-    rows.push([`Ubicación: ${inspectionInfo.location}`, '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`, '']);
+    // Title row (row 1)
+    ws.addRow(['DEL MAR — Reporte de Inspección e Inventario', '', '', '', '', '', '']);
+    ws.mergeCells(1, 1, 1, 7);
+    ws.getRow(1).getCell(1).font = { bold: true, size: 13 };
+    ws.getRow(1).getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+    ws.getRow(1).getCell(1).font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
 
-    // Fila 2: Info adicional
-    rows.push([`Recámaras: ${inspectionInfo.numBedrooms} | Baños: ${inspectionInfo.numBathrooms}`, '', inspectionInfo.duration ? `Duración: ${inspectionInfo.duration}` : '', '', '', '']);
+    // Info rows (rows 2-3)
+    ws.addRow([`Ubicación: ${inspectionInfo.location}`, '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`, '', '']);
+    ws.addRow([`Recámaras: ${inspectionInfo.numBedrooms || '—'} | Baños: ${inspectionInfo.numBathrooms || '—'}`, '', inspectionInfo.duration ? `Duración: ${inspectionInfo.duration}` : '', '', '', '', '']);
 
-    // Fila 3: Vacía
-    rows.push(['', '', '', '', '', '']);
+    // Empty row (row 4)
+    ws.addRow([]);
 
-    // Fila 4: Encabezados de columnas
-    // Col 0: Área, Col 1: Subcategoría, Col 2: Marcar, Col 3: Descripción, Col 4: Cantidad, Col 5: Observaciones
-    rows.push(['', '', 'Marcar', 'Descripción', 'Cantidad', 'Observaciones']);
+    // Header row (row 5)
+    const hdrRow = ws.addRow(['Área', 'Subcategoría', 'Marcar', 'Descripción', 'Cant.', 'Observaciones', 'Foto']);
+    hdrRow.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FF1E3A5F' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FE' } };
+    });
 
-    let rowIdx = 5;
+    let rowNum = 6;
 
-    // Agrupar items por área
+    // Group items by area
     const areaGroups = [];
     let curArea = null;
     section.items.forEach((item, idx) => {
-      if (item.area !== curArea) {
-        curArea = item.area;
-        areaGroups.push({ area: curArea, items: [] });
-      }
+      if (item.area !== curArea) { curArea = item.area; areaGroups.push({ area: curArea, items: [] }); }
       areaGroups[areaGroups.length - 1].items.push({ item, idx });
     });
 
-    areaGroups.forEach((group) => {
-      const areaStartRow = rowIdx;
+    for (const group of areaGroups) {
+      const areaStartRow = rowNum;
 
-      // Dentro del área, agrupar por subcategoría
       const subGroups = [];
       let curSub = null;
       group.items.forEach(entry => {
-        if (entry.item.sub !== curSub) {
-          curSub = entry.item.sub;
-          subGroups.push({ sub: curSub, entries: [] });
-        }
+        if (entry.item.sub !== curSub) { curSub = entry.item.sub; subGroups.push({ sub: curSub, entries: [] }); }
         subGroups[subGroups.length - 1].entries.push(entry);
       });
 
-      subGroups.forEach(subGroup => {
-        const subStartRow = rowIdx;
+      for (const subGroup of subGroups) {
+        const subStartRow = rowNum;
 
-        subGroup.entries.forEach(({ item, idx: itemIdx }, ei) => {
+        for (let ei = 0; ei < subGroup.entries.length; ei++) {
+          const { item, idx: itemIdx } = subGroup.entries[ei];
           const key = `${section.id}-${itemIdx}`;
           const data = inspectionData[key] || {};
           const names = getItemNames(item.name);
-          const markedStr = data.status ? '☑' : '☐';
+          const hasPhoto = data.photos && data.photos.length > 0;
 
-          rows.push([
+          ws.addRow([
             ei === 0 && subGroup === subGroups[0] ? group.area : '',
             ei === 0 ? (subGroup.sub || '') : '',
-            markedStr,
+            data.status ? '☑' : '☐',
             names.es,
             data.qty !== undefined ? Number(data.qty) : item.qty,
-            data.observations || ''
+            data.observations || '',
+            '',
           ]);
-          rowIdx++;
-        });
 
-        // Merge subcategoría (col 1)
-        if (rowIdx - 1 > subStartRow) {
-          merges.push({ s: { r: subStartRow, c: 1 }, e: { r: rowIdx - 1, c: 1 } });
+          if (hasPhoto) {
+            ws.getRow(rowNum).height = 65;
+            try {
+              const b64 = data.photos[0].split(',')[1];
+              const imgId = workbook.addImage({ base64: b64, extension: 'jpeg' });
+              ws.addImage(imgId, { tl: { col: 6, row: rowNum - 1 }, br: { col: 7, row: rowNum }, editAs: 'oneCell' });
+            } catch (_) {}
+          }
+
+          rowNum++;
         }
-      });
 
-      // Merge área (col 0)
-      if (rowIdx - 1 > areaStartRow) {
-        merges.push({ s: { r: areaStartRow, c: 0 }, e: { r: rowIdx - 1, c: 0 } });
+        if (rowNum - 1 > subStartRow) ws.mergeCells(subStartRow, 2, rowNum - 1, 2);
       }
 
-      // Fila separadora entre áreas
-      rows.push(['', '', '', '', '', '']);
-      rowIdx++;
-    });
+      if (rowNum - 1 > areaStartRow) ws.mergeCells(areaStartRow, 1, rowNum - 1, 1);
 
-    // Pie de página
-    rows.push(['', '', '', '', '', '']);
-    rows.push(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA', '', '', '', '', '']);
-    merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 5 } });
+      ws.addRow([]);
+      rowNum++;
+    }
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!merges'] = merges;
+    // Footer
+    ws.addRow([]);
+    ws.addRow(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA']);
+    ws.mergeCells(ws.rowCount, 1, ws.rowCount, 7);
+  }
 
-    ws['!cols'] = [
-      { wch: 18 },  // Área
-      { wch: 18 },  // Subcategoría
-      { wch: 8 },   // Marcar
-      { wch: 32 },  // Descripción
-      { wch: 10 },  // Cantidad
-      { wch: 40 },  // Observaciones
-    ];
-
-    const sheetName = section.name.substring(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  });
-
-  XLSX.writeFile(wb, `Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.xlsx`);
-  showToast('📊 Excel descargado');
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📊 Excel con fotos descargado');
 }
 
 // ── Exportar PDF ──
