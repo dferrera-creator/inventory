@@ -427,6 +427,16 @@ async function importInventoryFromXLSX(input) {
     const photoMsg = totalPhotos > 0 ? `, ${totalPhotos} fotos` : '';
     showToast(`✅ Importado: ${rooms.length} cuartos, ${totalItems} artículos${photoMsg}`);
 
+    _autosaveInvDraft();
+
+    if (isAPIReady()) {
+      try {
+        await saveInventory(inventoryInfo);
+      } catch (err) {
+        console.error('Error saving imported inventory to cloud:', err);
+      }
+    }
+
     importPhotoMap = {};
     document.getElementById('import-photos-label').textContent = 'Agregar Fotos';
   } catch (err) {
