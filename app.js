@@ -2674,26 +2674,29 @@ function generatePDFBlob() {
 
 function createLogoDataURL() {
   const canvas = document.createElement('canvas');
-  canvas.width = 240;
-  canvas.height = 80;
+  canvas.width = 320;
+  canvas.height = 90;
   const ctx = canvas.getContext('2d');
 
-  const gradient = ctx.createLinearGradient(0, 0, 240, 0);
-  gradient.addColorStop(0, '#c8962d');
-  gradient.addColorStop(0.5, '#e8c44a');
-  gradient.addColorStop(1, '#c8962d');
+  ctx.clearRect(0, 0, 320, 90);
 
-  ctx.strokeStyle = gradient;
-  ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+  // "DEL MAR" wordmark in white
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 40px sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillText('DEL MAR', 0, 2);
+
+  // Subtitle in gold
+  ctx.fillStyle = '#E8C44A';
+  ctx.font = '600 14px sans-serif';
+  ctx.fillText('GESTIÓN DE PROPIEDADES', 2, 50);
+
+  // Gold underline
+  ctx.strokeStyle = '#E8C44A';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(15, 55);
-  ctx.quadraticCurveTo(40, 10, 65, 45);
-  ctx.quadraticCurveTo(90, 75, 115, 30);
-  ctx.quadraticCurveTo(140, -10, 165, 45);
-  ctx.quadraticCurveTo(185, 75, 210, 25);
-  ctx.quadraticCurveTo(220, 10, 230, 18);
+  ctx.moveTo(0, 72);
+  ctx.lineTo(260, 72);
   ctx.stroke();
 
   return canvas.toDataURL('image/png');
@@ -2701,265 +2704,383 @@ function createLogoDataURL() {
 
 function createCertificationsDataURL() {
   const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 60;
+  canvas.width = 720;
+  canvas.height = 44;
   const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 720, 44);
 
-  const badges = [
-    { text: 'ISO 9001', color: '#d4a843', bg: '#fef3c7' },
-    { text: 'MARRIOTT', color: '#c62828', bg: '#ffebee' },
-    { text: 'SAFE TRAVELS', color: '#2e7d32', bg: '#e8f5e9' },
-    { text: 'AIRBNB', color: '#ff5a5f', bg: '#fce4ec' },
-    { text: 'APAR', color: '#1565c0', bg: '#e3f2fd' },
-    { text: 'AIRDNA', color: '#5c6bc0', bg: '#e8eaf6' },
-  ];
+  const labels = ['ISO 9001', 'MARRIOTT', 'SAFE TRAVELS', 'AIRBNB', 'APAR', 'AIRDNA'];
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
 
-  const spacing = 95;
-  const startX = 30;
+  let x = 0;
+  labels.forEach(text => {
+    const tw = ctx.measureText(text).width;
+    const pw = tw + 22;
+    const ph = 28;
+    const py = 8;
+    const r = 6;
 
-  badges.forEach((badge, i) => {
-    const cx = startX + i * spacing;
-    const cy = 30;
-    const r = 24;
-
-    // Círculo de fondo
+    // Pill background
+    ctx.fillStyle = '#EFF6FF';
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = badge.bg;
+    ctx.moveTo(x + r, py);
+    ctx.lineTo(x + pw - r, py);
+    ctx.arcTo(x + pw, py, x + pw, py + r, r);
+    ctx.lineTo(x + pw, py + ph - r);
+    ctx.arcTo(x + pw, py + ph, x + pw - r, py + ph, r);
+    ctx.lineTo(x + r, py + ph);
+    ctx.arcTo(x, py + ph, x, py + ph - r, r);
+    ctx.lineTo(x, py + r);
+    ctx.arcTo(x, py, x + r, py, r);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = badge.color;
-    ctx.lineWidth = 2;
+
+    // Pill border
+    ctx.strokeStyle = '#BFDBFE';
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Texto
-    ctx.fillStyle = badge.color;
-    ctx.font = 'bold 7px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(badge.text, cx, cy);
+    // Label
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillText(text, x + pw / 2, py + ph / 2 + 0.5);
+
+    x += pw + 10;
   });
 
   return canvas.toDataURL('image/png');
 }
 
 // ══════════════════════════════════════════
-// CONSTRUIR PDF (mejorado con agrupación y logos)
+// CONSTRUIR PDF (diseño corporativo)
 // ══════════════════════════════════════════
 
 function buildPDF(jsPDF) {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageW = 210;
-  const margin = 12;
+  const pageH = 297;
+  const margin = 14;
   const contentW = pageW - margin * 2;
-  let y = margin;
+
+  // Design tokens
+  const navy     = [30, 58, 95];
+  const gold     = [200, 150, 45];
+  const lblue    = [232, 240, 254];
+  const altRow   = [248, 250, 252];
+  const border   = [226, 232, 240];
+  const txtDark  = [15, 23, 42];
+  const txtMid   = [71, 85, 105];
+  const txtLight = [148, 163, 184];
+  const maxY     = pageH - 14;
+
+  const statusCfg = {
+    good:    { text: [21, 128, 61],   bg: [220, 252, 231] },
+    damaged: { text: [185, 28, 28],   bg: [254, 226, 226] },
+    missing: { text: [180, 83, 9],    bg: [254, 243, 199] },
+    new:     { text: [29, 78, 216],   bg: [219, 234, 254] },
+  };
+
+  let y = 0;
 
   function checkPage(needed) {
-    if (y + needed > 280) {
+    if (y + needed > maxY) {
       doc.addPage();
-      y = margin;
+      drawRunningHeader();
+      y = 16;
     }
   }
 
-  // Logo
+  function drawRunningHeader() {
+    doc.setFillColor(...navy);
+    doc.rect(0, 0, pageW, 10, 'F');
+    doc.setFillColor(...gold);
+    doc.rect(0, 10, pageW, 1, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('DEL MAR', margin, 7);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(200, 220, 255);
+    doc.text(`${inspectionInfo.location}  ·  ${inspectionInfo.date}`, pageW - margin, 7, { align: 'right' });
+  }
+
+  // ── COVER HEADER ────────────────────────────────────────────────
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, pageW, 42, 'F');
+  doc.setFillColor(...gold);
+  doc.rect(0, 42, pageW, 1.5, 'F');
+
   try {
     const logoData = createLogoDataURL();
-    doc.addImage(logoData, 'PNG', margin, y, 40, 13);
-    y += 16;
-  } catch (e) { /* skip if fails */ }
+    doc.addImage(logoData, 'PNG', margin, 7, 54, 15);
+  } catch (e) {}
 
-  // Título
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('Reporte de Inspección e Inventario', margin, y);
-  y += 8;
-
-  // Línea decorativa
-  doc.setDrawColor(37, 99, 235);
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, margin + contentW, y);
-  y += 6;
-
-  // Info
-  doc.setFontSize(10);
+  doc.setFontSize(8);
   doc.setFont(undefined, 'normal');
-  doc.setTextColor(60, 60, 60);
-  doc.text(`Ubicación: ${inspectionInfo.location}`, margin, y);
-  doc.text(`Fecha: ${inspectionInfo.date}`, margin + 90, y);
-  y += 5;
-  doc.text(`Inspector: ${inspectionInfo.auditor}`, margin, y);
-  if (inspectionInfo.duration) {
-    doc.text(`Duración: ${inspectionInfo.duration}`, margin + 90, y);
-  }
-  y += 3;
-  doc.text(`Recámaras: ${inspectionInfo.numBedrooms} | Baños: ${inspectionInfo.numBathrooms}`, margin, y);
-  y += 10;
+  doc.setTextColor(180, 210, 255);
+  doc.text('REPORTE DE INSPECCIÓN E INVENTARIO', pageW - margin, 13, { align: 'right' });
+  doc.setFontSize(15);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(255, 255, 255);
+  const locLines = doc.splitTextToSize(inspectionInfo.location || '—', 110);
+  doc.text(locLines, pageW - margin, 25, { align: 'right' });
 
-  // Cada sección
+  y = 51;
+
+  // Metadata card
+  doc.setFillColor(...altRow);
+  doc.setDrawColor(...border);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentW, 24, 2, 2, 'FD');
+
+  const c1 = margin + 6;
+  const c2 = margin + contentW / 2 + 4;
+  const labelY  = y + 6;
+  const valueY  = y + 12;
+  const label2Y = y + 17;
+  const value2Y = y + 23;
+
+  doc.setFontSize(6.5);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(...txtMid);
+  doc.text('INSPECTOR', c1, labelY);
+  doc.text('FECHA', c2, labelY);
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(...txtDark);
+  doc.text(inspectionInfo.auditor || '—', c1, valueY);
+  doc.text(inspectionInfo.date || '—', c2, valueY);
+
+  doc.setFontSize(6.5);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(...txtMid);
+  doc.text('DURACIÓN', c1, label2Y);
+  doc.text('HABITACIONES  /  BAÑOS', c2, label2Y);
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(...txtDark);
+  doc.text(inspectionInfo.duration || '—', c1, value2Y);
+  doc.text(`${inspectionInfo.numBedrooms || '—'}  /  ${inspectionInfo.numBathrooms || '—'}`, c2, value2Y);
+
+  y += 30;
+
+  // Status summary chips
+  const allData = Object.values(inspectionData);
+  const counts  = { good: 0, damaged: 0, missing: 0, new: 0 };
+  allData.forEach(d => { if (d.status && counts[d.status] !== undefined) counts[d.status]++; });
+  const totalFilled = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  if (totalFilled > 0) {
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...txtMid);
+    doc.text('RESUMEN DE CONDICIÓN', margin, y + 4);
+    y += 7;
+
+    const chipW = (contentW - 9) / 4;
+    ['good', 'damaged', 'missing', 'new'].forEach((s, i) => {
+      const cfg   = statusCfg[s];
+      const label = (STATUS_OPTIONS.find(o => o.value === s) || {}).label || s;
+      const cx    = margin + i * (chipW + 3);
+      doc.setFillColor(...cfg.bg);
+      doc.setDrawColor(...border);
+      doc.setLineWidth(0.25);
+      doc.roundedRect(cx, y, chipW, 14, 1.5, 1.5, 'FD');
+      doc.setFontSize(15);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(...cfg.text);
+      doc.text(String(counts[s]), cx + chipW / 2, y + 9, { align: 'center' });
+      doc.setFontSize(6);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(...txtMid);
+      doc.text(label.toUpperCase(), cx + chipW / 2, y + 13.5, { align: 'center' });
+    });
+    y += 19;
+  }
+
+  // ── SECTIONS ────────────────────────────────────────────────────
   SECTIONS.forEach((section, sIdx) => {
     if (sIdx > 0) {
       doc.addPage();
-      y = margin;
+      drawRunningHeader();
+      y = 16;
     }
 
-    // Encabezado de sección
-    checkPage(20);
-    doc.setFillColor(37, 99, 235);
-    doc.rect(margin, y - 1, contentW, 8, 'F');
-    doc.setFontSize(12);
+    checkPage(18);
+    // Section header band
+    doc.setFillColor(...navy);
+    doc.rect(margin, y, contentW, 9, 'F');
+    doc.setFillColor(...gold);
+    doc.rect(margin, y, 3, 9, 'F');
+    doc.setFontSize(9.5);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text(section.name.toUpperCase(), margin + 3, y + 5);
-    y += 12;
+    doc.text(section.name.toUpperCase(), margin + 8, y + 6);
+    y += 13;
 
-    // Agrupar por área
+    // Build area groups
     const areaGroups = [];
-    let currentArea = null;
+    let curArea = null;
     section.items.forEach((item, idx) => {
-      if (item.area !== currentArea) {
-        currentArea = item.area;
-        areaGroups.push({ area: currentArea, items: [] });
+      if (item.area !== curArea) {
+        curArea = item.area;
+        areaGroups.push({ area: curArea, items: [] });
       }
       areaGroups[areaGroups.length - 1].items.push({ item, idx });
     });
 
-    areaGroups.forEach((group) => {
-      checkPage(16);
+    areaGroups.forEach(group => {
+      checkPage(24);
 
-      // Sub-encabezado de área con fondo
-      doc.setFillColor(240, 244, 255);
-      doc.rect(margin, y - 1, contentW, 6, 'F');
-      doc.setFontSize(9);
+      // Area sub-header
+      doc.setFillColor(...lblue);
+      doc.rect(margin, y, contentW, 7, 'F');
+      doc.setFontSize(8);
       doc.setFont(undefined, 'bold');
-      doc.setTextColor(37, 99, 235);
-      doc.text(group.area.toUpperCase(), margin + 2, y + 3);
-      y += 8;
+      doc.setTextColor(...navy);
+      doc.text(group.area.toUpperCase(), margin + 5, y + 5);
+      y += 9;
 
-      // Encabezados de columna
-      const colX = [margin + 2, margin + 40, margin + 85, margin + 115, margin + 140, margin + 155];
-      doc.setFontSize(7);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(100, 100, 100);
-      doc.text('Subcategoría', colX[0], y);
-      doc.text('Artículo', colX[1], y);
-      doc.text('Estado', colX[2], y);
-      doc.text('Tipo', colX[3], y);
-      doc.text('Cant', colX[4], y);
-      doc.text('Observaciones', colX[5], y);
-      y += 1.5;
-      doc.setDrawColor(200, 200, 200);
+      // Column header row
+      const colX = [margin + 2, margin + 42, margin + 90, margin + 118, margin + 136, margin + 153];
+      doc.setFillColor(245, 247, 250);
+      doc.setDrawColor(...border);
       doc.setLineWidth(0.2);
-      doc.line(margin, y, margin + contentW, y);
-      y += 3;
+      doc.rect(margin, y, contentW, 6, 'FD');
+      doc.setFontSize(6.5);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(...txtMid);
+      ['SUBCATEGORÍA', 'ARTÍCULO', 'ESTADO', 'TIPO', 'CANT', 'OBSERVACIONES'].forEach((lbl, ci) => {
+        doc.text(lbl, colX[ci], y + 4.2);
+      });
+      y += 7;
 
-      // Agrupar por subcategoría dentro del área
       let currentSub = null;
+      let rowIdx     = 0;
 
       group.items.forEach(({ item, idx: itemIdx }) => {
-        const key = `${section.id}-${itemIdx}`;
-        const data = inspectionData[key] || {};
-        const statusLabel = STATUS_OPTIONS.find(o => o.value === data.status);
-        const names = getItemNames(item.name);
+        const key       = `${section.id}-${itemIdx}`;
+        const data      = inspectionData[key] || {};
+        const statusLbl = STATUS_OPTIONS.find(o => o.value === data.status);
+        const names     = getItemNames(item.name);
         const hasPhotos = data.photos && data.photos.length > 0;
-        const rowHeight = hasPhotos ? 22 : 5;
+        const rowH      = hasPhotos ? 26 : 7;
 
-        checkPage(rowHeight + 4);
+        checkPage(rowH + 3);
 
-        doc.setFontSize(7);
+        // Alternating stripe
+        if (rowIdx % 2 === 1) {
+          doc.setFillColor(...altRow);
+          doc.rect(margin, y, contentW, rowH, 'F');
+        }
+
+        doc.setFontSize(7.5);
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(50, 50, 50);
+        doc.setTextColor(...txtDark);
 
-        // Subcategoría (solo si cambió)
         if (item.sub !== currentSub) {
           currentSub = item.sub;
           doc.setFont(undefined, 'bold');
-          doc.setTextColor(100, 100, 100);
-          doc.text(item.sub || '', colX[0], y);
+          doc.setTextColor(...navy);
+          doc.text(doc.splitTextToSize(item.sub || '', 38)[0], colX[0], y + 5);
           doc.setFont(undefined, 'normal');
-          doc.setTextColor(50, 50, 50);
+          doc.setTextColor(...txtDark);
         }
 
-        doc.text(names.es, colX[1], y);
+        doc.text(doc.splitTextToSize(names.es, 45)[0], colX[1], y + 5);
 
-        // Estado con color
-        if (data.status) {
-          const statusColors = { good: [16, 185, 129], damaged: [239, 68, 68], missing: [245, 158, 11], new: [37, 99, 235] };
-          const c = statusColors[data.status] || [100, 100, 100];
-          doc.setTextColor(c[0], c[1], c[2]);
+        // Status chip
+        if (data.status && statusCfg[data.status]) {
+          const cfg   = statusCfg[data.status];
+          const label = statusLbl ? statusLbl.label : data.status;
+          const cw = 26, ch = 5;
+          doc.setFillColor(...cfg.bg);
+          doc.roundedRect(colX[2], y + 1, cw, ch, 1, 1, 'F');
+          doc.setFontSize(6.5);
           doc.setFont(undefined, 'bold');
+          doc.setTextColor(...cfg.text);
+          doc.text(label, colX[2] + cw / 2, y + 4.8, { align: 'center' });
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(...txtDark);
+          doc.setFontSize(7.5);
+        } else {
+          doc.setTextColor(...txtLight);
+          doc.text('—', colX[2], y + 5);
+          doc.setTextColor(...txtDark);
         }
-        doc.text(statusLabel ? statusLabel.label : '-', colX[2], y);
+
+        doc.text(item.type === 'fixed' ? 'Fijo' : 'Variable', colX[3], y + 5);
+        doc.setFont(undefined, 'bold');
+        doc.text(String(data.qty !== undefined ? data.qty : item.qty), colX[4], y + 5);
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(50, 50, 50);
 
-        doc.text(item.type === 'fixed' ? 'Fijo' : 'Variable', colX[3], y);
-        doc.text(String(data.qty !== undefined ? data.qty : item.qty), colX[4], y);
-
-        const obs = data.observations || '';
-        if (obs) {
-          const lines = doc.splitTextToSize(obs, 30);
-          doc.text(lines, colX[5], y);
+        if (data.observations) {
+          doc.setTextColor(...txtMid);
+          doc.text(doc.splitTextToSize(data.observations, 38), colX[5], y + 5);
+          doc.setTextColor(...txtDark);
         }
 
         if (hasPhotos) {
-          y += 3;
+          const photoY = y + 8;
           data.photos.forEach((photo, pi) => {
-            if (pi < 3) {
-              try {
-                doc.addImage(photo, 'JPEG', colX[1] + (pi * 22), y, 16, 16);
-              } catch (e) { /* skip */ }
-              // Mostrar hora de la foto y diferencia
-              if (data.photoTimes && data.photoTimes[pi]) {
-                const t = new Date(data.photoTimes[pi]);
-                const timeLabel = t.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                let diffLabel = '';
-                if (pi > 0 && data.photoTimes[pi - 1]) {
-                  const diffMs = t - new Date(data.photoTimes[pi - 1]);
-                  const diffSec = Math.floor(diffMs / 1000);
-                  const dm = Math.floor(diffSec / 60);
-                  const ds = diffSec % 60;
-                  diffLabel = dm > 0 ? ` (+${dm}m${ds}s)` : ` (+${ds}s)`;
-                }
-                doc.setFontSize(5);
-                doc.setTextColor(120, 120, 120);
-                doc.text(timeLabel + diffLabel, colX[1] + (pi * 22), y + 18);
-                doc.setFontSize(7);
-                doc.setTextColor(50, 50, 50);
+            if (pi >= 3) return;
+            const px = colX[1] + pi * 22;
+            try {
+              doc.setDrawColor(...border);
+              doc.setLineWidth(0.3);
+              doc.rect(px - 0.5, photoY - 0.5, 17, 17, 'D');
+              doc.addImage(photo, 'JPEG', px, photoY, 16, 16);
+            } catch (e) {}
+            if (data.photoTimes && data.photoTimes[pi]) {
+              const t = new Date(data.photoTimes[pi]);
+              const tl = t.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              let dl = '';
+              if (pi > 0 && data.photoTimes[pi - 1]) {
+                const ds = Math.floor((t - new Date(data.photoTimes[pi - 1])) / 1000);
+                const dm = Math.floor(ds / 60);
+                dl = dm > 0 ? ` +${dm}m${ds % 60}s` : ` +${ds}s`;
               }
+              doc.setFontSize(5);
+              doc.setTextColor(...txtLight);
+              doc.text(tl + dl, px, photoY + 18.5);
+              doc.setFontSize(7.5);
+              doc.setTextColor(...txtDark);
             }
           });
-          y += 22;
+          y += 26;
+        } else {
+          y += 7;
         }
 
-        y += 5;
-
-        // Línea separadora sutil
-        doc.setDrawColor(230, 230, 230);
+        doc.setDrawColor(...border);
         doc.setLineWidth(0.1);
-        doc.line(colX[1], y - 2, margin + contentW, y - 2);
+        doc.line(margin, y, margin + contentW, y);
+        rowIdx++;
       });
 
-      y += 3;
+      y += 5;
     });
   });
 
-  // Pie de página con certificaciones
-  checkPage(30);
-  y += 5;
-  doc.setDrawColor(37, 99, 235);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y, margin + contentW, y);
-  y += 5;
-
-  try {
-    const certData = createCertificationsDataURL();
-    doc.addImage(certData, 'PNG', margin + 10, y, 120, 12);
-    y += 15;
-  } catch (e) { /* skip */ }
-
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.text('Del Mar — Gestión de Propiedades | ISO 9001 | Marriott | Safe Travels | Airbnb Prohost | APAR | AirDNA', pageW / 2, y, { align: 'center' });
+  // ── FOOTER ON EVERY PAGE ────────────────────────────────────────
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    const fy = pageH - 9;
+    doc.setFillColor(...altRow);
+    doc.rect(0, fy - 1, pageW, 10, 'F');
+    doc.setDrawColor(...border);
+    doc.setLineWidth(0.3);
+    doc.line(0, fy - 1, pageW, fy - 1);
+    doc.setFontSize(6.5);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...txtMid);
+    doc.text('Del Mar — Gestión de Propiedades  ·  ISO 9001  ·  Marriott  ·  Safe Travels  ·  Airbnb Prohost  ·  APAR  ·  AirDNA', margin, fy + 4);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...txtDark);
+    doc.text(`${p} / ${totalPages}`, pageW - margin, fy + 4, { align: 'right' });
+  }
 
   return doc;
 }
@@ -2972,43 +3093,106 @@ async function exportXLSX() {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Del Mar';
 
+  const NAVY        = 'FF1E3A5F';
+  const GOLD        = 'FFC8962D';
+  const WHITE       = 'FFFFFFFF';
+  const ALT         = 'FFF8FAFC';
+  const INFO_BG     = 'FFF1F5F9';
+  const BORDER_C    = 'FFE2E8F0';
+  const MID_TXT     = 'FF475569';
+  const DARK_TXT    = 'FF0F172A';
+
+  const statusColors = {
+    good:    { text: 'FF15803D', bg: 'FFD1FAE5' },
+    damaged: { text: 'FFB91C1C', bg: 'FFFEE2E2' },
+    missing: { text: 'FFB45309', bg: 'FFFEF3C7' },
+    new:     { text: 'FF1D4ED8', bg: 'FFDBEAFE' },
+  };
+
+  const thin = {
+    top:    { style: 'thin', color: { argb: BORDER_C } },
+    bottom: { style: 'thin', color: { argb: BORDER_C } },
+    left:   { style: 'thin', color: { argb: BORDER_C } },
+    right:  { style: 'thin', color: { argb: BORDER_C } },
+  };
+
   for (const section of SECTIONS) {
-    const ws = workbook.addWorksheet(section.name.substring(0, 31));
-
-    ws.columns = [
-      { width: 18 }, // Área
-      { width: 18 }, // Sub
-      { width: 8  }, // Marcar
-      { width: 32 }, // Descripción
-      { width: 10 }, // Cantidad
-      { width: 40 }, // Observaciones
-      { width: 14 }, // Foto
-    ];
-
-    // Title row (row 1)
-    ws.addRow(['DEL MAR — Reporte de Inspección e Inventario', '', '', '', '', '', '']);
-    ws.mergeCells(1, 1, 1, 7);
-    ws.getRow(1).getCell(1).font = { bold: true, size: 13 };
-    ws.getRow(1).getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
-    ws.getRow(1).getCell(1).font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
-
-    // Info rows (rows 2-3)
-    ws.addRow([`Ubicación: ${inspectionInfo.location}`, '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`, '', '']);
-    ws.addRow([`Recámaras: ${inspectionInfo.numBedrooms || '—'} | Baños: ${inspectionInfo.numBathrooms || '—'}`, '', inspectionInfo.duration ? `Duración: ${inspectionInfo.duration}` : '', '', '', '', '']);
-
-    // Empty row (row 4)
-    ws.addRow([]);
-
-    // Header row (row 5)
-    const hdrRow = ws.addRow(['Área', 'Subcategoría', 'Marcar', 'Descripción', 'Cant.', 'Observaciones', 'Foto']);
-    hdrRow.eachCell(cell => {
-      cell.font = { bold: true, color: { argb: 'FF1E3A5F' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FE' } };
+    const ws = workbook.addWorksheet(section.name.substring(0, 31), {
+      properties: { tabColor: { argb: NAVY } },
     });
 
-    let rowNum = 6;
+    ws.columns = [
+      { width: 20 },
+      { width: 20 },
+      { width: 14 },
+      { width: 34 },
+      { width: 9  },
+      { width: 44 },
+      { width: 17 },
+    ];
 
-    // Group items by area
+    // Row 1: title
+    ws.addRow(['DEL MAR — Reporte de Inspección e Inventario', '', '', '', '', '', '']);
+    ws.mergeCells('A1:G1');
+    Object.assign(ws.getCell('A1'), {
+      font:      { bold: true, size: 14, color: { argb: WHITE }, name: 'Calibri' },
+      fill:      { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } },
+      alignment: { vertical: 'middle', horizontal: 'left', indent: 1 },
+    });
+    ws.getRow(1).height = 30;
+
+    // Row 2: gold accent stripe
+    ws.addRow(['', '', '', '', '', '', '']);
+    ws.mergeCells('A2:G2');
+    ws.getCell('A2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GOLD } };
+    ws.getRow(2).height = 3;
+
+    // Row 3: info
+    ws.addRow([`Ubicación: ${inspectionInfo.location}`, '', '', `Fecha: ${inspectionInfo.date}`, '', `Inspector: ${inspectionInfo.auditor}`, '']);
+    ws.mergeCells('A3:C3'); ws.mergeCells('D3:E3'); ws.mergeCells('F3:G3');
+    for (const addr of ['A3', 'D3', 'F3']) {
+      Object.assign(ws.getCell(addr), {
+        font:      { size: 10, name: 'Calibri', color: { argb: DARK_TXT } },
+        fill:      { type: 'pattern', pattern: 'solid', fgColor: { argb: INFO_BG } },
+        alignment: { vertical: 'middle', indent: 1 },
+      });
+    }
+    ws.getRow(3).height = 20;
+
+    // Row 4: info line 2
+    ws.addRow([
+      `Recámaras: ${inspectionInfo.numBedrooms || '—'}  |  Baños: ${inspectionInfo.numBathrooms || '—'}`,
+      '', '',
+      inspectionInfo.duration ? `Duración: ${inspectionInfo.duration}` : '',
+      '', '', '',
+    ]);
+    ws.mergeCells('A4:C4'); ws.mergeCells('D4:G4');
+    for (const addr of ['A4', 'D4']) {
+      Object.assign(ws.getCell(addr), {
+        font:      { size: 10, name: 'Calibri', color: { argb: DARK_TXT } },
+        fill:      { type: 'pattern', pattern: 'solid', fgColor: { argb: INFO_BG } },
+        alignment: { vertical: 'middle', indent: 1 },
+      });
+    }
+    ws.getRow(4).height = 18;
+
+    // Row 5: spacer
+    ws.addRow([]);
+    ws.getRow(5).height = 6;
+
+    // Row 6: column headers
+    const hdrRow = ws.addRow(['Área', 'Subcategoría', 'Estado', 'Descripción', 'Cant.', 'Observaciones', 'Foto']);
+    hdrRow.height = 22;
+    hdrRow.eachCell((cell, col) => {
+      cell.font      = { bold: true, size: 9.5, color: { argb: WHITE }, name: 'Calibri' };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+      cell.alignment = { vertical: 'middle', horizontal: col <= 2 ? 'left' : 'center', indent: col <= 2 ? 1 : 0 };
+      cell.border    = thin;
+    });
+
+    let rowNum   = 7;
+    let dataIdx  = 0;
+
     const areaGroups = [];
     let curArea = null;
     section.items.forEach((item, idx) => {
@@ -3018,8 +3202,7 @@ async function exportXLSX() {
 
     for (const group of areaGroups) {
       const areaStartRow = rowNum;
-
-      const subGroups = [];
+      const subGroups    = [];
       let curSub = null;
       group.items.forEach(entry => {
         if (entry.item.sub !== curSub) { curSub = entry.item.sub; subGroups.push({ sub: curSub, entries: [] }); }
@@ -3031,31 +3214,67 @@ async function exportXLSX() {
 
         for (let ei = 0; ei < subGroup.entries.length; ei++) {
           const { item, idx: itemIdx } = subGroup.entries[ei];
-          const key = `${section.id}-${itemIdx}`;
-          const data = inspectionData[key] || {};
-          const names = getItemNames(item.name);
+          const key      = `${section.id}-${itemIdx}`;
+          const data     = inspectionData[key] || {};
+          const names    = getItemNames(item.name);
           const hasPhoto = data.photos && data.photos.length > 0;
+          const statusLbl = STATUS_OPTIONS.find(o => o.value === data.status);
 
           ws.addRow([
             ei === 0 && subGroup === subGroups[0] ? group.area : '',
             ei === 0 ? (subGroup.sub || '') : '',
-            data.status ? '☑' : '☐',
+            statusLbl ? statusLbl.label : '',
             names.es,
             data.qty !== undefined ? Number(data.qty) : item.qty,
             data.observations || '',
             '',
           ]);
 
+          const row      = ws.getRow(rowNum);
+          const isAlt    = dataIdx % 2 === 1;
+          const rowFill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: isAlt ? ALT : WHITE } };
+          row.height     = hasPhoto ? 65 : 18;
+
+          row.eachCell({ includeEmpty: true }, (cell, col) => {
+            if (col > 7) return;
+            cell.fill      = rowFill;
+            cell.border    = thin;
+            cell.font      = { size: 9.5, name: 'Calibri', color: { argb: DARK_TXT } };
+            cell.alignment = { vertical: 'middle', wrapText: col === 6 };
+          });
+
+          // Area cell
+          const areaCell = row.getCell(1);
+          areaCell.font      = { bold: true, size: 9.5, name: 'Calibri', color: { argb: NAVY } };
+          areaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1, wrapText: true };
+
+          // Sub cell
+          const subCell  = row.getCell(2);
+          subCell.font   = { size: 9, italic: true, name: 'Calibri', color: { argb: MID_TXT } };
+          subCell.alignment = { vertical: 'middle', indent: 1 };
+
+          // Status cell coloring
+          if (data.status && statusColors[data.status]) {
+            const sc       = statusColors[data.status];
+            const sCell    = row.getCell(3);
+            sCell.font     = { bold: true, size: 9, name: 'Calibri', color: { argb: sc.text } };
+            sCell.fill     = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } };
+            sCell.alignment = { vertical: 'middle', horizontal: 'center' };
+          }
+
+          // Qty centered
+          row.getCell(5).alignment = { vertical: 'middle', horizontal: 'center' };
+
           if (hasPhoto) {
-            ws.getRow(rowNum).height = 65;
             try {
-              const b64 = data.photos[0].split(',')[1];
+              const b64   = data.photos[0].split(',')[1];
               const imgId = workbook.addImage({ base64: b64, extension: 'jpeg' });
               ws.addImage(imgId, { tl: { col: 6, row: rowNum - 1 }, br: { col: 7, row: rowNum }, editAs: 'oneCell' });
             } catch (_) {}
           }
 
           rowNum++;
+          dataIdx++;
         }
 
         if (rowNum - 1 > subStartRow) ws.mergeCells(subStartRow, 2, rowNum - 1, 2);
@@ -3064,13 +3283,19 @@ async function exportXLSX() {
       if (rowNum - 1 > areaStartRow) ws.mergeCells(areaStartRow, 1, rowNum - 1, 1);
 
       ws.addRow([]);
+      ws.getRow(rowNum).height = 6;
       rowNum++;
     }
 
     // Footer
     ws.addRow([]);
-    ws.addRow(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA']);
+    ws.addRow(['Del Mar — Gestión de Propiedades  ·  ISO 9001  ·  Marriott International  ·  Safe Travels  ·  Airbnb Prohost  ·  APAR  ·  AirDNA']);
     ws.mergeCells(ws.rowCount, 1, ws.rowCount, 7);
+    const fCell     = ws.getCell(`A${ws.rowCount}`);
+    fCell.font      = { size: 8, name: 'Calibri', color: { argb: MID_TXT } };
+    fCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: INFO_BG } };
+    fCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getRow(ws.rowCount).height = 18;
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -3083,7 +3308,7 @@ async function exportXLSX() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('📊 Excel con fotos descargado');
+  showToast('📊 Excel descargado');
 }
 
 // ── Exportar PDF ──

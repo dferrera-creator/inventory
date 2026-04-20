@@ -1152,63 +1152,169 @@ async function exportInventoryXLSX() {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Del Mar';
 
+  const NAVY     = 'FF1E3A5F';
+  const GOLD     = 'FFC8962D';
+  const WHITE    = 'FFFFFFFF';
+  const ALT      = 'FFF8FAFC';
+  const INFO_BG  = 'FFF1F5F9';
+  const BORDER_C = 'FFE2E8F0';
+  const MID_TXT  = 'FF475569';
+  const DARK_TXT = 'FF0F172A';
+
+  const statusColors = {
+    good:    { text: 'FF15803D', bg: 'FFD1FAE5' },
+    damaged: { text: 'FFB91C1C', bg: 'FFFEE2E2' },
+    missing: { text: 'FFB45309', bg: 'FFFEF3C7' },
+    new:     { text: 'FF1D4ED8', bg: 'FFDBEAFE' },
+  };
+
+  const thin = {
+    top:    { style: 'thin', color: { argb: BORDER_C } },
+    bottom: { style: 'thin', color: { argb: BORDER_C } },
+    left:   { style: 'thin', color: { argb: BORDER_C } },
+    right:  { style: 'thin', color: { argb: BORDER_C } },
+  };
+
   for (const room of inventoryRooms) {
-    const ws = workbook.addWorksheet(room.roomName.substring(0, 31));
-    ws.columns = [
-      { width: 30 }, // Artículo
-      { width: 14 }, // SKU
-      { width: 12 }, // Estado
-      { width: 10 }, // Tipo
-      { width: 10 }, // Cantidad
-      { width: 12 }, // Precio
-      { width: 40 }, // Notas
-      { width: 14 }, // Foto
-    ];
-
-    // Title
-    ws.addRow(['DEL MAR — Inventario de Unidad', '', '', '', '', '', '', '']);
-    ws.mergeCells(1, 1, 1, 8);
-    ws.getRow(1).getCell(1).font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
-    ws.getRow(1).getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
-
-    ws.addRow([`Unidad: ${inventoryInfo.unitName}`, '', `Fecha: ${inventoryInfo.date}`, '', `Responsable: ${inventoryInfo.auditor}`, '', '', '']);
-    ws.addRow([inventoryInfo.duration ? `Duración: ${inventoryInfo.duration}` : '', '', '', '', '', '', '', '']);
-    ws.addRow([]);
-
-    const hdrRow = ws.addRow(['Artículo', 'SKU', 'Estado', 'Tipo', 'Cantidad', 'Precio ($)', 'Notas', 'Foto']);
-    hdrRow.eachCell(cell => {
-      cell.font = { bold: true, color: { argb: 'FF1E3A5F' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FE' } };
+    const ws = workbook.addWorksheet(room.roomName.substring(0, 31), {
+      properties: { tabColor: { argb: GOLD } },
     });
 
-    let rowNum = 6;
+    ws.columns = [
+      { width: 32 },
+      { width: 15 },
+      { width: 14 },
+      { width: 9  },
+      { width: 12 },
+      { width: 44 },
+      { width: 17 },
+    ];
+
+    // Row 1: title
+    ws.addRow(['DEL MAR — Inventario de Unidad', '', '', '', '', '', '']);
+    ws.mergeCells('A1:G1');
+    Object.assign(ws.getCell('A1'), {
+      font:      { bold: true, size: 14, color: { argb: WHITE }, name: 'Calibri' },
+      fill:      { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } },
+      alignment: { vertical: 'middle', horizontal: 'left', indent: 1 },
+    });
+    ws.getRow(1).height = 30;
+
+    // Row 2: gold accent stripe
+    ws.addRow(['', '', '', '', '', '', '']);
+    ws.mergeCells('A2:G2');
+    ws.getCell('A2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GOLD } };
+    ws.getRow(2).height = 3;
+
+    // Row 3: info
+    ws.addRow([`Unidad: ${inventoryInfo.unitName}`, '', `Fecha: ${inventoryInfo.date}`, '', `Responsable: ${inventoryInfo.auditor}`, '', '']);
+    ws.mergeCells('A3:B3'); ws.mergeCells('C3:D3'); ws.mergeCells('E3:G3');
+    for (const addr of ['A3', 'C3', 'E3']) {
+      Object.assign(ws.getCell(addr), {
+        font:      { size: 10, name: 'Calibri', color: { argb: DARK_TXT } },
+        fill:      { type: 'pattern', pattern: 'solid', fgColor: { argb: INFO_BG } },
+        alignment: { vertical: 'middle', indent: 1 },
+      });
+    }
+    ws.getRow(3).height = 20;
+
+    // Row 4: duration
+    ws.addRow([inventoryInfo.duration ? `Duración: ${inventoryInfo.duration}` : '', '', '', '', '', '', '']);
+    ws.mergeCells('A4:G4');
+    Object.assign(ws.getCell('A4'), {
+      font:      { size: 10, name: 'Calibri', color: { argb: DARK_TXT } },
+      fill:      { type: 'pattern', pattern: 'solid', fgColor: { argb: INFO_BG } },
+      alignment: { vertical: 'middle', indent: 1 },
+    });
+    ws.getRow(4).height = 18;
+
+    // Row 5: spacer
+    ws.addRow([]);
+    ws.getRow(5).height = 6;
+
+    // Row 6: column headers
+    const hdrRow = ws.addRow(['Artículo', 'SKU', 'Estado', 'Cant.', 'Precio ($)', 'Notas', 'Foto']);
+    hdrRow.height = 22;
+    hdrRow.eachCell((cell, col) => {
+      cell.font      = { bold: true, size: 9.5, color: { argb: WHITE }, name: 'Calibri' };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+      cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'center', indent: col === 1 ? 1 : 0 };
+      cell.border    = thin;
+    });
+
+    let rowNum  = 7;
+    let dataIdx = 0;
+    const sopts = typeof STATUS_OPTIONS !== 'undefined' ? STATUS_OPTIONS : [];
+
     for (const item of room.items) {
-      const statusLabel = (typeof STATUS_OPTIONS !== 'undefined' ? STATUS_OPTIONS : []).find(o => o.value === item.status);
-      const hasPhoto = item.photos && item.photos.length > 0;
+      const statusLabel = sopts.find(o => o.value === item.status);
+      const hasPhoto    = item.photos && item.photos.length > 0;
+
       ws.addRow([
         item.name,
         item.sku || '',
         statusLabel ? statusLabel.label : '',
-        'Variable',
         item.qty,
         item.price ? Number(item.price) : 0,
         item.notes || '',
         '',
       ]);
+
+      const row     = ws.getRow(rowNum);
+      const isAlt   = dataIdx % 2 === 1;
+      const rowFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isAlt ? ALT : WHITE } };
+      row.height    = hasPhoto ? 65 : 18;
+
+      row.eachCell({ includeEmpty: true }, (cell, col) => {
+        if (col > 7) return;
+        cell.fill      = rowFill;
+        cell.border    = thin;
+        cell.font      = { size: 9.5, name: 'Calibri', color: { argb: DARK_TXT } };
+        cell.alignment = { vertical: 'middle', wrapText: col === 6 };
+      });
+
+      // Article name
+      row.getCell(1).alignment = { vertical: 'middle', indent: 1 };
+
+      // SKU muted
+      row.getCell(2).font = { size: 9, name: 'Calibri', color: { argb: MID_TXT } };
+      row.getCell(2).alignment = { vertical: 'middle', horizontal: 'center' };
+
+      // Status coloring
+      if (item.status && statusColors[item.status]) {
+        const sc      = statusColors[item.status];
+        const sCell   = row.getCell(3);
+        sCell.font    = { bold: true, size: 9, name: 'Calibri', color: { argb: sc.text } };
+        sCell.fill    = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } };
+        sCell.alignment = { vertical: 'middle', horizontal: 'center' };
+      }
+
+      // Qty and price centered
+      row.getCell(4).alignment = { vertical: 'middle', horizontal: 'center' };
+      row.getCell(5).numFmt    = '"$"#,##0.00';
+      row.getCell(5).alignment = { vertical: 'middle', horizontal: 'right' };
+
       if (hasPhoto) {
-        ws.getRow(rowNum).height = 65;
         try {
-          const b64 = item.photos[0].split(',')[1];
+          const b64   = item.photos[0].split(',')[1];
           const imgId = workbook.addImage({ base64: b64, extension: 'jpeg' });
-          ws.addImage(imgId, { tl: { col: 7, row: rowNum - 1 }, br: { col: 8, row: rowNum }, editAs: 'oneCell' });
+          ws.addImage(imgId, { tl: { col: 6, row: rowNum - 1 }, br: { col: 7, row: rowNum }, editAs: 'oneCell' });
         } catch (_) {}
       }
+
       rowNum++;
+      dataIdx++;
     }
 
+    // Footer
     ws.addRow([]);
-    ws.addRow(['ISO 9001 | Marriott International | Safe Travels | Airbnb Prohost | APAR | AirDNA']);
-    ws.mergeCells(ws.rowCount, 1, ws.rowCount, 8);
+    ws.addRow(['Del Mar — Gestión de Propiedades  ·  ISO 9001  ·  Marriott International  ·  Safe Travels  ·  Airbnb Prohost  ·  APAR  ·  AirDNA']);
+    ws.mergeCells(ws.rowCount, 1, ws.rowCount, 7);
+    const fCell     = ws.getCell(`A${ws.rowCount}`);
+    fCell.font      = { size: 8, name: 'Calibri', color: { argb: MID_TXT } };
+    fCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: INFO_BG } };
+    fCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getRow(ws.rowCount).height = 18;
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -1221,7 +1327,7 @@ async function exportInventoryXLSX() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('📊 Excel con fotos descargado');
+  showToast('📊 Excel descargado');
 }
 
 // ── Exportar PDF (modo inventario) ──
@@ -1242,167 +1348,302 @@ function generateInventoryPDFBlob() {
 function buildInventoryPDF(jsPDF) {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageW = 210;
-  const margin = 12;
+  const pageH = 297;
+  const margin = 14;
   const contentW = pageW - margin * 2;
-  let y = margin;
+
+  // Design tokens — amber/gold palette for inventory
+  const amber    = [166, 109, 0];
+  const navy     = [30, 58, 95];
+  const lblue    = [255, 243, 205];
+  const altRow   = [248, 250, 252];
+  const border   = [226, 232, 240];
+  const txtDark  = [15, 23, 42];
+  const txtMid   = [71, 85, 105];
+  const txtLight = [148, 163, 184];
+  const maxY     = pageH - 14;
+
+  const statusCfg = {
+    good:    { text: [21, 128, 61],   bg: [220, 252, 231] },
+    damaged: { text: [185, 28, 28],   bg: [254, 226, 226] },
+    missing: { text: [180, 83, 9],    bg: [254, 243, 199] },
+    new:     { text: [29, 78, 216],   bg: [219, 234, 254] },
+  };
+
+  let y = 0;
 
   function checkPage(needed) {
-    if (y + needed > 280) {
+    if (y + needed > maxY) {
       doc.addPage();
-      y = margin;
+      drawRunningHeader();
+      y = 16;
     }
   }
 
-  // Logo
+  function drawRunningHeader() {
+    doc.setFillColor(...navy);
+    doc.rect(0, 0, pageW, 10, 'F');
+    doc.setFillColor(...amber);
+    doc.rect(0, 10, pageW, 1, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('DEL MAR', margin, 7);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(220, 210, 180);
+    doc.text(`${inventoryInfo.unitName}  ·  ${inventoryInfo.date}`, pageW - margin, 7, { align: 'right' });
+  }
+
+  // ── COVER HEADER ────────────────────────────────────────────────
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, pageW, 42, 'F');
+  doc.setFillColor(...amber);
+  doc.rect(0, 42, pageW, 1.5, 'F');
+
   try {
     const logoData = createLogoDataURL();
-    doc.addImage(logoData, 'PNG', margin, y, 40, 13);
-    y += 16;
-  } catch (e) { /* skip */ }
+    doc.addImage(logoData, 'PNG', margin, 7, 54, 15);
+  } catch (e) {}
 
-  // Título en ámbar
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(180, 120, 0);
-  doc.text('Reporte de Inventario de Unidad', margin, y);
-  y += 8;
-
-  doc.setDrawColor(180, 120, 0);
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, margin + contentW, y);
-  y += 6;
-
-  // Metadata
-  doc.setFontSize(10);
+  doc.setFontSize(8);
   doc.setFont(undefined, 'normal');
-  doc.setTextColor(60, 60, 60);
-  doc.text(`Unidad: ${inventoryInfo.unitName}`, margin, y);
-  doc.text(`Fecha: ${inventoryInfo.date}`, margin + 90, y);
-  y += 5;
-  doc.text(`Responsable: ${inventoryInfo.auditor}`, margin, y);
-  if (inventoryInfo.duration) {
-    doc.text(`Duración: ${inventoryInfo.duration}`, margin + 90, y);
-  }
-  y += 10;
+  doc.setTextColor(220, 200, 150);
+  doc.text('REPORTE DE INVENTARIO DE UNIDAD', pageW - margin, 13, { align: 'right' });
+  doc.setFontSize(15);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(255, 255, 255);
+  const unitLines = doc.splitTextToSize(inventoryInfo.unitName || '—', 110);
+  doc.text(unitLines, pageW - margin, 25, { align: 'right' });
 
-  // Un cuarto por página (excepto el primero)
+  y = 51;
+
+  // Metadata card
+  doc.setFillColor(...altRow);
+  doc.setDrawColor(...border);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentW, 24, 2, 2, 'FD');
+
+  const c1 = margin + 6;
+  const c2 = margin + contentW / 2 + 4;
+
+  doc.setFontSize(6.5);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(...txtMid);
+  doc.text('RESPONSABLE', c1, y + 6);
+  doc.text('FECHA', c2, y + 6);
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(...txtDark);
+  doc.text(inventoryInfo.auditor || '—', c1, y + 12);
+  doc.text(inventoryInfo.date || '—', c2, y + 12);
+
+  doc.setFontSize(6.5);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(...txtMid);
+  doc.text('DURACIÓN', c1, y + 17);
+  doc.text('UNIDAD', c2, y + 17);
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(...txtDark);
+  doc.text(inventoryInfo.duration || '—', c1, y + 23);
+  doc.text(inventoryInfo.unitName || '—', c2, y + 23);
+
+  y += 30;
+
+  // Status summary chips
+  const counts = { good: 0, damaged: 0, missing: 0, new: 0 };
+  inventoryRooms.forEach(room => room.items.forEach(item => {
+    if (item.status && counts[item.status] !== undefined) counts[item.status]++;
+  }));
+  const totalFilled = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  if (totalFilled > 0) {
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...txtMid);
+    doc.text('RESUMEN DE CONDICIÓN', margin, y + 4);
+    y += 7;
+
+    const chipW = (contentW - 9) / 4;
+    ['good', 'damaged', 'missing', 'new'].forEach((s, i) => {
+      const cfg   = statusCfg[s];
+      const label = (STATUS_OPTIONS.find(o => o.value === s) || {}).label || s;
+      const cx    = margin + i * (chipW + 3);
+      doc.setFillColor(...cfg.bg);
+      doc.setDrawColor(...border);
+      doc.setLineWidth(0.25);
+      doc.roundedRect(cx, y, chipW, 14, 1.5, 1.5, 'FD');
+      doc.setFontSize(15);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(...cfg.text);
+      doc.text(String(counts[s]), cx + chipW / 2, y + 9, { align: 'center' });
+      doc.setFontSize(6);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(...txtMid);
+      doc.text(label.toUpperCase(), cx + chipW / 2, y + 13.5, { align: 'center' });
+    });
+    y += 19;
+  }
+
+  // ── ROOMS ────────────────────────────────────────────────────────
   inventoryRooms.forEach((room, rIdx) => {
     if (rIdx > 0) {
       doc.addPage();
-      y = margin;
+      drawRunningHeader();
+      y = 16;
     }
 
-    checkPage(20);
-    doc.setFillColor(180, 120, 0);
-    doc.rect(margin, y - 1, contentW, 8, 'F');
-    doc.setFontSize(12);
+    checkPage(18);
+    // Room header band
+    doc.setFillColor(...navy);
+    doc.rect(margin, y, contentW, 9, 'F');
+    doc.setFillColor(...amber);
+    doc.rect(margin, y, 3, 9, 'F');
+    doc.setFontSize(9.5);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text(room.roomName.toUpperCase(), margin + 3, y + 5);
-    y += 12;
+    doc.text(room.roomName.toUpperCase(), margin + 8, y + 6);
+    y += 13;
 
-    // Encabezados de columna
-    const colX = [margin + 2, margin + 50, margin + 85, margin + 110, margin + 130, margin + 155];
-    doc.setFontSize(7);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(100, 100, 100);
-    doc.text('Artículo', colX[0], y);
-    doc.text('SKU', colX[1], y);
-    doc.text('Estado', colX[2], y);
-    doc.text('Cant', colX[3], y);
-    doc.text('Precio', colX[4], y);
-    doc.text('Notas', colX[5], y);
-    y += 1.5;
-    doc.setDrawColor(200, 200, 200);
+    // Column header row
+    const colX = [margin + 2, margin + 52, margin + 88, margin + 112, margin + 130, margin + 152];
+    doc.setFillColor(245, 247, 250);
+    doc.setDrawColor(...border);
     doc.setLineWidth(0.2);
-    doc.line(margin, y, margin + contentW, y);
-    y += 3;
+    doc.rect(margin, y, contentW, 6, 'FD');
+    doc.setFontSize(6.5);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...txtMid);
+    ['ARTÍCULO', 'SKU', 'ESTADO', 'CANT', 'PRECIO', 'NOTAS'].forEach((lbl, ci) => {
+      doc.text(lbl, colX[ci], y + 4.2);
+    });
+    y += 7;
+
+    let rowIdx = 0;
 
     room.items.forEach(item => {
-      const statusLabel = STATUS_OPTIONS.find(o => o.value === item.status);
+      const statusLbl = STATUS_OPTIONS.find(o => o.value === item.status);
       const hasPhotos = item.photos && item.photos.length > 0;
-      const rowHeight = hasPhotos ? 22 : 5;
-      checkPage(rowHeight + 4);
+      const rowH      = hasPhotos ? 26 : 7;
 
-      doc.setFontSize(7);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(50, 50, 50);
-      doc.text(item.name, colX[0], y);
-      doc.text(item.sku || '', colX[1], y);
+      checkPage(rowH + 3);
 
-      if (item.status) {
-        const statusColors = { good: [16, 185, 129], damaged: [239, 68, 68], missing: [245, 158, 11], new: [37, 99, 235] };
-        const c = statusColors[item.status] || [100, 100, 100];
-        doc.setTextColor(c[0], c[1], c[2]);
-        doc.setFont(undefined, 'bold');
+      if (rowIdx % 2 === 1) {
+        doc.setFillColor(...altRow);
+        doc.rect(margin, y, contentW, rowH, 'F');
       }
-      doc.text(statusLabel ? statusLabel.label : '-', colX[2], y);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(50, 50, 50);
 
-      doc.text(String(item.qty), colX[3], y);
-      doc.text(item.price ? `$${Number(item.price).toFixed(2)}` : '-', colX[4], y);
+      doc.setFontSize(7.5);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(...txtDark);
+
+      doc.text(doc.splitTextToSize(item.name, 48)[0], colX[0], y + 5);
+
+      if (item.sku) {
+        doc.setTextColor(...txtMid);
+        doc.text(item.sku, colX[1], y + 5);
+        doc.setTextColor(...txtDark);
+      }
+
+      // Status chip
+      if (item.status && statusCfg[item.status]) {
+        const cfg   = statusCfg[item.status];
+        const label = statusLbl ? statusLbl.label : item.status;
+        const cw = 26, ch = 5;
+        doc.setFillColor(...cfg.bg);
+        doc.roundedRect(colX[2], y + 1, cw, ch, 1, 1, 'F');
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...cfg.text);
+        doc.text(label, colX[2] + cw / 2, y + 4.8, { align: 'center' });
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(...txtDark);
+        doc.setFontSize(7.5);
+      } else {
+        doc.setTextColor(...txtLight);
+        doc.text('—', colX[2], y + 5);
+        doc.setTextColor(...txtDark);
+      }
+
+      doc.setFont(undefined, 'bold');
+      doc.text(String(item.qty), colX[3], y + 5);
+      doc.setFont(undefined, 'normal');
+
+      if (item.price) {
+        doc.setTextColor(...txtMid);
+        doc.text(`$${Number(item.price).toFixed(2)}`, colX[4], y + 5);
+        doc.setTextColor(...txtDark);
+      } else {
+        doc.setTextColor(...txtLight);
+        doc.text('—', colX[4], y + 5);
+        doc.setTextColor(...txtDark);
+      }
 
       if (item.notes) {
-        const lines = doc.splitTextToSize(item.notes, 30);
-        doc.text(lines, colX[5], y);
+        doc.setTextColor(...txtMid);
+        doc.text(doc.splitTextToSize(item.notes, 38), colX[5], y + 5);
+        doc.setTextColor(...txtDark);
       }
 
       if (hasPhotos) {
-        y += 3;
+        const photoY = y + 8;
         item.photos.forEach((photo, pi) => {
-          if (pi < 3) {
-            try {
-              doc.addImage(photo, 'JPEG', colX[1] + (pi * 22), y, 16, 16);
-            } catch (e) { /* skip */ }
-            if (item.photoTimes && item.photoTimes[pi]) {
-              const t = new Date(item.photoTimes[pi]);
-              const timeLabel = t.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              let diffLabel = '';
-              if (pi > 0 && item.photoTimes[pi - 1]) {
-                const diffMs = t - new Date(item.photoTimes[pi - 1]);
-                const diffSec = Math.floor(diffMs / 1000);
-                const dm = Math.floor(diffSec / 60);
-                const ds = diffSec % 60;
-                diffLabel = dm > 0 ? ` (+${dm}m${ds}s)` : ` (+${ds}s)`;
-              }
-              doc.setFontSize(5);
-              doc.setTextColor(120, 120, 120);
-              doc.text(timeLabel + diffLabel, colX[1] + (pi * 22), y + 18);
-              doc.setFontSize(7);
-              doc.setTextColor(50, 50, 50);
+          if (pi >= 3) return;
+          const px = colX[1] + pi * 22;
+          try {
+            doc.setDrawColor(...border);
+            doc.setLineWidth(0.3);
+            doc.rect(px - 0.5, photoY - 0.5, 17, 17, 'D');
+            doc.addImage(photo, 'JPEG', px, photoY, 16, 16);
+          } catch (e) {}
+          if (item.photoTimes && item.photoTimes[pi]) {
+            const t = new Date(item.photoTimes[pi]);
+            const tl = t.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            let dl = '';
+            if (pi > 0 && item.photoTimes[pi - 1]) {
+              const ds = Math.floor((t - new Date(item.photoTimes[pi - 1])) / 1000);
+              const dm = Math.floor(ds / 60);
+              dl = dm > 0 ? ` +${dm}m${ds % 60}s` : ` +${ds}s`;
             }
+            doc.setFontSize(5);
+            doc.setTextColor(...txtLight);
+            doc.text(tl + dl, px, photoY + 18.5);
+            doc.setFontSize(7.5);
+            doc.setTextColor(...txtDark);
           }
         });
-        y += 22;
+        y += 26;
+      } else {
+        y += 7;
       }
 
-      y += 5;
-      doc.setDrawColor(230, 230, 230);
+      doc.setDrawColor(...border);
       doc.setLineWidth(0.1);
-      doc.line(colX[0], y - 2, margin + contentW, y - 2);
+      doc.line(margin, y, margin + contentW, y);
+      rowIdx++;
     });
 
-    y += 3;
+    y += 5;
   });
 
-  // Pie de página
-  checkPage(30);
-  y += 5;
-  doc.setDrawColor(180, 120, 0);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y, margin + contentW, y);
-  y += 5;
-
-  try {
-    const certData = createCertificationsDataURL();
-    doc.addImage(certData, 'PNG', margin + 10, y, 120, 12);
-    y += 15;
-  } catch (e) { /* skip */ }
-
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.text('Del Mar — Gestión de Propiedades | ISO 9001 | Marriott | Safe Travels | Airbnb Prohost | APAR | AirDNA', pageW / 2, y, { align: 'center' });
+  // ── FOOTER ON EVERY PAGE ────────────────────────────────────────
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    const fy = pageH - 9;
+    doc.setFillColor(...altRow);
+    doc.rect(0, fy - 1, pageW, 10, 'F');
+    doc.setDrawColor(...border);
+    doc.setLineWidth(0.3);
+    doc.line(0, fy - 1, pageW, fy - 1);
+    doc.setFontSize(6.5);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...txtMid);
+    doc.text('Del Mar — Gestión de Propiedades  ·  ISO 9001  ·  Marriott  ·  Safe Travels  ·  Airbnb Prohost  ·  APAR  ·  AirDNA', margin, fy + 4);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...txtDark);
+    doc.text(`${p} / ${totalPages}`, pageW - margin, fy + 4, { align: 'right' });
+  }
 
   return doc;
 }
