@@ -935,14 +935,9 @@
         <h3 class="help-modal-name">Eliminar Registro</h3>
         <p class="help-modal-hint" id="delete-modal-desc">Esta acción no se puede deshacer.</p>
         <div class="inv-field-group" style="margin-top:16px">
-          <label style="font-size:0.82rem;color:#6b7280;margin-bottom:6px;display:block">Ingresa la contraseña para continuar</label>
-          <div style="position:relative">
-            <input type="password" id="delete-password-input" placeholder="Contraseña..." style="width:100%;padding-right:44px" autocomplete="off" onkeydown="if(event.key==='Enter')confirmDelete()">
-            <button type="button" class="delete-pw-toggle" onclick="toggleDeletePwVisibility()">
-              <span class="material-symbols-rounded" id="delete-pw-eye">visibility</span>
-            </button>
-          </div>
-          <p class="delete-pw-error" id="delete-pw-error" style="display:none">Contraseña incorrecta</p>
+          <label style="font-size:0.82rem;color:#6b7280;margin-bottom:6px;display:block">Ingresa el nombre del registro para continuar</label>
+          <input type="text" id="delete-name-input" placeholder="Nombre del registro..." style="width:100%" autocomplete="off" onkeydown="if(event.key==='Enter')confirmDelete()">
+          <p class="delete-name-error" id="delete-name-error" style="display:none;color:#ef4444;font-size:0.82rem;margin-top:6px">El nombre no coincide</p>
         </div>
         <button class="btn-continue btn-delete-confirm" style="margin-top:16px;width:100%;background:#ef4444" onclick="confirmDelete()">
           <span class="material-symbols-rounded">delete_forever</span> Eliminar

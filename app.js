@@ -5,51 +5,33 @@
 // descripciones de artículos, exportes mejorados
 // ══════════════════════════════════════════
 
-// ── Contraseña de eliminación (SHA-256) ──
-const DELETE_PASSWORD_HASH = 'e901284b0c60f39416612ccd9ba16960d11c28b545d2b8f7f47362a171d8d84e';
-
-async function hashString(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 let _pendingDeleteUnitId = null;
+let _pendingDeleteDescription = null;
 
 function showDeleteModal(unitId, description) {
   _pendingDeleteUnitId = unitId;
+  _pendingDeleteDescription = description;
   document.getElementById('delete-modal-desc').textContent = description || 'Esta acción no se puede deshacer.';
-  document.getElementById('delete-password-input').value = '';
-  document.getElementById('delete-pw-error').style.display = 'none';
+  document.getElementById('delete-name-input').value = '';
+  document.getElementById('delete-name-error').style.display = 'none';
   document.getElementById('delete-modal').classList.add('visible');
-  setTimeout(() => document.getElementById('delete-password-input').focus(), 100);
+  setTimeout(() => document.getElementById('delete-name-input').focus(), 100);
 }
 
 function closeDeleteModal() {
   _pendingDeleteUnitId = null;
+  _pendingDeleteDescription = null;
   document.getElementById('delete-modal').classList.remove('visible');
 }
 
-function toggleDeletePwVisibility() {
-  const input = document.getElementById('delete-password-input');
-  const eye = document.getElementById('delete-pw-eye');
-  if (input.type === 'password') {
-    input.type = 'text';
-    eye.textContent = 'visibility_off';
-  } else {
-    input.type = 'password';
-    eye.textContent = 'visibility';
-  }
-}
+function confirmDelete() {
+  const input = document.getElementById('delete-name-input').value.trim();
+  const errEl = document.getElementById('delete-name-error');
 
-async function confirmDelete() {
-  const pw = document.getElementById('delete-password-input').value;
-  const errEl = document.getElementById('delete-pw-error');
-
-  const hash = await hashString(pw);
-  if (hash !== DELETE_PASSWORD_HASH) {
+  if (input !== _pendingDeleteDescription) {
     errEl.style.display = 'block';
-    document.getElementById('delete-password-input').value = '';
-    document.getElementById('delete-password-input').focus();
+    document.getElementById('delete-name-input').value = '';
+    document.getElementById('delete-name-input').focus();
     return;
   }
 
