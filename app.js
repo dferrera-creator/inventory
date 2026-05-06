@@ -2634,6 +2634,11 @@ async function saveInspectionToDatabase() {
 // ══════════════════════════════════════════
 
 async function shareFiles() {
+  if (!SECTIONS || SECTIONS.length === 0) {
+    showToast('⚠️ No hay datos de inspección para compartir');
+    return;
+  }
+
   try {
     showToast('⏳ Preparando archivos...');
 
@@ -2900,6 +2905,17 @@ function buildPDF(jsPDF) {
   }
 
   // ── SECTIONS ────────────────────────────────────────────────────
+  if (!SECTIONS || SECTIONS.length === 0) {
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...txtMid);
+    doc.text('No hay datos de inspección para mostrar.', margin, y + 20);
+    doc.setFontSize(10);
+    doc.setTextColor(...txtLight);
+    doc.text('Asegúrate de haber cargado los items de inspección antes de exportar.', margin, y + 30, { maxWidth: contentW });
+    return doc;
+  }
+
   SECTIONS.forEach((section, sIdx) => {
     if (sIdx > 0) {
       doc.addPage();
@@ -3324,6 +3340,10 @@ async function exportXLSX() {
 // ── Exportar PDF ──
 
 function exportPDF() {
+  if (!SECTIONS || SECTIONS.length === 0) {
+    showToast('⚠️ No hay datos de inspección para exportar');
+    return;
+  }
   const { jsPDF } = window.jspdf;
   const doc = buildPDF(jsPDF);
   doc.save(`Inspeccion_${inspectionInfo.location}_${inspectionInfo.date}.pdf`);
