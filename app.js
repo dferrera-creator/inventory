@@ -2965,7 +2965,18 @@ function buildPDF(jsPDF) {
         const statusLbl = STATUS_OPTIONS.find(o => o.value === data.status);
         const names     = getItemNames(item.name);
         const hasPhotos = data.photos && data.photos.length > 0;
-        const rowH      = hasPhotos ? 26 : 7;
+
+        let rowH = hasPhotos ? 26 : 7;
+
+        // Calculate additional height needed for multi-line observations
+        if (data.observations) {
+          const obsLines = doc.splitTextToSize(data.observations, 38);
+          const lineHeight = 3.5;
+          const obsHeight = obsLines.length * lineHeight;
+          const minObsHeight = 5;
+          const additionalHeight = Math.max(0, obsHeight - minObsHeight);
+          rowH += additionalHeight;
+        }
 
         checkPage(rowH + 3);
 
@@ -3048,10 +3059,9 @@ function buildPDF(jsPDF) {
               doc.setTextColor(...txtDark);
             }
           });
-          y += 26;
-        } else {
-          y += 7;
         }
+
+        y += rowH;
 
         doc.setDrawColor(...border);
         doc.setLineWidth(0.1);
