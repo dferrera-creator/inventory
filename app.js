@@ -2986,8 +2986,9 @@ function buildPDF(jsPDF) {
 
         // Calculate additional height needed for multi-line observations
         if (data.observations) {
-          const obsLines = doc.splitTextToSize(data.observations, 38);
-          const lineHeight = 3.5;
+          const obsColWidth = contentW - (colX[5] - margin);
+          const obsLines = doc.splitTextToSize(data.observations, obsColWidth);
+          const lineHeight = 3.8;
           const obsHeight = obsLines.length * lineHeight;
           const minObsHeight = 5;
           const additionalHeight = Math.max(0, obsHeight - minObsHeight);
