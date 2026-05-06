@@ -2981,12 +2981,12 @@ function buildPDF(jsPDF) {
         const statusLbl = STATUS_OPTIONS.find(o => o.value === data.status);
         const names     = getItemNames(item.name);
         const hasPhotos = data.photos && data.photos.length > 0;
+        const obsColWidth = contentW - (colX[5] - margin);
 
         let rowH = hasPhotos ? 26 : 7;
 
         // Calculate additional height needed for multi-line observations
         if (data.observations) {
-          const obsColWidth = contentW - (colX[5] - margin);
           const obsLines = doc.splitTextToSize(data.observations, obsColWidth);
           const lineHeight = 3.8;
           const obsHeight = obsLines.length * lineHeight;
@@ -3045,7 +3045,7 @@ function buildPDF(jsPDF) {
 
         if (data.observations) {
           doc.setTextColor(...txtMid);
-          doc.text(doc.splitTextToSize(data.observations, 38), colX[5], y + 5);
+          doc.text(doc.splitTextToSize(data.observations, obsColWidth), colX[5], y + 5);
           doc.setTextColor(...txtDark);
         }
 
